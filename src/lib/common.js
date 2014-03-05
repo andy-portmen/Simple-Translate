@@ -5,8 +5,8 @@ Storage Items:
     "history"
     "from"
     "to"
-    "textSelection"
-    "mouseDoubleClick"
+    "isTextSelection"
+    "isDblclick"
     "enableHistory"
     "numberHistoryItems"
 */
@@ -129,15 +129,22 @@ content_script.receive("translation-request", function (word) {
   });
 });
 
+content_script.receive("options-request", function () {
+  content_script.send("options-response", {
+    isTextSelection: storage.read('isTextSelection') == "true",
+    isDblclick: storage.read('isDblclick') == "true"
+  });
+});
+
 // Initialization
 if (!storage.read("from")) {
   storage.write("from", "auto");
 }
-if (!storage.read("textSelection")) {
-  storage.write("textSelection", "false");
+if (!storage.read("isTextSelection")) {
+  storage.write("isTextSelection", "false");
 }
-if (!storage.read("mouseDoubleClick")) {
-  storage.write("mouseDoubleClick", "true");
+if (!storage.read("isDblclick")) {
+  storage.write("isDblclick", "true");
 }
 if (!storage.read("enableHistory")) {
   storage.write("enableHistory", "true");

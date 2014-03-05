@@ -23,13 +23,23 @@ else {
 /********/
 
 // Make a bubble at startup
+var isTextSelection = false;
+var isDblclick = false;
 var bubbleDOM = document.createElement('div');
 bubbleDOM.setAttribute('class', 'selection_bubble');
 bubbleDOM.setAttribute('id', 'bubble_container');
 document.body.appendChild(bubbleDOM);
 bubbleDOM.style.visibility = 'hidden';
 
+// Get options at Startup
+background.send("options-request", null);
+background.receive("options-response", function (data) {
+  isTextSelection = data.isTextSelection;
+  isDblclick = data.isDblclick;
+});
+
 document.addEventListener('dblclick', function (e) {
+  if (!isDblclick) return;
   var target = e.target || e.originalTarget;
   var selectedText = window.getSelection().toString();
   if (target.localName == 'input' && target.getAttribute('type') == 'text') return;
@@ -39,7 +49,7 @@ document.addEventListener('dblclick', function (e) {
 }, false);
 
 document.addEventListener('mouseup', function (e) {
-  if (!e.altKey) return;
+  if (!isTextSelection || !e.altKey) return;
   var selectedText = window.getSelection().toString();
   if (selectedText.length > 2) {
     requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);

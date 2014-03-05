@@ -19,8 +19,8 @@ function loadOptions() {
       break;
     }
   }
-  document.getElementsByName('CheckBox1')[0].checked = storage.read('textSelection') == 'true';
-  document.getElementsByName('CheckBox2')[0].checked = storage.read('mouseDoubleClick') == 'true';
+  document.getElementsByName('CheckBox1')[0].checked = storage.read('isTextSelection') == 'true';
+  document.getElementsByName('CheckBox2')[0].checked = storage.read('isDblclick') == 'true';
   document.getElementsByName('CheckBox3')[0].checked = storage.read('enableHistory') == 'true';
   document.getElementsByName('numberHistoryItems')[0].value = parseInt(storage.read('numberHistoryItems'));
   if (storage.read('enableHistory') == 'true') {
@@ -78,10 +78,10 @@ document.getElementById('clearHistory').addEventListener('click', function () {
   clearOptionsHistory();
 }, false);
 document.getElementsByName('CheckBox1')[0].addEventListener('change', function (e) {
-  storage.write('textSelection', e.target.checked);
+  storage.write('isTextSelection', e.target.checked);
 }, false);
 document.getElementsByName('CheckBox2')[0].addEventListener('change', function (e) {
-  storage.write('mouseDoubleClick', e.target.checked);
+  storage.write('isDblclick', e.target.checked);
 }, false);
 document.getElementsByName('CheckBox3')[0].addEventListener('change', function (e) {
   storage.write('enableHistory', e.target.checked);
