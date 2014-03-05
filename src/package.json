@@ -2,9 +2,9 @@
   "name": "simtrans",
   "title": "Simple Translate",
   "id": "jid1-sgnIBcMja0SIBw",
-  "description": "A simple Translator",
-  "author": "Mike Avilov",
+  "description": "A Simple Translator Using Google Translate",
+  "author": "Andy Portmen",
   "license": "MPL 2.0",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "common"
 }
