@@ -1,10 +1,10 @@
 /********/
-var bg = {};
+var background = {};
 if (typeof chrome !== 'undefined') {
-  bg.send = function (id, data) {
+  background.send = function (id, data) {
     chrome.extension.sendRequest({method: id, data: data});
   }
-  bg.receive = function (id, callback) {
+  background.receive = function (id, callback) {
     chrome.extension.onRequest.addListener(function(request, sender, callback2) {
       if (request.method == id) {
         callback(request.data);
@@ -13,10 +13,10 @@ if (typeof chrome !== 'undefined') {
   }
 }
 else {
-  bg.send = function (id, data) {
+  background.send = function (id, data) {
     self.port.emit(id, data);
   }
-  bg.receive = function (id, callback) {
+  background.receive = function (id, callback) {
     self.port.on(id, callback);
   }
 }
@@ -36,7 +36,7 @@ function onClick() {
     $("answer-input").value = "Select Your Language";
   }
   else {
-    bg.send("translation-request", word);
+    background.send("translation-request", word);
   }
   $("question-input").select();
 }
@@ -49,9 +49,9 @@ $("question-input").addEventListener("keydown", function (e) {
 }, false);
 
 // Message Passing Between Background and Popup
-bg.receive("translation-response", function (obj) {
+background.receive("translation-response", function (obj) {
   if (obj.word.toLowerCase() == obj.definition.toLowerCase()) {
-    bg.send("correction-request", obj.word);
+    background.send("correction-request", obj.word);
     $("question-input").setAttribute("type", "corrected");
     $("answer-input").removeAttribute("type");
     $("answer-input").value = "Looking for alternative spelling.";
@@ -63,14 +63,14 @@ bg.receive("translation-response", function (obj) {
     $("answer-input").value = obj.definition;
   }
 });
-bg.receive("correction-response", function (obj) {
+background.receive("correction-response", function (obj) {
   $("question-input").setAttribute("type", "corrected");
   $("question-input").value = obj.word + " >> " + obj.correctedWord;
   $("question-input").select();
   $("answer-input").removeAttribute("type");
   $("answer-input").value = obj.definition;
 });
-bg.receive("history-update", function (obj) {
+background.receive("history-update", function (obj) {
   var historySelect = $("history-select");
   while (historySelect.firstChild) { // Remove history from drop-down list
     historySelect.removeChild(historySelect.firstChild);
@@ -96,17 +96,17 @@ bg.receive("history-update", function (obj) {
 
 $('from-select').addEventListener("change", function (e) {
   var from = e.target.children[e.target.selectedIndex].value;
-  bg.send("change-from-select-request", from);
+  background.send("change-from-select-request", from);
 }, false);
 $('to-select').addEventListener("change", function (e) {
   var to = e.target.children[e.target.selectedIndex].value;
-  bg.send("change-to-select-request", to);
+  background.send("change-to-select-request", to);
 }, false);
 
 // Initialization
 $("question-input").focus();
-bg.send("initialization-request");
-bg.receive("initialization-response", function (obj) {
+background.send("initialization-request");
+background.receive("initialization-response", function (obj) {
   var fromSelect = $("from-select");
   for (var i = 0; i < fromSelect.children.length; i++) {
     if (fromSelect.children[i].getAttribute("value") == obj.from) {

@@ -1,10 +1,12 @@
 // Load Firefox based resources
-var data          = require("sdk/self").data;
+var data          = require("sdk/self").data,
     sp            = require("sdk/simple-prefs"),
     Request       = require("sdk/request").Request,
     prefs         = sp.prefs,
+    pageMod       = require("sdk/page-mod"),
+    tabs          = require("sdk/tabs"),
     {Cc, Ci, Cu}  = require('chrome');
-
+    
 Cu.import("resource://gre/modules/Promise.jsm");
     
 // Load overlay styles
@@ -15,13 +17,27 @@ var button = require("./toolbarbutton").ToolbarButton({
   label: "Simple Translate",
   tooltiptext: "Simple Translate",
   onCommand: function () {
-    panel.show(button.object);
+    popup.show(button.object);
   },
   onClick: function () {
   }
 });
 
-var panel = require("sdk/panel").Panel({
+// Load overlay styles
+var workers = [], content_script_arr = [];
+pageMod.PageMod({
+  include: ["*"],
+  contentScriptFile: data.url("./content_script/inject.js"),
+  contentStyleFile : data.url("./content_script/inject.css"),
+  onAttach: function(worker) {
+    workers.push(worker);
+    content_script_arr.forEach(function (arr) {
+      worker.port.on(arr[0], arr[1]);
+    })
+  }
+});
+
+var popup = require("sdk/panel").Panel({
   width: 318,
   height: 205,
   contentURL: data.url("./popup/popup.html"),
@@ -48,12 +64,25 @@ exports.get = function (url) {
   return d.promise;
 }
 
-exports.panel = {
+exports.popup = {
   send: function (id, data) {
-    panel.port.emit(id, data);
+    popup.port.emit(id, data);
   },
   receive: function (id, callback) {
-    panel.port.on(id, callback);
+    popup.port.on(id, callback);
+  }
+}
+
+exports.content_script = {
+  send: function (id, data) {
+    workers.forEach(function (worker) {
+      if (worker.tab != tabs.activeTab) return;
+      if (!worker) return;
+      worker.port.emit(id, data);
+    });
+  },
+  receive: function (id, callback) {
+    content_script_arr.push([id, callback]);
   }
 }
 

@@ -1,4 +1,4 @@
-var storage, get, panel, window, Deferred;
+var storage, get, popup, window, Deferred, content_script;
 
 /*
 Storage Items:
@@ -16,14 +16,16 @@ if (typeof require !== 'undefined') {
   var firefox = require("./firefox.js");
   storage = firefox.storage;
   get = firefox.get;
-  panel = firefox.panel;
+  popup = firefox.popup;
   window = firefox.window;
+  content_script = firefox.content_script;
   Deferred = firefox.Promise.defer;
 }
 else {
   storage = _chrome.storage;
   get = _chrome.get;
-  panel = _chrome.panel;
+  popup = _chrome.popup;
+  content_script = _chrome.content_script;
   Deferred = task.Deferred;
 }
 /********/
@@ -48,7 +50,7 @@ function saveToHistory(obj) {
       lStorage_obj.shift();
   }
   storage.write("history", JSON.stringify(lStorage_obj));
-  panel.send("history-update", lStorage_obj);
+  popup.send("history-update", lStorage_obj);
 }
 
 function clearHistory() {
@@ -87,15 +89,15 @@ function getTranslation (word) {
 }
 
 // Message Passing Between Background and Popup
-panel.receive("translation-request", function (word) {
+popup.receive("translation-request", function (word) {
   getTranslation(word).then(function (definition) {
-    panel.send("translation-response", {word: word, definition: definition});
+    popup.send("translation-response", {word: word, definition: definition});
   });
 });
-panel.receive("correction-request", function (word) {
+popup.receive("correction-request", function (word) {
   wordCorrection(word).then(function (correctedWord) {
     getTranslation(correctedWord).then(function (definition) {
-      panel.send("correction-response", {
+      popup.send("correction-response", {
         word: word, 
         correctedWord: correctedWord, 
         definition: definition
@@ -103,18 +105,18 @@ panel.receive("correction-request", function (word) {
     });
   });
 });
-panel.receive("change-from-select-request", function (from) {
+popup.receive("change-from-select-request", function (from) {
   storage.write("from", from);
 });
-panel.receive("change-to-select-request", function (to) {
+popup.receive("change-to-select-request", function (to) {
   storage.write("to", to);
 });
-panel.receive("initialization-request", function () {
-  panel.send("initialization-response", {
+popup.receive("initialization-request", function () {
+  popup.send("initialization-response", {
     from: storage.read("from"),
     to: storage.read("to")
   });
-  panel.send("history-update", JSON.parse(storage.read("history") || "[]"));
+  popup.send("history-update", JSON.parse(storage.read("history") || "[]"));
 });
 
 // Initialization
@@ -133,3 +135,25 @@ if (!storage.read("enableHistory")) {
 if (!storage.read("numberHistoryItems")) {
   storage.write("numberHistoryItems", "100");
 }
+
+
+
+
+
+
+
+
+
+
+content_script.receive("send-from-content-script", function (data) {
+  console.error(data)
+
+  content_script.send("send-from-background", "send-from-background");
+});
+
+
+
+
+
+
+

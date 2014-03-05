@@ -1,0 +1,34 @@
+ .selection_bubble {
+    visibility: hidden;
+    position: absolute;
+    padding: 8px;
+    color: black;
+    font: bold 16px Arial;
+    text-align: center;
+    background: #FAEBD7;
+    border: 1px solid #DEB887;
+    -webkit-border-radius: 3px;
+    z-index: 1000;
+}
+
+.selection_bubble:after, .selection_bubble:before {
+    content: "";
+    border: solid transparent;
+    height: 0;
+    width: 0;
+    position: absolute;
+}
+
+.selection_bubble:after {
+    border-width: 7px;
+    border-bottom-color: #FAEBD7;
+    bottom: 99%;
+    left: 4px;
+}
+
+.selection_bubble:before {
+    border-width: 8px;
+    border-bottom-color: #DEB887;
+    bottom: 100%;
+    left: 3px;
+}

@@ -26,9 +26,23 @@ var _chrome = {
     
     return deferred.promise;
   },
-  panel: {
+  popup: {
     send: function (id, data) {
       chrome.extension.sendRequest({method: id, data: data});
+    },
+    receive: function (id, callback) {
+      chrome.extension.onRequest.addListener(function(request, sender, callback2) {
+        if (request.method == id) {
+          callback(request.data);
+        }
+      });
+    }
+  },
+  content_script: {
+    send: function (id, data) {
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          chrome.tabs.sendMessage(tabs[0].id, {method: id, data: data}, function() {});  
+      });
     },
     receive: function (id, callback) {
       chrome.extension.onRequest.addListener(function(request, sender, callback2) {
