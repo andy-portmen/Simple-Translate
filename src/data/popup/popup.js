@@ -48,7 +48,7 @@ $("question-input").addEventListener("keydown", function (e) {
   }
 }, false);
 
-// Listeners
+// Message Passing Between Background and Popup
 bg.receive("translation-response", function (obj) {
   if (obj.word.toLowerCase() == obj.definition.toLowerCase()) {
     bg.send("correction-request", obj.word);

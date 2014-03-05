@@ -1,23 +1,31 @@
 {
+  "name": "Simple Translate",
+  "version": "0.1.5",
+  
   "manifest_version": 2,
 
   "short_name": "simtrans",
   "name": "Simple Translate",
-  "description": "A simple Translator",
-  "version": "0.1.4",
+  "description": "A Simple Translator Using Google Translate",
+  "version": "0.1.5",
 
-  "author": "Mike Avilov",
+  "author": "Andy Portmen",
   
   "permissions": [
+    "contextMenus",
+    "storage",
+    "tabs", 
     "<all_urls>"
   ],
   "browser_action": {
     "default_icon": "data/icon16.png",
-    "default_popup": "data/popup/popup.html"
+    "default_popup": "data/popup/popup.html",
+    "default_title": "Simple Translate"
   },
   "background": {
     "scripts": ["lib/task.js", "lib/chrome.js", "lib/common.js"]
   },
+  "options_page": "data/options/options.html",
   "icons": {
     "16": "data/icon16.png",
     "48": "data/icon48.png",

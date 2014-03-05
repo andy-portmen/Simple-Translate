@@ -1,5 +1,16 @@
 var storage, get, panel, window, Deferred;
 
+/*
+Storage Items:
+    "history"
+    "from"
+    "to"
+    "textSelection"
+    "mouseDoubleClick"
+    "enableHistory"
+    "numberHistoryItems"
+*/
+
 /********/
 if (typeof require !== 'undefined') {
   var firefox = require("./firefox.js");
@@ -16,24 +27,32 @@ else {
   Deferred = task.Deferred;
 }
 /********/
+function readHistory() {
+  var lStorage = storage.read("history") || "[]";
+  lStorage_obj = JSON.parse(lStorage); // lStorage to Hash Array
+  return lStorage_obj;
+}
 
 function saveToHistory(obj) {
   if (!obj.word || !obj.definition) return;
   obj.word = obj.word.toLowerCase();
   obj.definition = obj.definition.toLowerCase();
   if (obj.word == obj.definition) return;
-  var lStorage = storage.read("history") || "[]";
-  var numberHistoryItems = parseInt(12);
-  lStorage_obj = JSON.parse(lStorage); // lStorage to Hash Array
+  var numberHistoryItems = parseInt(storage.read("numberHistoryItems"));
+  var lStorage_obj = readHistory();
   lStorage_obj = lStorage_obj.filter(function (a) { // Remove duplicate
       return !(a[0] == obj.word && a[1] == obj.definition);
   });
   lStorage_obj.push([obj.word, obj.definition]);
-  if (lStorage_obj.length > numberHistoryItems) { // Only store numberHistoryItems items
+  if (lStorage_obj.length > numberHistoryItems) { // Only store up to the numberHistoryItems items
       lStorage_obj.shift();
   }
   storage.write("history", JSON.stringify(lStorage_obj));
   panel.send("history-update", lStorage_obj);
+}
+
+function clearHistory() {
+  storage.write("history", "[]");
 }
 
 // Word Correction Using Google API
@@ -67,6 +86,7 @@ function getTranslation (word) {
   return d.promise;
 }
 
+// Message Passing Between Background and Popup
 panel.receive("translation-request", function (word) {
   getTranslation(word).then(function (definition) {
     panel.send("translation-response", {word: word, definition: definition});
@@ -97,10 +117,19 @@ panel.receive("initialization-request", function () {
   panel.send("history-update", JSON.parse(storage.read("history") || "[]"));
 });
 
-
-
-
 // Initialization
 if (!storage.read("from")) {
   storage.write("from", "auto");
+}
+if (!storage.read("textSelection")) {
+  storage.write("textSelection", "false");
+}
+if (!storage.read("mouseDoubleClick")) {
+  storage.write("mouseDoubleClick", "true");
+}
+if (!storage.read("enableHistory")) {
+  storage.write("enableHistory", "true");
+}
+if (!storage.read("numberHistoryItems")) {
+  storage.write("numberHistoryItems", "100");
 }
