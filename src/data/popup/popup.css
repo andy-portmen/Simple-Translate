@@ -1,0 +1,95 @@
+@font-face {
+  font-family: 'Cambo';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Cambo'), local('Cambo-Regular'), url(Hpv6vCTojizn0Qwl_Bb2SQ.woff) format('woff');
+}
+
+body {
+  margin: 0;
+  padding: 15px;
+  width: 287px;
+  background: white;
+  overflow: hidden;
+}
+#title { 
+  font-family: 'Cambo', sans-serif;
+  font-weight: 100;
+  font-size: 30px;
+  color: #2F2626;
+  background-color: rgba(221, 209, 195, 0.5);
+  padding: 5px;
+}
+#title img {
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 7px;
+}
+select {
+  border: 1px solid #DEB887;
+  -webkit-appearance: none;  
+  -moz-appearance: none;
+  background: url('dropdown.png') no-repeat;
+  text-overflow: "";
+  width: auto;
+  text-indent: 0.01px;
+  background-position: center right;
+  padding: 1px;
+}
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  select {padding-right: 10px;}
+}
+#dicHistory {
+  width: 22px;
+  height: 22px;
+  border: 1px solid #DEB887;
+  text-indent: 20px;
+  padding: 2px;
+  background-position: center center;
+}
+input {
+  font-family: arial, verdana, sans-serif;
+  border: 1px solid #DEB887;
+  text-align: center; 
+  color: black;
+  background-color: white;
+  font-size: 16px; 
+  width: 174px;
+  line-height: 22px;
+}
+#question-input {}
+#question-input[type="corrected"] {
+  font-size: 85%;
+}
+#answer-input {}
+#answer-input[type="no-language"] {
+  color: red;
+}
+.label {
+  font-family: arial, verdana, sans-serif;
+  border-style: none; 
+  text-align: left;
+  margin-top: 20px;
+  background-color: transparent;
+  font-size: 12px;
+}
+#inputLanguage,#targetLanguage {
+  margin-top: 15px;
+}
+#answerField {
+  font-size: 22px;
+  width: 100%;
+}
+#questionField {
+  font-size: 16px;
+}
+button {
+  border: 1px solid #DEB887;
+  font-size: 12px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+}
+
+
+

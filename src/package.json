@@ -1,0 +1,10 @@
+{
+  "name": "simtrans",
+  "title": "Simple Translate",
+  "id": "jid1-sgnIBcMja0SIBw",
+  "description": "A simple Translator",
+  "author": "Mike Avilov",
+  "license": "MPL 2.0",
+  "version": "0.1.4",
+  "main": "common"
+}

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+
+  "short_name": "simtrans",
+  "name": "Simple Translate",
+  "description": "A simple Translator",
+  "version": "0.1.4",
+
+  "author": "Mike Avilov",
+  
+  "permissions": [
+    "<all_urls>"
+  ],
+  "browser_action": {
+    "default_icon": "data/icon16.png",
+    "default_popup": "data/popup/popup.html"
+  },
+  "background": {
+    "scripts": ["lib/task.js", "lib/chrome.js", "lib/common.js"]
+  },
+  "icons": {
+    "16": "data/icon16.png",
+    "48": "data/icon48.png",
+    "128": "data/icon128.png" 
+  }
+}
