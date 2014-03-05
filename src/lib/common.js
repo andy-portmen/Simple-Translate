@@ -119,6 +119,16 @@ popup.receive("initialization-request", function () {
   popup.send("history-update", JSON.parse(storage.read("history") || "[]"));
 });
 
+// Message Passing Between Background and Content Script
+content_script.receive("translation-request", function (word) {
+  getTranslation(word).then(function (definition) {
+    content_script.send("translation-response", {
+      word: word, 
+      definition: definition
+    });
+  });
+});
+
 // Initialization
 if (!storage.read("from")) {
   storage.write("from", "auto");
@@ -144,12 +154,6 @@ if (!storage.read("numberHistoryItems")) {
 
 
 
-
-content_script.receive("send-from-content-script", function (data) {
-  console.error(data)
-
-  content_script.send("send-from-background", "send-from-background");
-});
 
 
 
