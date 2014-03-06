@@ -6,8 +6,7 @@
 }
 
 body {
-  margin: 0;
-  padding: 15px;
+  margin: 15px;
   width: 287px;
   background: white;
   overflow: hidden;
@@ -29,22 +28,24 @@ select {
   border: 1px solid #DEB887;
   -webkit-appearance: none;  
   -moz-appearance: none;
-  background: url('dropdown.png') no-repeat;
+  background: url('dropdown.png') no-repeat right 5px center;
   text-overflow: "";
   width: auto;
   text-indent: 0.01px;
-  background-position: center right;
-  padding: 1px;
+  padding: 5px 15px 5px 1px;
 }
 @media screen and (-webkit-min-device-pixel-ratio:0) {
-  select {padding-right: 10px;}
+  select {
+    padding: 4px 15px 4px 1px;
+  }
 }
-#dicHistory {
-  width: 22px;
-  height: 22px;
+
+
+#history-select {
+  width: 26px !important;
+  height: 26px;
   border: 1px solid #DEB887;
   text-indent: 20px;
-  padding: 2px;
   background-position: center center;
 }
 input {
@@ -55,13 +56,17 @@ input {
   background-color: white;
   font-size: 16px; 
   width: 174px;
+  height: 22px;
   line-height: 22px;
 }
-#question-input {}
+#question-input {
+}
 #question-input[type="corrected"] {
   font-size: 85%;
 }
-#answer-input {}
+#answer-input {
+  width: 100%;
+}
 #answer-input[type="no-language"] {
   color: red;
 }
@@ -86,10 +91,7 @@ input {
 button {
   border: 1px solid #DEB887;
   font-size: 12px;
-  height: 24px;
-  line-height: 24px;
+  height: 26px;
+  line-height: 26px;
   text-align: center;
 }
-
-
-

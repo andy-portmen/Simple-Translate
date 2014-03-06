@@ -6,5 +6,34 @@
   "author": "Andy Portmen",
   "license": "MPL 2.0",
   "version": "0.1.5",
-  "main": "common"
+  "main": "common",
+  
+  "preferences": [{
+    "name": "isTextSelection",
+    "title": "Do translation when text is selected by mouse while Alt key is hold:",
+    "description": "",
+    "type": "bool",
+    "value": false
+  },
+  {
+    "name": "isDblclick",
+    "title": "Do translation when selecting text by mouse double-clicking:",
+    "description": "",
+    "type": "bool",
+    "value": true
+  },
+  {
+    "name": "enableHistory",
+    "title": "Enable History:",
+    "description": "save words and definitions to history",
+    "type": "bool",
+    "value": true
+  },
+  {
+    "name": "numberHistoryItems",
+    "title": "Number of Items saved in History:",
+    "description": "",
+    "type": "integer",
+    "value": 100
+  }]
 }

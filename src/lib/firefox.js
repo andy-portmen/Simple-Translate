@@ -28,7 +28,8 @@ var workers = [], content_script_arr = [];
 pageMod.PageMod({
   include: ["*"],
   contentScriptFile: data.url("./content_script/inject.js"),
-  contentStyleFile : data.url("./content_script/inject.css"),
+  contentStyleFile: data.url("./content_script/inject.css"),
+  contentScriptWhen: 'ready',
   onAttach: function(worker) {
     workers.push(worker);
     content_script_arr.forEach(function (arr) {
@@ -38,18 +39,27 @@ pageMod.PageMod({
 });
 
 var popup = require("sdk/panel").Panel({
-  width: 318,
-  height: 205,
+  width: 317,
+  height: 225,
   contentURL: data.url("./popup/popup.html"),
   contentScriptFile: [data.url("./popup/popup.js")]
 });
 
 exports.storage = {
   read: function (id) {
-    return prefs[id] || null;
+    return (prefs[id] + "") || null;
   },
   write: function (id, data) {
-    prefs[id] = data + "";
+    data = data + "";
+    if (data === "true" || data === "false") {
+      prefs[id] = data === "true" ? true : false;
+    }
+    else if (parseInt(data) === data) {
+      prefs[id] = parseInt(data);
+    }
+    else {
+      prefs[id] = data + "";
+    }
   }
 }
 

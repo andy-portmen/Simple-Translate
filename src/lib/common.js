@@ -152,19 +152,3 @@ if (!storage.read("enableHistory")) {
 if (!storage.read("numberHistoryItems")) {
   storage.write("numberHistoryItems", "100");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
