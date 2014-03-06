@@ -1,56 +1,45 @@
-@font-face {
-  font-family: 'Cambo';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Cambo'), local('Cambo-Regular'), url(Hpv6vCTojizn0Qwl_Bb2SQ.woff) format('woff');
-}
-
 body {
-  margin: 15px;
+  font-family: arial, verdana, sans-serif;
+  margin: 2px 5px 2px 5px;
   width: 287px;
-  background: white;
+  background: rgba(209, 72, 54, 0.00);
   overflow: hidden;
 }
-#title { 
-  font-family: 'Cambo', sans-serif;
-  font-weight: 100;
-  font-size: 30px;
-  color: #2F2626;
-  background-color: rgba(221, 209, 195, 0.5);
-  padding: 5px;
-}
-#title img {
+#popupLogo {
   cursor: pointer;
   vertical-align: middle;
-  margin-left: 7px;
+  margin-left: 60px;
 }
 select {
-  border: 1px solid #DEB887;
+  font-family: arial, verdana, sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid rgba(209, 72, 54, 0.15);
   -webkit-appearance: none;  
   -moz-appearance: none;
   background: url('dropdown.png') no-repeat right 5px center;
   text-overflow: "";
   width: auto;
   text-indent: 0.01px;
-  padding: 5px 15px 5px 1px;
+  padding: 6px 15px 4px 1px;
+  color: #797979;
 }
 @media screen and (-webkit-min-device-pixel-ratio:0) {
   select {
-    padding: 4px 15px 4px 1px;
+    padding: 6px 15px 4px 1px;
   }
 }
-
 
 #history-select {
   width: 26px !important;
   height: 26px;
-  border: 1px solid #DEB887;
+  border: 1px solid rgba(209, 72, 54, 0.2);
   text-indent: 20px;
   background-position: center center;
 }
 input {
   font-family: arial, verdana, sans-serif;
-  border: 1px solid #DEB887;
+  border: 1px solid #d14836;
   text-align: center; 
   color: black;
   background-color: white;
@@ -60,15 +49,23 @@ input {
   line-height: 22px;
 }
 #question-input {
+  font-family: arial, verdana, sans-serif;
 }
 #question-input[type="corrected"] {
-  font-size: 85%;
+  font-size: 90%;
 }
 #answer-input {
+  font-family: arial, verdana, sans-serif;
+  font-size: 20px; 
   width: 100%;
+  height: 28px;
+  line-height: 28px;
 }
 #answer-input[type="no-language"] {
-  color: red;
+  color: rgba(209, 72, 54, 1);
+}
+#answer-input[type="looking-for-alternates"] {
+  font-size: 90%;
 }
 .label {
   font-family: arial, verdana, sans-serif;
@@ -76,22 +73,19 @@ input {
   text-align: left;
   margin-top: 20px;
   background-color: transparent;
-  font-size: 12px;
+  font-size: 14px;
+  color: #797979;
 }
 #inputLanguage,#targetLanguage {
   margin-top: 15px;
 }
-#answerField {
-  font-size: 22px;
-  width: 100%;
-}
-#questionField {
-  font-size: 16px;
-}
 button {
-  border: 1px solid #DEB887;
-  font-size: 12px;
+  font-family: arial, verdana, sans-serif;
+  border: 1px solid rgba(209, 72, 54, 0.2);
+  font-size: 14px;
+  font-weight: normal;
   height: 26px;
   line-height: 26px;
   text-align: center;
+  color: #797979;
 }

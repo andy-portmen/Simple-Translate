@@ -1,5 +1,8 @@
+/** version 4 **/
+
 // Load Firefox based resources
-var data          = require("sdk/self").data,
+var self          = require("sdk/self"),
+    data          = self.data,
     sp            = require("sdk/simple-prefs"),
     Request       = require("sdk/request").Request,
     prefs         = sp.prefs,
@@ -8,14 +11,14 @@ var data          = require("sdk/self").data,
     {Cc, Ci, Cu}  = require('chrome');
     
 Cu.import("resource://gre/modules/Promise.jsm");
-    
+ 
 // Load overlay styles
 require("./userstyles").load(data.url("overlay.css"));
 //Install toolbar button
 var button = require("./toolbarbutton").ToolbarButton({
-  id: "simple-translate",
-  label: "Simple Translate",
-  tooltiptext: "Simple Translate",
+  id: "igshortcuts",
+  label: "Google Shortcuts",
+  tooltiptext: "Shortcuts of Google Products",
   onCommand: function () {
     popup.show(button.object);
   },
@@ -28,8 +31,7 @@ var workers = [], content_script_arr = [];
 pageMod.PageMod({
   include: ["*"],
   contentScriptFile: data.url("./content_script/inject.js"),
-  contentStyleFile: data.url("./content_script/inject.css"),
-  contentScriptWhen: 'ready',
+  contentStyleFile : data.url("./content_script/inject.css"),
   onAttach: function(worker) {
     workers.push(worker);
     content_script_arr.forEach(function (arr) {
@@ -39,8 +41,8 @@ pageMod.PageMod({
 });
 
 var popup = require("sdk/panel").Panel({
-  width: 317,
-  height: 225,
+  width: 260,
+  height: 302,
   contentURL: data.url("./popup/popup.html"),
   contentScriptFile: [data.url("./popup/popup.js")]
 });
@@ -94,6 +96,16 @@ exports.content_script = {
   receive: function (id, callback) {
     content_script_arr.push([id, callback]);
   }
+}
+
+exports.tab = {
+  open: function (url) {
+    tabs.open(url);
+  }
+}
+
+exports.version = function () {
+  return self.version;
 }
 
 exports.window = require('sdk/window/utils').getMostRecentBrowserWindow();

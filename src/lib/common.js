@@ -1,4 +1,4 @@
-var storage, get, popup, window, Deferred, content_script;
+var storage, get, popup, window, Deferred, content_script, tab, version;
 
 /*
 Storage Items:
@@ -19,6 +19,8 @@ if (typeof require !== 'undefined') {
   popup = firefox.popup;
   window = firefox.window;
   content_script = firefox.content_script;
+  tab = firefox.tab;
+  version = firefox.version;
   Deferred = firefox.Promise.defer;
 }
 else {
@@ -26,9 +28,16 @@ else {
   get = _chrome.get;
   popup = _chrome.popup;
   content_script = _chrome.content_script;
+  tab = _chrome.tab;
+  version = _chrome.version;
   Deferred = task.Deferred;
 }
 /********/
+if (storage.read("version") != version()) {
+  storage.write("version", version());
+  tab.open("http://add0n.com/simple-translate-chrome.html");
+}
+
 function readHistory() {
   var lStorage = storage.read("history") || "[]";
   lStorage_obj = JSON.parse(lStorage); // lStorage to Hash Array
@@ -118,7 +127,9 @@ popup.receive("initialization-request", function () {
   });
   popup.send("history-update", JSON.parse(storage.read("history") || "[]"));
 });
-
+popup.receive("open-options-page", function () {
+  tab.open("./data/options/options.html");
+});
 // Message Passing Between Background and Content Script
 content_script.receive("translation-request", function (word) {
   getTranslation(word).then(function (definition) {

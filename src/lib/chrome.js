@@ -1,3 +1,5 @@
+/** version 4 **/
+
 var _chrome = {
   storage: {
     read: function (id) {
@@ -51,5 +53,13 @@ var _chrome = {
         }
       });
     }
+  },
+  tab: {
+    open: function (url) {
+      chrome.tabs.create({url: url});
+    }
+  },
+  version: function () {
+    return chrome[chrome.runtime && chrome.runtime.getManifest ? "runtime" : "extension"].getManifest().version;
   }
 }

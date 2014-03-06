@@ -26,6 +26,10 @@ function $ (id) {
   return document.getElementById(id);
 }
 
+$('popupLogo').addEventListener('click', function () {
+    background.send("open-options-page", '');
+});
+
 function onClick() {
   var word = $("question-input").value;
   if (!word) return;
@@ -53,12 +57,13 @@ background.receive("translation-response", function (obj) {
   if (obj.word.toLowerCase() == obj.definition.toLowerCase()) {
     background.send("correction-request", obj.word);
     $("question-input").setAttribute("type", "corrected");
-    $("answer-input").removeAttribute("type");
+    $("answer-input").setAttribute("type", "looking-for-alternates");
     $("answer-input").value = "Looking for alternative spelling.";
   }
   else {
     $("question-input").removeAttribute("type");
     $("question-input").value = obj.word;
+    $("question-input").select();
     $("answer-input").removeAttribute("type");
     $("answer-input").value = obj.definition;
   }
