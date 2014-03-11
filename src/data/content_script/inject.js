@@ -60,14 +60,22 @@ document.addEventListener('mousedown', function (e) {
   bubbleDOM.style.visibility = 'hidden';
 }, false);
 
-function requestBubbleTranslation(mouseX, mouseY, selected_text) {
+function requestBubbleTranslation(mouseX, mouseY, selectedText) {
   bubbleDOM.style.top = (mouseY + 16) + 'px';
   bubbleDOM.style.left = mouseX + 'px';
   bubbleDOM.style.visibility = 'visible';
   bubbleDOM.textContent = '...';
-  background.send("translation-request", selected_text);
+  background.send("translation-request", selectedText);
 }
 
 background.receive("translation-response", function (data) {
   bubbleDOM.textContent = data.definition;
 });
+
+// Filter out iFrame window
+if (window.frameElement === null) {
+  background.receive("context-menu-request", function () {
+    var selectedText = window.getSelection().toString();
+    background.send("context-menu-response", selectedText);
+  });
+}

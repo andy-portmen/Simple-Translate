@@ -9,6 +9,7 @@ var self          = require("sdk/self"),
     pageMod       = require("sdk/page-mod"),
     tabs          = require("sdk/tabs"),
     windowUtils   = require('sdk/window/utils'),
+    contextMenu   = require("sdk/context-menu"),
     {Cc, Ci, Cu}  = require('chrome');
     
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -53,7 +54,7 @@ popup.on('show', function() {
 
 exports.storage = {
   read: function (id) {
-    return prefs[id] ? prefs[id] : null;
+    return (prefs[id] || prefs[id] + "" == "false") ? (prefs[id] + "") : null;
   },
   write: function (id, data) {
     data = data + "";
@@ -110,6 +111,20 @@ exports.tab = {
     windowUtils.getMostRecentBrowserWindow().BrowserOpenAddonsMgr(
       "addons://detail/" + encodeURIComponent(self.id)
     );
+  }
+}
+
+exports.contextMenu = {
+  create: function (title, callback) {
+    var menuItem = contextMenu.Item({
+      label: title,
+      image: data.url('./icon16.png'),
+      context: contextMenu.SelectionContext(),
+      contentScript: 'self.on("click", function () {self.postMessage();});',
+      onMessage: function () {
+        callback();
+      }
+    });
   }
 }
 

@@ -62,6 +62,17 @@ var _chrome = {
       chrome.tabs.create({url: "./data/options/options.html"});
     }
   },
+  contextMenu: {
+    create: function (title, callback) {
+      chrome.contextMenus.create({
+        "title": title, 
+        "contexts": ["selection"], 
+        "onclick": function () {
+          callback();
+        }
+      });
+    }
+  },
   version: function () {
     return chrome[chrome.runtime && chrome.runtime.getManifest ? "runtime" : "extension"].getManifest().version;
   }

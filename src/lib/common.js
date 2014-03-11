@@ -1,4 +1,4 @@
-var storage, get, popup, window, Deferred, content_script, tab, version;
+var storage, get, popup, window, Deferred, content_script, tab, contextMenu, version;
 
 /*
 Storage Items:
@@ -20,6 +20,7 @@ if (typeof require !== 'undefined') {
   window = firefox.window;
   content_script = firefox.content_script;
   tab = firefox.tab;
+  contextMenu = firefox.contextMenu;
   version = firefox.version;
   Deferred = firefox.Promise.defer;
 }
@@ -29,6 +30,7 @@ else {
   popup = _chrome.popup;
   content_script = _chrome.content_script;
   tab = _chrome.tab;
+  contextMenu = _chrome.contextMenu;
   version = _chrome.version;
   Deferred = task.Deferred;
 }
@@ -167,6 +169,14 @@ content_script.receive("options-request", function () {
     isTextSelection: storage.read('isTextSelection') == "true",
     isDblclick: storage.read('isDblclick') == "true"
   });
+});
+
+contextMenu.create("Define in Google Translate", function () {
+  content_script.send("context-menu-request");
+});
+
+content_script.receive("context-menu-response", function (word) {
+  tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + word);
 });
 
 // Initialization

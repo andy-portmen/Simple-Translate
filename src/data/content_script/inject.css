@@ -7,7 +7,7 @@
     text-align: center;
     background: #FAEBD7;
     border: 1px solid #DEB887;
-    -webkit-border-radius: 3px;
+    border-radius: 3px;
     z-index: 1000;
 }
 
@@ -22,7 +22,7 @@
 .selection_bubble:after {
     border-width: 7px;
     border-bottom-color: #FAEBD7;
-    bottom: 99%;
+    bottom: 98%;
     left: 4px;
 }
 

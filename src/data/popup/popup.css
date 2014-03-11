@@ -4,7 +4,7 @@ body {
   color: #444;
   margin: 14px 13px 0 13px;
   background-color: #fff;
-  user-select: none;
+  -moz-user-select: none;
 }
 @media screen and (-webkit-min-device-pixel-ratio:0) {
   body {
