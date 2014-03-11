@@ -1,29 +1,30 @@
 body {
-  font-family: arial, verdana, sans-serif;
   width: 290px;
-  height: 153px;
   overflow: hidden;
   color: #444;
-  margin: 0;
-  padding: 0 10px;
+  margin: 14px 13px 0 13px;
+  background-color: #fff;
+  user-select: none;
+}
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  body {
+    margin: 10px;
+  }
 }
 select {
+  font-family: arial, verdana, sans-serif;
+  font-size: 13px; 
   -webkit-appearance: none;  
   -moz-appearance: none;
   cursor: pointer;
   border: 1px solid rgba(76, 142, 251, .5);
   background: url('dropdown.png') no-repeat right 5px center;
   text-overflow: "";
-  padding: 5px 15px 2px 1px;
+  padding: 4px 10px 4px 2px;
   border-radius: 2px;
   color: #444;
   text-align: middle;
   text-indent: 0.01px; /* remove Firefox arrow */
-}
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-  select {
-    padding: 5px 15px 2px 1px;
-  }
 }
 select:focus {
   outline: none;
@@ -43,11 +44,11 @@ input:focus {
   outline: none;
   border: 1px solid rgba(76, 142, 251, 1.0);
 }
-#language-div, #question-div, #answer-div, #toolbar-div {
+#question-div, #answer-div, #toolbar-div {
   margin: 5px 0 0 0;
 }
 #from-select, #to-select{ 
-  width: 120px;
+  width: 121px;
 }
 #fromto-span {
   background: #F3F3F3 url("fromto.png") no-repeat center center;
@@ -57,7 +58,7 @@ input:focus {
   -webkit-user-select: none;
   -moz-user-select: none;
   cursor: pointer;
-  padding: 4px 47px 3px 0px;
+  padding: 3px 47px 4px 0px;
   opacity: 0.5;
   -webkit-transition: 200ms all; 
   -moz-transition: 200ms all;
@@ -68,7 +69,7 @@ input:focus {
   -moz-transition: 0ms all;
 }
 #question-input {
-  width: 226px;
+  width: 228px;
 }
 #history-select {
   width: 10px !important;
@@ -90,16 +91,16 @@ input:focus {
   -webkit-user-select: none;
   -moz-user-select: none;
   cursor: pointer;
-  margin-left: 2px;
-  padding: 5px 20px 5px 10px;
+  margin-left: 6px;
+  padding: 5px 20px 4px 10px;
  -webkit-transition: 200ms all; 
   -moz-transition: 200ms all;
   opacity: 0.8;
 }
 @media screen and (-webkit-min-device-pixel-ratio:0) {
   #translate-span {
-    margin-left: -2px;
-    padding: 4px 15px 6px 15px;
+    margin-left: 2px;
+    padding: 4px 15px 5px 15px;
   }
 }
 #translate-span:hover {
@@ -108,8 +109,7 @@ input:focus {
   opacity: 1.0;
 }
 #answer-input {
-  font-size: 20px; 
-  width: 255px;
+  width: 257px;
   height: 28px;
   line-height: 28px;
 }
@@ -117,13 +117,15 @@ input:focus {
   color: rgba(221, 64, 42, 1);
 }
 #answer-input[type="looking-for-alternates"] {
-  font-size: 90%;
+
 }
 table {
   empty-cells: show;
+  border-spacing: 2px;
+  margin: -2px;
 }
 tr td {
-  width: 90px;
+  width: 91px;
   height: 28px;
   border: solid 1px rgba(76, 142, 251, 0.5);
   cursor: pointer;

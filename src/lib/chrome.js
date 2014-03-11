@@ -57,6 +57,9 @@ var _chrome = {
   tab: {
     open: function (url) {
       chrome.tabs.create({url: url});
+    },
+    openOptions: function () {
+      chrome.tabs.create({url: "./data/options/options.html"});
     }
   },
   version: function () {

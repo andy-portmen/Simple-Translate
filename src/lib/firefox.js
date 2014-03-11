@@ -1,4 +1,4 @@
-/** version 4 **/
+/** version 6 **/
 
 // Load Firefox based resources
 var self          = require("sdk/self"),
@@ -8,6 +8,7 @@ var self          = require("sdk/self"),
     prefs         = sp.prefs,
     pageMod       = require("sdk/page-mod"),
     tabs          = require("sdk/tabs"),
+    windowUtils   = require('sdk/window/utils'),
     {Cc, Ci, Cu}  = require('chrome');
     
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -41,15 +42,18 @@ pageMod.PageMod({
 });
 
 var popup = require("sdk/panel").Panel({
-  width: 260,
-  height: 302,
+  width: 316,
+  height: 163,
   contentURL: data.url("./popup/popup.html"),
   contentScriptFile: [data.url("./popup/popup.js")]
+});
+popup.on('show', function() {
+  popup.port.emit('show', true);
 });
 
 exports.storage = {
   read: function (id) {
-    return (prefs[id] + "") || null;
+    return prefs[id] ? prefs[id] : null;
   },
   write: function (id, data) {
     data = data + "";
@@ -101,6 +105,11 @@ exports.content_script = {
 exports.tab = {
   open: function (url) {
     tabs.open(url);
+  },
+  openOptions: function () {
+    windowUtils.getMostRecentBrowserWindow().BrowserOpenAddonsMgr(
+      "addons://detail/" + encodeURIComponent(self.id)
+    );
   }
 }
 
@@ -108,5 +117,5 @@ exports.version = function () {
   return self.version;
 }
 
-exports.window = require('sdk/window/utils').getMostRecentBrowserWindow();
+exports.window = windowUtils.getMostRecentBrowserWindow();
 exports.Promise = Promise;

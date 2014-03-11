@@ -11,6 +11,7 @@ if (typeof chrome !== 'undefined') {
       }
     });
   }
+  $("question-input").focus();
 }
 else {
   background.send = function (id, data) {
@@ -19,6 +20,9 @@ else {
   background.receive = function (id, callback) {
     self.port.on(id, callback);
   }
+  self.port.on("show", function () {
+    $("question-input").focus();
+  });
 }
 /********/
 
@@ -56,7 +60,6 @@ function onClick() {
   var toSelect = $("to-select");
   var value = toSelect.children[toSelect.selectedIndex].getAttribute("value");
   if (!value) {
-    $("answer-input").setAttribute("type", "no-language");
     $("answer-input").value = "Select Your Language!";
   }
   else {
@@ -67,7 +70,6 @@ function onClick() {
 }
 $("translate-span").addEventListener("click", onClick, false);
 $("question-input").addEventListener("keydown", function (e) {
-  $("question-input").removeAttribute("type");
   if (e.keyCode === 13) {
     onClick();
   }
@@ -77,23 +79,17 @@ $("question-input").addEventListener("keydown", function (e) {
 background.receive("translation-response", function (obj) {
   if (obj.word.toLowerCase() == obj.definition.toLowerCase()) {
     background.send("correction-request", obj.word);
-    $("question-input").setAttribute("type", "corrected");
-    $("answer-input").setAttribute("type", "looking-for-alternates");
     $("answer-input").value = "Looking for alternative spelling.";
   }
   else {
-    $("question-input").removeAttribute("type");
     $("question-input").value = obj.word;
     $("question-input").select();
-    $("answer-input").removeAttribute("type");
     $("answer-input").value = obj.definition;
   }
 });
 background.receive("correction-response", function (obj) {
-  $("question-input").setAttribute("type", "corrected");
   $("question-input").value = obj.word + " >> " + obj.correctedWord;
   $("question-input").select();
-  $("answer-input").removeAttribute("type");
   $("answer-input").value = obj.definition;
 });
 background.receive("history-update", function (obj) {
@@ -130,7 +126,6 @@ $('to-select').addEventListener("change", function (e) {
 }, false);
 
 // Initialization
-$("question-input").focus();
 background.send("initialization-request");
 background.receive("initialization-response", function (obj) {
   var fromSelect = $("from-select");

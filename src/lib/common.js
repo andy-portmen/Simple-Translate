@@ -145,7 +145,7 @@ popup.receive("open-page", function (obj) {
     tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
     break;
   case 'settings':
-    tab.open("./data/options/options.html");
+    tab.openOptions();
     break;
   case 'define':
     tab.open("https://www.google.com/search?q=define+" + obj.word);
