@@ -5,11 +5,10 @@ body {
   margin: 14px 13px 0 13px;
   background-color: #fff;
   -moz-user-select: none;
+  cursor: defualt;
 }
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-  body {
-    margin: 10px;
-  }
+.webkit body {
+  margin: 10px;
 }
 select {
   font-family: arial, verdana, sans-serif;
@@ -58,10 +57,16 @@ input:focus {
   -webkit-user-select: none;
   -moz-user-select: none;
   cursor: pointer;
-  padding: 3px 47px 4px 0px;
+  padding: 3px 47px 4px 0;
   opacity: 0.5;
   -webkit-transition: 200ms all; 
   -moz-transition: 200ms all;
+}
+.mac.gecko #fromto-span {
+  padding: 5px 47px 4px 0;
+}
+.mac.webkit #fromto-span {
+  padding: 2px 47px 3px 0;
 }
 #fromto-span:hover {
   opacity: 1.0;
@@ -97,11 +102,15 @@ input:focus {
   -moz-transition: 200ms all;
   opacity: 0.8;
 }
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-  #translate-span {
-    margin-left: 2px;
-    padding: 4px 15px 5px 15px;
-  }
+.mac.gecko #translate-span {
+  padding: 7px 20px 4px 10px;
+}
+.win.webkit #translate-span {
+  margin-left: 2px;
+  padding: 4px 15px 5px 15px;
+}
+.mac.webkit #translate-span {
+  padding: 5px 15px 5px 15px;
 }
 #translate-span:hover {
   -webkit-transition: 0ms all; 
@@ -117,7 +126,6 @@ input:focus {
   color: rgba(221, 64, 42, 1);
 }
 #answer-input[type="looking-for-alternates"] {
-
 }
 table {
   empty-cells: show;

@@ -18,9 +18,9 @@ Cu.import("resource://gre/modules/Promise.jsm");
 require("./userstyles").load(data.url("overlay.css"));
 //Install toolbar button
 var button = require("./toolbarbutton").ToolbarButton({
-  id: "igshortcuts",
-  label: "Google Shortcuts",
-  tooltiptext: "Shortcuts of Google Products",
+  id: "igtranslator",
+  label: "Google™ Translator",
+  tooltiptext: "Google™ Translator",
   onCommand: function () {
     popup.show(button.object);
   },

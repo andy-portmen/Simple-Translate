@@ -68,7 +68,15 @@ function onClick() {
   }
   $("question-input").select();
 }
+
+$("history-select").addEventListener("change", function (e) {
+  var target = e.target || e.originalTarget;
+  $('question-input').value = target.children[target.selectedIndex].getAttribute("value");
+  onClick();
+}, false);
+
 $("translate-span").addEventListener("click", onClick, false);
+
 $("question-input").addEventListener("keydown", function (e) {
   if (e.keyCode === 13) {
     onClick();
