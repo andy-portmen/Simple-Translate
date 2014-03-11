@@ -26,9 +26,29 @@ function $ (id) {
   return document.getElementById(id);
 }
 
-$('popupLogo').addEventListener('click', function () {
-    background.send("open-options-page", '');
-});
+$('fromto-span').addEventListener('click', function () {
+    background.send("toggle-request");
+}, false);
+
+$('home-td').addEventListener('click', function () {
+    background.send("open-page", {
+      page: 'home', 
+      word: $("question-input").value.split(">>")[0]
+    });
+}, false);
+
+$('settings-td').addEventListener('click', function () {
+    background.send("open-page", {
+     page: 'settings'
+   });
+}, false);
+
+$('define-td').addEventListener('click', function () {
+    background.send("open-page", {
+      page: 'define', 
+      word: $("question-input").value.split(">>")[0]
+    });
+}, false);
 
 function onClick() {
   var word = $("question-input").value;
@@ -37,14 +57,15 @@ function onClick() {
   var value = toSelect.children[toSelect.selectedIndex].getAttribute("value");
   if (!value) {
     $("answer-input").setAttribute("type", "no-language");
-    $("answer-input").value = "Select Your Language";
+    $("answer-input").value = "Select Your Language!";
   }
   else {
     background.send("translation-request", word);
+    $("answer-input").value = "...";
   }
   $("question-input").select();
 }
-$("translate-button").addEventListener("click", onClick, false);
+$("translate-span").addEventListener("click", onClick, false);
 $("question-input").addEventListener("keydown", function (e) {
   $("question-input").removeAttribute("type");
   if (e.keyCode === 13) {

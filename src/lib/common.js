@@ -120,6 +120,18 @@ popup.receive("change-from-select-request", function (from) {
 popup.receive("change-to-select-request", function (to) {
   storage.write("to", to);
 });
+popup.receive("toggle-request", function (to) {
+  var from = storage.read("to");
+  var to = storage.read("from");
+  from = (from == '' ? 'en' : from);
+  to = (to == 'auto' ? 'en' : to);
+  storage.write("from", from);
+  storage.write("to", to);
+  popup.send("initialization-response", {
+    from: storage.read("from"),
+    to: storage.read("to")
+  });
+});
 popup.receive("initialization-request", function () {
   popup.send("initialization-response", {
     from: storage.read("from"),
@@ -127,8 +139,18 @@ popup.receive("initialization-request", function () {
   });
   popup.send("history-update", JSON.parse(storage.read("history") || "[]"));
 });
-popup.receive("open-options-page", function () {
-  tab.open("./data/options/options.html");
+popup.receive("open-page", function (obj) {
+  switch (obj.page) {
+  case 'home':
+    tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
+    break;
+  case 'settings':
+    tab.open("./data/options/options.html");
+    break;
+  case 'define':
+    tab.open("https://www.google.com/search?q=define+" + obj.word);
+    break;
+  }
 });
 // Message Passing Between Background and Content Script
 content_script.receive("translation-request", function (word) {
