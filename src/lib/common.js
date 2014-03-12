@@ -37,7 +37,7 @@ else {
 /********/
 if (storage.read("version") != version()) {
   storage.write("version", version());
-  tab.open("http://add0n.com/simple-translate-chrome.html");
+  tab.open("http://add0n.com/google-translator.html");
 }
 
 function readHistory() {

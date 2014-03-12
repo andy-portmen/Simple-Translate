@@ -31,7 +31,7 @@ function loadOptions() {
         var historyList = document.getElementById('historyList');
         var dateSpan = document.createElement('span');
         var br = document.createElement('br');
-        dateSpan.innerHTML = ' (' + (i + 1) + ') ' + o[0] + ': ' + o[1];
+        dateSpan.textContent = ' (' + (i + 1) + ') ' + o[0] + ': ' + o[1];
         historyList.appendChild(dateSpan);
         historyList.appendChild(br);  
       }

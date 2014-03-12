@@ -3,7 +3,7 @@
   "version": "0.1.6",
   "manifest_version": 2,
   "short_name": "igtranslator",
-  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Chrome toolbar.",
+  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate.",
   "author": "Andy Portmen",
   "permissions": [
     "contextMenus",
