@@ -67,6 +67,7 @@ function onClick() {
     $("answer-input").value = "...";
   }
   $("question-input").select();
+  $("question-td").style.opacity = 1.0;
 }
 
 $("history-select").addEventListener("change", function (e) {
@@ -92,12 +93,14 @@ background.receive("translation-response", function (obj) {
   else {
     $("question-input").value = obj.word;
     $("question-input").select();
+    $("question-td").style.opacity = 1.0;
     $("answer-input").value = obj.definition;
   }
 });
 background.receive("correction-response", function (obj) {
   $("question-input").value = obj.word + " >> " + obj.correctedWord;
   $("question-input").select();
+  $("question-td").style.opacity = 1.0;
   $("answer-input").value = obj.definition;
 });
 background.receive("history-update", function (obj) {

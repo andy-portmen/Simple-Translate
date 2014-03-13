@@ -26,6 +26,9 @@ select {
 select:focus {
   outline: none;
 }
+.mac.webkit select {
+  padding-left: 7px;
+}
 input {
   font-family: arial, verdana, sans-serif;
   font-size: 16px; 
@@ -62,6 +65,12 @@ tr td:hover {
 #from-select, #to-select{ 
   width: 121px;
 }
+#from-td {
+  border-radius: 2px 0 0 2px;
+}
+#to-td {
+  border-radius: 0 2px 2px 0;
+}
 #fromto-td {
   width: 49px;
   border-left-width: 0;
@@ -95,9 +104,12 @@ tr td:hover {
 }
 #answer-input {
   width: 270px;
+  font-size: 18px; 
 }
 #answer-td {
-  opacity: 0.7;
+  border: solid 1px rgba(76, 142, 251, 0.7);
+  border-radius: 2px;
+  opacity: 1.0;
 }
 #shortcuts-table {
   border-spacing: 2px 0px;
@@ -106,13 +118,16 @@ tr td:hover {
 }
 #home-td {
   width: 95px; 
+  border-radius: 2px;
   background: #F3F3F3 url(home.png) no-repeat center center;
 }
 #settings-td {
   width: 95px; 
+  border-radius: 2px;
   background: #F3F3F3 url(settings.png) no-repeat center center;
 }
 #define-td {
   width: 95px; 
+  border-radius: 2px;
   background: #F3F3F3 url(define.png) no-repeat center center;
 }
