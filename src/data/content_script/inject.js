@@ -42,7 +42,7 @@ document.addEventListener('dblclick', function (e) {
   if (!isDblclick) return;
   var target = e.target || e.originalTarget;
   var selectedText = window.getSelection().toString();
-  if (target.localName == 'input' && target.getAttribute('type') == 'text') return;
+  if (target.localName == 'input'  || target.getAttribute('contenteditable') == 'true') return;
   if (selectedText.length > 2) {
     requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);
   }

@@ -30,7 +30,7 @@ function $ (id) {
   return document.getElementById(id);
 }
 
-$('fromto-span').addEventListener('click', function () {
+$('fromto-td').addEventListener('click', function () {
     background.send("toggle-request");
 }, false);
 
@@ -75,7 +75,7 @@ $("history-select").addEventListener("change", function (e) {
   onClick();
 }, false);
 
-$("translate-span").addEventListener("click", onClick, false);
+$("translate-td").addEventListener("click", onClick, false);
 
 $("question-input").addEventListener("keydown", function (e) {
   if (e.keyCode === 13) {
