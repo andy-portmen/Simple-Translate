@@ -11,7 +11,9 @@ if (typeof chrome !== 'undefined') {
       }
     });
   }
-  $("question-input").focus();
+  window.setTimeout(function () {
+    $("question-input").focus();
+  }, 100);
 }
 else {
   background.send = function (id, data) {
