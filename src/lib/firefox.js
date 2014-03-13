@@ -42,10 +42,9 @@ pageMod.PageMod({
   }
 });
 
-var os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 var popup = require("sdk/panel").Panel({
-  width: os == "Darwin" ? 330 : 316,
-  height: os == "Darwin" ? 173 : 163,
+  width: 328,
+  height: 172,
   contentURL: data.url("./popup/popup.html"),
   contentScriptFile: [data.url("./popup/popup.js")]
 });
