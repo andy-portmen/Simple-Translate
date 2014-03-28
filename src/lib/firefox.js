@@ -27,6 +27,13 @@ var button = require("./toolbarbutton").ToolbarButton({
   onClick: function () {
   }
 });
+if (self.loadReason == "install") {
+  button.moveTo({
+    toolbarID: "nav-bar", 
+    insertbefore: "home-button", 
+    forceMove: false
+  });
+}
 
 // Load overlay styles
 var workers = [], content_script_arr = [];

@@ -77,13 +77,6 @@ var Unloader = exports.Unloader = function Unloader() {
 
 const unload = (Unloader()).unload;
 
-
-
-
-
-
-
-
 exports.ToolbarButton = function ToolbarButton(options) {
   var unloaders = [],
       toolbarID = "",
@@ -95,43 +88,27 @@ exports.ToolbarButton = function ToolbarButton(options) {
     onTrack: function (window) {
       if ("chrome://browser/content/browser.xul" != window.location || destroyed)
         return;
+
       let doc = window.document;
-      let $ = function(id) doc.getElementById(id);
-      options.tooltiptext = options.tooltiptext || '';
+      function $(id) doc.getElementById(id);
+      function xul(type) doc.createElementNS(NS_XUL, type);
+
       // create toolbar button
-      let tbb = doc.createElementNS(NS_XUL, "toolbarbutton");
+      let tbb = xul("toolbarbutton");
       tbb.setAttribute("id", options.id);
-      tbb.setAttribute("value", "");
-      tbb.setAttribute("orient", "horizontal");
+      tbb.setAttribute("type", "button");
+      if (options.image) tbb.setAttribute("image", options.image);
       tbb.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
       tbb.setAttribute("label", options.label);
-      tbb.setAttribute("tooltiptext", options.tooltiptext);
-      tbb.addEventListener("command", function(e) {
-        if (e.ctrlKey) return;
-        if (e.originalTarget.localName == "menu" || e.originalTarget.localName == "menuitem") return;
-
+      tbb.addEventListener("command", function() {
         if (options.onCommand)
-          options.onCommand(e);
+          options.onCommand({}); // TODO: provide something?
 
         if (options.panel) {
           options.panel.show(tbb);
         }
       }, true);
-      if (options.onClick) {
-          tbb.addEventListener("click", options.onClick, true); 
-      }
-      if (options.onContext) {
-        let menupopup = doc.createElementNS(NS_XUL, "menupopup");
-        let menuitem = doc.createElementNS(NS_XUL, "menuitem");
-        let menuseparator = doc.createElementNS(NS_XUL, "menuseparator");
-        tbb.addEventListener("contextmenu", function (e) {
-          e.stopPropagation(); //Prevent Firefox context menu
-          e.preventDefault();
-          options.onContext(e, menupopup, menuitem, menuseparator);
-          menupopup.openPopup(tbb , "after_end", 0, 0, false);
-        }, true);
-        tbb.appendChild(menupopup);
-      }
+
       // add toolbarbutton to palette
       ($("navigator-toolbox") || $("mail-toolbox")).palette.appendChild(tbb);
 
@@ -168,9 +145,6 @@ exports.ToolbarButton = function ToolbarButton(options) {
 
         tb.insertItem(options.id, b4, null, false);
       }
-      
-      if (setBadge.value) setBadge ({value: setBadge.value});
-      if (setType.value) setType({value: setType.value});
 
       var saveTBNodeInfo = function(e) {
         toolbarID = tbb.parentNode.getAttribute("id") || "";
@@ -193,28 +167,8 @@ exports.ToolbarButton = function ToolbarButton(options) {
     },
     onUntrack: function (window) {}
   };
-  var tracker = winUtils.WindowTracker(delegate);
-
-  function setType(aOptions) {
-    setType.value = aOptions.value;
-  
-    getToolbarButtons(function(tbb) {
-      tbb.setAttribute("type", aOptions.value);
-    }, options.id);
-    return aOptions.value;
-  }
-  function setBadge (aOptions) {
-    setBadge.value = aOptions.value;
-  
-    getToolbarButtons(function(tbb) {
-      if ((aOptions.value + "").length > 4) {
-        aOptions.value = "9999"
-      }
-      tbb.setAttribute("value", aOptions.value ? aOptions.value : "");
-      tbb.setAttribute("length", aOptions.value ? (aOptions.value + "").length : 0);
-    }, options.id);
-    return aOptions.value;
-  }
+  var winUtils = require("sdk/deprecated/window-utils");
+  var tracker = new winUtils.WindowTracker(delegate);
 
   return {
     destroy: function() {
@@ -241,7 +195,7 @@ exports.ToolbarButton = function ToolbarButton(options) {
 
       // change the current position for open windows
       for each (var window in winUtils.windowIterator()) {
-        if (browserURL != window.location) return;
+        if ("chrome://browser/content/browser.xul" != window.location) return;
 
         let doc = window.document;
         let $ = function (id) doc.getElementById(id);
@@ -254,29 +208,23 @@ exports.ToolbarButton = function ToolbarButton(options) {
 
         // TODO: if b4 dne, but insertbefore is in currentset, then find toolbar to right
 
-        if (tb) {
-          tb.insertItem(options.id, b4, null, false);
-          tb.setAttribute("currentset", tb.currentSet); 
-          doc.persist(tb.id, "currentset");
-        }
+        if (tb) tb.insertItem(options.id, b4, null, false);
       };
     },
-    get label() options.label,
-    set label(value) {
-      options.label = value;
-      getToolbarButtons(function(tbb) {
-        tbb.label = value;
-      }, options.id);
-      return value;
-    },
-    set type(value) setType({value: value}),
-    set badge(value) setBadge({value: value}),
-    get tooltiptext() options.tooltiptext,
-    set tooltiptext(value) {
-      options.tooltiptext = value;
-      getToolbarButtons(function(tbb) {
-        tbb.setAttribute('tooltiptext', value);
-      }, options.id);
+    updateAttributes: function(attributes) {
+      var allowedAttributes = ["image", "label"];
+
+      for (var window in winUtils.windowIterator()) {
+        var tb = window.document.getElementById(options.id);
+
+        if (tb) {
+          for (var attr in attributes) {
+            if (allowedAttributes.indexOf(attr) >= 0) {
+              tb.setAttribute(attr, attributes[attr]);
+            }
+          }
+        }
+      }
     },
     get object () {
       return winUtils.activeBrowserWindow.document.getElementById(options.id);
@@ -284,22 +232,11 @@ exports.ToolbarButton = function ToolbarButton(options) {
   };
 };
 
-function getToolbarButtons(callback, id) {
-  let buttons = [];
-  for each (var window in winUtils.windowIterator()) {
-    if (browserURL != window.location) continue;
-    let tbb = window.document.getElementById(id);
-    if (tbb) buttons.push(tbb);
-  }
-  if (callback) buttons.forEach(callback);
-  return buttons;
-}
-
 function toolbarbuttonExists(doc, id) {
   var toolbars = doc.getElementsByTagNameNS(NS_XUL, "toolbar");
   for (var i = toolbars.length - 1; ~i; i--) {
     if ((new RegExp("(?:^|,)" + id + "(?:,|$)")).test(toolbars[i].getAttribute("currentset")))
       return toolbars[i];
   }
-  return doc.getElementById("nav-bar");
+  return false;
 }
