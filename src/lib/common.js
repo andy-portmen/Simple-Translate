@@ -37,7 +37,7 @@ else {
 /********/
 if (storage.read("version") != version()) {
   storage.write("version", version());
-  tab.open("http://add0n.com/google-translator.html");
+  tab.open("http://add0n.com/google-translator.html?version=" + version());
 }
 
 function readHistory() {
@@ -145,7 +145,7 @@ popup.receive("open-page", function (obj) {
     tab.openOptions();
     break;
   case 'define':
-    tab.open("https://www.google.com/search?q=define+" + obj.word);
+    tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
     break;
   }
 });
