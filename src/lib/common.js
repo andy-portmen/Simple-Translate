@@ -2,13 +2,13 @@ var storage, get, popup, window, Deferred, content_script, tab, contextMenu, ver
 
 /*
 Storage Items:
-    "history"
-    "from"
-    "to"
-    "isTextSelection"
-    "isDblclick"
-    "enableHistory"
-    "numberHistoryItems"
+  "history"
+  "from"
+  "to"
+  "isTextSelection"
+  "isDblclick"
+  "enableHistory"
+  "numberHistoryItems"
 */
 
 /********/
@@ -68,51 +68,48 @@ function clearHistory() {
   storage.write("history", "[]");
 }
 
-// Word Correction Using Google API
-function wordCorrection(word) {
+var autoDetectedLang = 'en';
+function getTranslation(word) {
+  var definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '';
+  var url = 'http://translate.google.com/translate_a/t?client=p&sl=' + storage.read("from") + '&tl=' + storage.read("to") + 
+  '&hl=en&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&prev=btn&ssel=0&tsel=0&q=' + encodeURIComponent(word);
   var d = new Deferred();
-  get("http://suggestqueries.google.com/complete/search?client=chrome&q=" +  word).then(function (txt) {
-    var correctedWord = '';
-    try {
-      correctedWord = JSON.parse(txt)[1][0];
-    } catch (e) {}
-    d.resolve(correctedWord);
-  });
-  return d.promise;
-}
-
-function getTranslation (word) {
-  var d = new Deferred();
-  get("http://translate.google.com/m?hl=en&sl=" + storage.read("from") + "&tl=" + storage.read("to") + "&ie=UTF-8&prev=_m&q=" + word).then(function (txt) {
-    var dom = (new window.DOMParser()).parseFromString(txt, "text/html");
-    var definition = "";
-    try {
-      definition = dom.getElementsByClassName("t0")[0].textContent;
+  get(url).then(function (txt) {
+    var obj = [];
+    try {obj = JSON.parse(txt);} catch(e) {}
+    if (!obj.spell || obj.dict) { // if the word is correct (obj.spell) does not exist
+      wordIsCorrect = true;
+      definition = obj.sentences.reduce(function(p,c){return p + c.trans}, "");
+      saveToHistory({
+        word: word,
+        definition: definition
+      });
+    } else {correctedWord = obj.spell.spell_res;}
+    if (obj.dict) {detailDefinition = obj.dict;}
+    if (obj.src)  {sourceLang = obj.src; autoDetectedLang = sourceLang;}   
+    var return_obj = {
+      word: word, 
+      definition: definition,
+      sourceLang: sourceLang,
+      detailDefinition: detailDefinition,
+      wordIsCorrect: wordIsCorrect,
+      correctedWord: correctedWord
     }
-    catch (e) {}
-    saveToHistory({
-      word: word,
-      definition: definition
-    });
-    d.resolve(definition);
+    d.resolve(return_obj);
   });
   return d.promise;
 }
 
 // Message Passing Between Background and Popup
 popup.receive("translation-request", function (word) {
-  getTranslation(word).then(function (definition) {
-    popup.send("translation-response", {word: word, definition: definition});
-  });
-});
-popup.receive("correction-request", function (word) {
-  wordCorrection(word).then(function (correctedWord) {
-    getTranslation(correctedWord).then(function (definition) {
-      popup.send("correction-response", {
-        word: word, 
-        correctedWord: correctedWord, 
-        definition: definition
-      });
+  getTranslation(word).then(function (obj) {
+    popup.send("translation-response", {
+      word: obj.word, 
+      definition: obj.definition,
+      sourceLang: obj.sourceLang,
+      detailDefinition: obj.detailDefinition,
+      wordIsCorrect: obj.wordIsCorrect,
+      correctedWord: obj.correctedWord
     });
   });
 });
@@ -122,11 +119,11 @@ popup.receive("change-from-select-request", function (from) {
 popup.receive("change-to-select-request", function (to) {
   storage.write("to", to);
 });
-popup.receive("toggle-request", function (to) {
+popup.receive("toggle-request", function () {
   var from = storage.read("to");
   var to = storage.read("from");
   from = (from == '' ? 'en' : from);
-  to = (to == 'auto' ? 'en' : to);
+  to = (to == 'auto' ? autoDetectedLang : to);
   storage.write("from", from);
   storage.write("to", to);
   popup.send("initialization-response", {
@@ -143,9 +140,6 @@ popup.receive("initialization-request", function () {
 });
 popup.receive("open-page", function (obj) {
   switch (obj.page) {
-  case 'home':
-    tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
-    break;
   case 'settings':
     tab.openOptions();
     break;
@@ -156,10 +150,11 @@ popup.receive("open-page", function (obj) {
 });
 // Message Passing Between Background and Content Script
 content_script.receive("translation-request", function (word) {
-  getTranslation(word).then(function (definition) {
+  getTranslation(word).then(function (obj) {
     content_script.send("translation-response", {
-      word: word, 
-      definition: definition
+      word: obj.word, 
+      definition: obj.definition,
+      detailDefinition: obj.detailDefinition
     });
   });
 });

@@ -32,13 +32,16 @@ function $ (id) {
   return document.getElementById(id);
 }
 
+$('tab-1').style.display = 'block';
+$('tab-2').style.display = 'none';
+
 $('fromto-td').addEventListener('click', function () {
     background.send("toggle-request");
 }, false);
 
-$('home-td').addEventListener('click', function () {
+$('open-define-td').addEventListener('click', function () {
     background.send("open-page", {
-      page: 'home', 
+      page: 'define', 
       word: $("question-input").value.split(">>")[0]
     });
 }, false);
@@ -49,24 +52,17 @@ $('settings-td').addEventListener('click', function () {
    });
 }, false);
 
-$('define-td').addEventListener('click', function () {
-    background.send("open-page", {
-      page: 'define', 
-      word: $("question-input").value.split(">>")[0]
-    });
-}, false);
-
 function onClick() {
+  $("answer-input").value = '';
+  $('get-more-definition-td').removeAttribute('state');
   var word = $("question-input").value;
   if (!word) return;
   var toSelect = $("to-select");
   var value = toSelect.children[toSelect.selectedIndex].getAttribute("value");
-  if (!value) {
-    $("answer-input").value = "Select Your Language!";
-  }
+  if (!value) {$("answer-input").value = "select your language!";}
   else {
     background.send("translation-request", word);
-    $("answer-input").value = "...";
+    $("answer-input").setAttribute('state', 'loading');
   }
   $("question-input").select();
   $("question-td").style.opacity = 1.0;
@@ -81,30 +77,71 @@ $("history-select").addEventListener("change", function (e) {
 $("translate-td").addEventListener("click", onClick, false);
 
 $("question-input").addEventListener("keydown", function (e) {
-  if (e.keyCode === 13) {
-    onClick();
+  if (e.keyCode === 13) {onClick();}
+}, false);
+
+$("get-more-definition-td").addEventListener("click", function (e) {
+  if ($("get-more-definition-td").getAttribute('state') == 'show') {
+    $('tab-1').style.display = 'none';
+    $('tab-2').style.display = 'block';
   }
 }, false);
 
+$("close-tab-td").addEventListener("click", function (e) {
+  $('tab-1').style.display = 'block';
+  $('tab-2').style.display = 'none';
+  $("question-input").select();
+}, false);
+
 // Message Passing Between Background and Popup
+var wrongWord = '';
 background.receive("translation-response", function (obj) {
-  if (obj.word.toLowerCase() == obj.definition.toLowerCase()) {
-    background.send("correction-request", obj.word);
-    $("answer-input").value = "Looking for alternative spelling.";
-  }
-  else {
-    $("question-input").value = obj.word;
+  $("answer-input").removeAttribute('state');
+  $('more-definition-div').innerHTML = "";
+  if (obj.wordIsCorrect) {
+    if (wrongWord) {$("question-input").value = wrongWord + " >> " + obj.word;}
+    else {$("question-input").value = obj.word;}
+    wrongWord = '';
     $("question-input").select();
     $("question-td").style.opacity = 1.0;
     $("answer-input").value = obj.definition;
+    if ($("from-select").children[$("from-select").selectedIndex].value == 'auto' && obj.sourceLang) {
+      $("from-select").children[$("from-select").selectedIndex].textContent = 'Auto (' + obj.sourceLang + ')';
+    }
+    if (obj.detailDefinition) {
+      var div = $('more-definition-div');
+      var detailDefinition = obj.detailDefinition; 
+      if (detailDefinition.length > 0) {
+        $('get-more-definition-td').setAttribute('state', 'show');
+        for (var i = 0; i < detailDefinition.length; i++) {
+          var span = document.createElement('span');
+          var br = document.createElement('br');
+          span.textContent = detailDefinition[i].pos + ': ';
+          span.style.fontWeight = 'bold';
+          div.appendChild(span);
+          div.appendChild(br);  
+          if (detailDefinition[i].entry) {
+            for (j = 0; j < detailDefinition[i].entry.length; j++) {
+              var span = document.createElement('span');
+              var br = document.createElement('br');
+              span.textContent = ' (' + (j + 1) + ') ' + detailDefinition[i].entry[j].word;
+              div.appendChild(span);
+              div.appendChild(br); 
+            }
+          }
+          var br = document.createElement('br');
+          div.appendChild(br); 
+        }
+      }
+    }
+  } else {
+    background.send("translation-request", obj.correctedWord);
+    $("answer-input").value = "spell check";
+    $("answer-input").setAttribute('state', 'loading');
+    wrongWord = obj.word;
   }
-});
-background.receive("correction-response", function (obj) {
-  $("question-input").value = obj.word + " >> " + obj.correctedWord;
-  $("question-input").select();
-  $("question-td").style.opacity = 1.0;
-  $("answer-input").value = obj.definition;
-});
+})
+;
 background.receive("history-update", function (obj) {
   var historySelect = $("history-select");
   while (historySelect.firstChild) { // Remove history from drop-down list

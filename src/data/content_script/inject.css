@@ -1,34 +1,54 @@
- .selection_bubble {
-    visibility: hidden;
-    position: absolute;
-    padding: 8px;
-    color: black;
-    font: bold 16px Arial;
-    text-align: center;
-    background: #FAEBD7;
-    border: 1px solid #DEB887;
-    border-radius: 3px;
-    z-index: 1000;
+.selection_bubble {
+  visibility: hidden;
+  position: absolute;
+  padding: 8px;
+  color: black;
+  font: 12px Arial;
+  text-align: left;
+  background: #FAEBD7;
+  border: 1px solid #DEB887;
+  border-radius: 3px;
+  white-space: pre-wrap;       /* CSS3     */   
+  white-space: -moz-pre-wrap;  /* Firefox  */    
+  white-space: -pre-wrap;      /* Opera <7 */   
+  white-space: -o-pre-wrap;    /* Opera 7  */    
+  word-wrap: break-word;       /* IE       */
+  z-index: 1000;
+  max-width: 350px;
+  min-width: 120px;
+  max-height: 200px;
 }
-
+.selection_bubble div {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 200px;
+}
 .selection_bubble:after, .selection_bubble:before {
-    content: "";
-    border: solid transparent;
-    height: 0;
-    width: 0;
-    position: absolute;
+  content: "";
+  border: solid transparent;
+  height: 0;
+  width: 0;
+  position: absolute;
 }
 
 .selection_bubble:after {
-    border-width: 7px;
-    border-bottom-color: #FAEBD7;
-    bottom: 98%;
-    left: 4px;
+  border-width: 7px;
+  border-bottom-color: #FAEBD7;
+  top: -14px;
+  left: 4px;
 }
 
 .selection_bubble:before {
-    border-width: 8px;
-    border-bottom-color: #DEB887;
-    bottom: 100%;
-    left: 3px;
+  border-width: 8px;
+  border-bottom-color: #DEB887;
+  top: -16px;
+  left: 3px;
+}
+
+.selection_bubble_line {
+  background-color: black;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  border: 0;
 }
