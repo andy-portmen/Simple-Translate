@@ -72,7 +72,8 @@ var autoDetectedLang = 'en';
 function getTranslation(word) {
   var definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '';
   var url = 'http://translate.google.com/translate_a/t?client=p&sl=' + storage.read("from") + '&tl=' + storage.read("to") + 
-  '&hl=en&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&prev=btn&ssel=0&tsel=0&q=' + encodeURIComponent(word);
+  '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + encodeURIComponent(word);
+  /* Note: (&oc=3&otf=2) is required for spell check */
   var d = new Deferred();
   get(url).then(function (txt) {
     var obj = [];
