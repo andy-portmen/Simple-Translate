@@ -68,9 +68,10 @@ function onClick() {
   $("question-td").style.opacity = 1.0;
 }
 
-$("history-select").addEventListener("change", function (e) {
+$("history-select").addEventListener("click", function (e) {
   var target = e.target || e.originalTarget;
-  $('question-input').value = target.children[target.selectedIndex].getAttribute("value");
+  if (target.localName != "option") return;
+  $('question-input').value = $("history-select").children[$("history-select").selectedIndex].getAttribute("value");
   onClick();
 }, false);
 

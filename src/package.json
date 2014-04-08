@@ -9,7 +9,7 @@
   "main": "common",
   "preferences": [{
     "name": "isTextSelection",
-    "title": "Do translation when text is selected by mouse while Alt key is hold:",
+    "title": "Do translation when text is selected by mouse while Alt or Insert key is hold:",
     "description": "",
     "type": "bool",
     "value": false

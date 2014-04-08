@@ -164,7 +164,7 @@ content_script.receive("options-request", function () {
   content_script.send("options-response", {
     isTextSelection: storage.read('isTextSelection') == "true",
     isDblclick: storage.read('isDblclick') == "true"
-  });
+  }, true); // true: send to all tabs
 });
 
 contextMenu.create("Define in Google Translate", function () {

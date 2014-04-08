@@ -98,9 +98,9 @@ exports.popup = {
 }
 
 exports.content_script = {
-  send: function (id, data) {
+  send: function (id, data, global) {
     workers.forEach(function (worker) {
-      if (worker.tab != tabs.activeTab) return;
+      if (!global && worker.tab != tabs.activeTab) return;
       if (!worker) return;
       worker.port.emit(id, data);
     });

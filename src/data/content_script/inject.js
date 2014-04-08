@@ -101,12 +101,20 @@ if (window.frameElement === null) {
     bubbleDOM.style.visibility = 'hidden';
     body.innerHTML = '';
   }, false);
+  var keyCode;
+  document.addEventListener('keydown', function (e) {
+    keyCode = e.keyCode;
+  }, false);
+  document.addEventListener('keyup', function (e) {
+    keyCode = null;
+  }, false);
   document.addEventListener('mouseup', function (e) {
-    if (!isTextSelection || !e.altKey) return;
+    if (!isTextSelection || !(e.altKey || keyCode == 45)) return;
     var selectedText = window.getSelection().toString();
     if (selectedText.length > 2) {
       requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);
     }
+    
   }, false);
   document.addEventListener('dblclick', function (e) {
     if (!isDblclick) return;
