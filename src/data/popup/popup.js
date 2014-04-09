@@ -158,9 +158,13 @@ background.receive("history-update", function (obj) {
     historySelect.appendChild(option);
   }
   addNewItem('', '', 0);
-  obj.reverse().forEach(function (o, i) { // Store 10 items in pop-up list
-    if (i > 9) {return;}
-    addNewItem(o[0], o[1], i + 1);
+  var count = 0;
+  obj.reverse().forEach(function (o, i) {
+    if (count > 9) {return;} // store 10 items in pop-up list
+    if ((o[0].length + o[1].length) < 50) { // do not include large sentences in short history list
+      addNewItem(o[0], o[1], count + 1);
+      count++;
+    }
   });
   if (!obj.length) { // If the list is empty
     var option = document.createElement("option");
