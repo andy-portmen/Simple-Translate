@@ -68,10 +68,9 @@ function onClick() {
   $("question-td").style.opacity = 1.0;
 }
 
-$("history-select").addEventListener("click", function (e) {
+$("history-select").addEventListener("change", function (e) {
   var target = e.target || e.originalTarget;
-  if (target.localName != "option") return;
-  $('question-input').value = $("history-select").children[$("history-select").selectedIndex].getAttribute("value");
+  $('question-input').value = target.children[target.selectedIndex].getAttribute("value");
   onClick();
 }, false);
 
@@ -148,16 +147,20 @@ background.receive("history-update", function (obj) {
   while (historySelect.firstChild) { // Remove history from drop-down list
     historySelect.removeChild(historySelect.firstChild);
   }
-  function addNewItem(word, definition) {
+  function addNewItem(word, definition, index) {
     var option = document.createElement("option");
     option.textContent = word + ": " + definition;
     option.setAttribute("value", word);
+    if (index == 0) {
+      option.textContent = "- Please Select -";
+      option.setAttribute("value", "");
+    }
     historySelect.appendChild(option);
   }
+  addNewItem('', '', 0);
   obj.reverse().forEach(function (o, i) { // Store 10 items in pop-up list
-    if (i < 10) {
-      addNewItem(o[0], o[1]);
-    }
+    if (i > 9) {return;}
+    addNewItem(o[0], o[1], i + 1);
   });
   if (!obj.length) { // If the list is empty
     var option = document.createElement("option");
