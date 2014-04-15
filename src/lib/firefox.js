@@ -45,7 +45,13 @@ pageMod.PageMod({
     workers.push(worker);
     content_script_arr.forEach(function (arr) {
       worker.port.on(arr[0], arr[1]);
-    })
+    });
+    worker.on('detach', function(){
+      var i = workers.indexOf(worker);
+      if (i != -1) {
+        workers.splice(i, 1);
+      }
+    });
   }
 });
 
