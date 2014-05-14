@@ -83,14 +83,15 @@ exports.storage = {
   }
 }
 
-exports.get = function (url) {
+exports.get = function (url, data) {
   var d = new Promise.defer();
   Request({
     url: url,
+    content: data,
     onComplete: function (response) {
       d.resolve(response.text);
     }
-  }).get();
+  })[data ? "post" : "get"]();
   return d.promise;
 }
 

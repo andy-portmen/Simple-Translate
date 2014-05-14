@@ -1,10 +1,17 @@
+.header_bubble {
+  height: 19px;
+  overflow: visible !important;
+  padding-top: 5px;
+}
+.header_bubble img {
+  margin: 0 5px;
+}
 .selection_bubble {
   visibility: hidden;
   position: absolute;
   padding: 8px;
   color: black;
-  font: 12px Arial;
-  text-align: left;
+  font: 13px Arial;
   background: #FAEBD7;
   border: 1px solid #DEB887;
   border-radius: 3px;
@@ -14,9 +21,8 @@
   white-space: -o-pre-wrap;    /* Opera 7  */    
   word-wrap: break-word;       /* IE       */
   z-index: 1000;
+  min-width: 105px;
   max-width: 350px;
-  min-width: 120px;
-  max-height: 200px;
 }
 .selection_bubble div {
   overflow-y: auto;
@@ -46,9 +52,9 @@
 }
 
 .selection_bubble_line {
-  background-color: black;
+  background-color: #DEB887;
   height: 1px;
+  margin: 4px 0;
   padding: 0;
-  margin: 0;
   border: 0;
 }

@@ -3,8 +3,9 @@ var readHistory = chrome.extension.getBackgroundPage().readHistory;
 var clearHistory = chrome.extension.getBackgroundPage().clearHistory;
 // ------------------------------------------------------------------
 
+// background.receive("loadOptions", loadOptions());
+
 function loadOptions() {
-  // Initialization
   var fromSelect = document.getElementById('from-select');
   for (var i = 0; i < fromSelect.children.length; i++) {
     if (fromSelect.children[i].getAttribute('value') == storage.read('from')) {
@@ -88,7 +89,7 @@ document.getElementsByName('CheckBox3')[0].addEventListener('change', function (
   loadOptions();
 }, false);
 document.getElementsByName('numberHistoryItems')[0].addEventListener('change', function (e) {
-  storage.write('numberHistoryItems', e.target.checked);
+  storage.write('numberHistoryItems', e.target.value);
   loadOptions();
 }, false);
 $(window).load(function() {

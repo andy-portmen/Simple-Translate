@@ -32,17 +32,19 @@ function $ (id) {
   return document.getElementById(id);
 }
 
-$('tab-1').style.display = 'block';
-$('tab-2').style.display = 'none';
-
 $('fromto-td').addEventListener('click', function () {
-    background.send("toggle-request");
+  var difinition = $("definition-div").getAttribute("definition");
+  if (difinition) {
+    $("question-input").value = difinition;
+    $("question-input").setAttribute("word", difinition);
+  }
+  background.send("toggle-request");
 }, false);
 
-$('open-define-td').addEventListener('click', function () {
+$('home-td').addEventListener('click', function () {
     background.send("open-page", {
       page: 'define', 
-      word: $("question-input").value.split(">>")[0]
+      word: $("question-input").getAttribute("word")
     });
 }, false);
 
@@ -53,106 +55,115 @@ $('settings-td').addEventListener('click', function () {
 }, false);
 
 function onClick() {
-  $("answer-input").value = '';
-  $('get-more-definition-td').removeAttribute('state');
-  var word = $("question-input").value;
+  $("definition-div").textContent = '';
+  var word = $("question-input").getAttribute("word");
   if (!word) return;
   var toSelect = $("to-select");
   var value = toSelect.children[toSelect.selectedIndex].getAttribute("value");
-  if (!value) {$("answer-input").value = "select your language!";}
+  if (!value) {
+    $("definition-div").textContent = "select your language!";
+  }
   else {
     background.send("translation-request", word);
-    $("answer-input").setAttribute('state', 'loading');
+    $("definition-div").setAttribute('state', 'loading');
   }
   $("question-input").select();
-  $("question-td").style.opacity = 1.0;
 }
 
 $("history-select").addEventListener("change", function (e) {
   var target = e.target || e.originalTarget;
-  $('question-input').value = target.children[target.selectedIndex].getAttribute("value");
+  var word = target.children[target.selectedIndex].getAttribute("value");
+  $('question-input').value = word;
+  $('question-input').setAttribute("word", word);
   onClick();
 }, false);
 
-$("translate-td").addEventListener("click", onClick, false);
-
-$("question-input").addEventListener("keydown", function (e) {
-  if (e.keyCode === 13) {onClick();}
-}, false);
-
-$("get-more-definition-td").addEventListener("click", function (e) {
-  if ($("get-more-definition-td").getAttribute('state') == 'show') {
-    $('tab-1').style.display = 'none';
-    $('tab-2').style.display = 'block';
-  }
-}, false);
-
-$("close-tab-td").addEventListener("click", function (e) {
-  $('tab-1').style.display = 'block';
-  $('tab-2').style.display = 'none';
-  $("question-input").select();
+$("question-input").addEventListener("change", function (e) {
+  $("question-input").setAttribute("word", $("question-input").value);
+  onClick();
 }, false);
 
 // Message Passing Between Background and Popup
 var wrongWord = '';
 background.receive("translation-response", function (obj) {
-  $("answer-input").removeAttribute('state');
-  $('more-definition-div').innerHTML = "";
+  function br () {
+    var br = document.createElement('br');
+    $("definition-div").appendChild(br); 
+  }
+  function span (style) {
+    var span = document.createElement('span');
+    if (style) {
+      span.setAttribute("style", style);
+    }
+    span.dir = "auto";
+    $("definition-div").appendChild(span);
+    return span;
+  }
+
+  $("definition-div").removeAttribute('state');
   if (obj.wordIsCorrect) {
-    if (wrongWord) {$("question-input").value = wrongWord + " >> " + obj.word;}
-    else {$("question-input").value = obj.word;}
+    $("question-input").setAttribute("word", obj.word);
+    
+    if (wrongWord) {
+      $("question-input").value = wrongWord + " >> " + obj.word;
+    }
+    else {
+      $("question-input").value = obj.word;
+    }
     wrongWord = '';
     $("question-input").select();
-    $("question-td").style.opacity = 1.0;
-    $("answer-input").value = obj.definition;
-    if ($("from-select").children[$("from-select").selectedIndex].value == 'auto' && obj.sourceLang) {
-      $("from-select").children[$("from-select").selectedIndex].textContent = 'Auto (' + obj.sourceLang + ')';
+    $("definition-div").innerHTML = "";
+    span("display: inline-block; width: 100%; padding-bottom: 6px; font-size: 16px;").textContent = obj.definition;
+    $("definition-div").setAttribute("definition", obj.definition);
+    
+    var fs = $("from-select").children[$("from-select").selectedIndex];
+    if (fs.value == 'auto' && obj.sourceLang) {
+      fs.textContent = 'Auto (' + obj.sourceLang + ')';
+      $("from-select").setAttribute("detected-language", obj.sourceLang);
+    }
+    if (obj.phrasebook) {
+      $("phrasebook-td").setAttribute("status", "saved");
+      $("phrasebook-td").setAttribute("title", "Saved");
+    }
+    else {
+      $("phrasebook-td").removeAttribute("status");
+      $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
     }
     if (obj.detailDefinition) {
-      var div = $('more-definition-div');
       var detailDefinition = obj.detailDefinition; 
       if (detailDefinition.length > 0) {
-        $('get-more-definition-td').setAttribute('state', 'show');
-        for (var i = 0; i < detailDefinition.length; i++) {
-          var span = document.createElement('span');
-          var br = document.createElement('br');
-          span.textContent = detailDefinition[i].pos + ': ';
-          span.style.fontWeight = 'bold';
-          div.appendChild(span);
-          div.appendChild(br);  
+        br();
+        for (var i = 0; i < detailDefinition.length; i++) { // titles
+          span("display: block; width: 100%; font-weight: bold;").textContent = detailDefinition[i].pos + ':';
+          br();  
           if (detailDefinition[i].entry) {
-            for (j = 0; j < detailDefinition[i].entry.length; j++) {
-              var span = document.createElement('span');
-              var br = document.createElement('br');
-              span.textContent = ' (' + (j + 1) + ') ' + detailDefinition[i].entry[j].word;
-              div.appendChild(span);
-              div.appendChild(br); 
+            for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
+              span("display: inline-block; width: 100%;").textContent = ' • ' + detailDefinition[i].entry[j].word;
+              br();
             }
           }
-          var br = document.createElement('br');
-          div.appendChild(br); 
         }
       }
     }
-  } else {
+  }
+  else {
     background.send("translation-request", obj.correctedWord);
-    $("answer-input").value = "spell check";
-    $("answer-input").setAttribute('state', 'loading');
+    $("definition-div").textContent = "check spelling";
+    $("definition-div").setAttribute('state', 'loading');
     wrongWord = obj.word;
   }
 })
 ;
 background.receive("history-update", function (obj) {
   var historySelect = $("history-select");
-  while (historySelect.firstChild) { // Remove history from drop-down list
-    historySelect.removeChild(historySelect.firstChild);
-  }
+  historySelect.innerHTML = "";
+  
   function addNewItem(word, definition, index) {
     var option = document.createElement("option");
     option.textContent = word + ": " + definition;
     option.setAttribute("value", word);
     if (index == 0) {
-      option.textContent = "- Please Select -";
+      option.textContent = "- please select -";
       option.setAttribute("value", "");
     }
     historySelect.appendChild(option);
@@ -175,14 +186,92 @@ background.receive("history-update", function (obj) {
 });
 
 $('from-select').addEventListener("change", function (e) {
-  var from = e.target.children[e.target.selectedIndex].value;
+  var target = e.target || e.originalTarget;
+  var from = target.children[target.selectedIndex].value;
   background.send("change-from-select-request", from);
+  checkVoice();
+  onClick();
 }, false);
 $('to-select').addEventListener("change", function (e) {
-  var to = e.target.children[e.target.selectedIndex].value;
+  var target = e.target || e.originalTarget;
+  var to = target.children[target.selectedIndex].value;
   background.send("change-to-select-request", to);
+  checkVoice();
+  onClick();
+}, false);
+$('voice-question-td').addEventListener("click", function(e) {
+  var target = e.target || e.originalTarget;
+  if (target.getAttribute("voice") == "false") return;
+
+  var word = $("question-input").getAttribute("word");
+  var lang = $('from-select').children[$('from-select').selectedIndex].value;
+  if (lang == 'auto') {
+    lang = $('from-select').getAttribute("detected-language");
+  }
+  playVoice(word, lang);
+}, false);
+$('voice-answer-td').addEventListener("click", function(e) {
+  var target = e.target || e.originalTarget;
+  if (target.getAttribute("voice") == "false") return;
+  
+  var word = $('definition-div').getAttribute("definition");
+  var lang = $('to-select').children[$('to-select').selectedIndex].value;
+  playVoice(word, lang);
 }, false);
 
+$('phrasebook-td').addEventListener("click", function(e) {
+  var target = e.target || e.originalTarget;
+  var word = $("question-input").getAttribute("word");
+  var definition = $("definition-div").getAttribute("definition");
+  if (!word || !definition) return;
+  if (!target.getAttribute("status")) {
+    background.send("add-to-phrasebook", {
+      question: word, 
+      answer: definition
+    });
+  }
+  else {
+    background.send("remove-from-phrasebook", {
+      question: word, 
+      answer: definition
+    });
+  }
+  target.setAttribute("status", "loading");
+}, false);
+
+function playVoice(word, lang) {
+  background.send("play-voice", {
+    word: word, 
+    lang: lang
+  });
+}
+
+function checkVoice() {
+  background.send("check-voice-request"); 
+}
+background.receive("check-voice-response", function (arr) {
+  var fromLang = $('from-select').children[$('from-select').selectedIndex].value;
+  if (fromLang == 'auto') {
+    fromLang = $('from-select').getAttribute("detected-language") || "en";
+  }
+  var toLang = $('to-select').children[$('to-select').selectedIndex].value;
+  
+  $("voice-question-td").setAttribute("voice", arr.indexOf(fromLang) == -1);
+  $("voice-answer-td").setAttribute("voice", arr.indexOf(toLang) == -1);
+});
+
+background.receive("saved-to-phrasebook", function () {
+  $("phrasebook-td").setAttribute("title", "Saved");
+  $("phrasebook-td").setAttribute("status", "saved");
+});
+background.receive("removed-from-phrasebook", function () {
+  $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
+  $("phrasebook-td").removeAttribute("status");
+});
+background.receive("failed-phrasebook", function (status) {
+  $("phrasebook-td").setAttribute("title", "Sign-in required");
+  $("phrasebook-td").setAttribute("status", status);
+});
 // Initialization
 background.send("initialization-request");
 background.receive("initialization-response", function (obj) {
@@ -200,4 +289,6 @@ background.receive("initialization-response", function (obj) {
       break;
     }
   }
+  checkVoice();
+  onClick();
 });

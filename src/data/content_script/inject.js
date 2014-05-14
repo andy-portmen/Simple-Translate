@@ -1,5 +1,5 @@
 /********/
-var background = {};
+var background = {}, manifest = {};
 if (navigator.userAgent.toLowerCase().indexOf('firefox') !== -1) {
   background.send = function (id, data) {
     self.port.emit(id, data);
@@ -7,6 +7,7 @@ if (navigator.userAgent.toLowerCase().indexOf('firefox') !== -1) {
   background.receive = function (id, callback) {
     self.port.on(id, callback);
   }
+  manifest.url = "resource://jid1-dgnIBwQga0SIBw/igtranslator/";
 }
 else {
   background.send = function (id, data) {
@@ -19,8 +20,11 @@ else {
       }
     });
   }
+  manifest.url = chrome.extension.getURL("./");
 }
 /********/
+var word, definition;
+
 // Filter-out iFrame window
 if (window.frameElement === null) {
   // make a bubble at start-up
@@ -29,9 +33,81 @@ if (window.frameElement === null) {
   var bubbleDOM = document.createElement('div');
   bubbleDOM.setAttribute('class', 'selection_bubble');
   bubbleDOM.setAttribute('id', 'bubble_container');
+  
+  var toolbarDiv = document.createElement('div');
+  toolbarDiv.setAttribute('class', 'header_bubble');
+  var bookmarks = document.createElement('img');
+  bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
+  bookmarks.addEventListener("click", function () {
+    if (!bookmarks.getAttribute("status")) {
+      background.send("add-to-phrasebook", {
+        question: word, 
+        answer: definition
+      });
+    }
+    else {
+      background.send("remove-from-phrasebook", {
+        question: word, 
+        answer: definition
+      });
+    }
+    bookmarks.src = manifest.url + "data/content_script/bookmarks-loading.gif";
+  }, false);
+  
+  background.receive("saved-to-phrasebook", function () {
+    bookmarks.setAttribute("title", "Saved");
+    bookmarks.setAttribute("status", "saved");
+    bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
+  });
+  background.receive("removed-from-phrasebook", function () {
+    bookmarks.setAttribute("title", "Save to Phrasebook");
+    bookmarks.removeAttribute("status");
+    bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
+  });  
+  background.receive("failed-phrasebook", function (status) {
+    bookmarks.setAttribute("title", "Sign-in required");
+    bookmarks.setAttribute("status", status);
+    bookmarks.src = manifest.url + "data/content_script/bookmarks" + (status ? "-saved" : "") + ".png";
+  });
+  
+  var voice = document.createElement('img');
+  voice.src = manifest.url + "data/content_script/voice.png";
+  voice.addEventListener("click", function () {
+    var isVoice = voice.getAttribute("isVoice") == "true";
+    if (!isVoice) return;
+    background.send("play-voice", {
+      word: definition
+    });
+  }, false);
+  
+  var settings = document.createElement('img');
+  settings.src = manifest.url + "data/content_script/settings.png";
+  settings.addEventListener("click", function () {
+    background.send("open-page", {
+     page: 'settings'
+   });
+  }, false);
+  
+  var home = document.createElement('img');
+  home.src = manifest.url + "data/content_script/home.png";
+  home.addEventListener("click", function (e) {
+    background.send("open-page", {
+      page: 'define', 
+      word: word
+    });
+  });
+
   var body = document.createElement('div');
-  document.body.appendChild(bubbleDOM);
   bubbleDOM.appendChild(body);
+  
+  toolbarDiv.appendChild(bookmarks);
+  toolbarDiv.appendChild(voice);
+  toolbarDiv.appendChild(home);
+  toolbarDiv.appendChild(settings);
+  bubbleDOM.appendChild(toolbarDiv);
+  
+
+  document.body.appendChild(bubbleDOM); 
   bubbleDOM.style.visibility = 'hidden';
 
   // Get options at start-up
@@ -45,49 +121,53 @@ if (window.frameElement === null) {
     bubbleDOM.style.top = (mouseY + 16) + 'px';
     bubbleDOM.style.left = mouseX + 'px';
     bubbleDOM.style.visibility = 'visible'; 
-    body.style.textAlign = 'center';
-    var span = document.createElement('span');
-    span.style.fontSize = '130%';
-    span.textContent = '...';
-    body.appendChild(span);
+    var img = document.createElement('img');
+    img.setAttribute("style", "margin-left: 40px;");
+    img.src = manifest.url + "data/content_script/loading.gif";
+    body.appendChild(img);
     background.send("translation-request", selectedText);
   }
 
   background.receive("translation-response", function (data) {
+    // Global
+    definition = data.definition;
+    word = data.word;
+    function span (style) {
+      var span = document.createElement('span');
+      if (style) {
+        span.setAttribute("style", style);
+      }
+      span.dir = "auto";
+      body.appendChild(span);
+      return span;
+    }
+
+    if (data.phrasebook) {
+      bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
+      bookmarks.setAttribute("status", "saved");
+    }
+    else {
+      bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
+      bookmarks.removeAttribute("status");
+    }
+    voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
+    voice.setAttribute("isVoice", data.isVoice);
+  
     body.innerHTML = '';
-    body.style.textAlign = 'auto';
-    var span = document.createElement('span');
-    span.style.fontSize = '130%';
-    span.textContent = data.definition || "not found";
-    body.appendChild(span);
+    span("font-size: 130%; display: block; width: 100%;").textContent = data.definition || "not found";
     if (data.detailDefinition) {
       var detailDefinition = data.detailDefinition; 
       if (detailDefinition.length > 0) {
         var hr = document.createElement('hr');
-        var br = document.createElement('br');
         hr.setAttribute('class', 'selection_bubble_line');
-        body.style.textAlign = 'left';
         body.appendChild(hr);
-        body.appendChild(br);
-        for (var i = 0; i < detailDefinition.length; i++) {
-          var span = document.createElement('span');
-          var br = document.createElement('br');
-          span.style.fontSize = '100%';
-          span.textContent = detailDefinition[i].pos + ': ';
-          span.style.fontWeight = 'bold';
-          body.appendChild(span);
-          body.appendChild(br);
+        for (var i = 0; i < detailDefinition.length; i++) { // title
+          span("display: block; width: 100%; font-weight: bold;").textContent = detailDefinition[i].pos + ': ';
           if (detailDefinition[i].entry) {
-            for (j = 0; j < detailDefinition[i].entry.length; j++) {
-              var span = document.createElement('span');
-              var br = document.createElement('br');
-              span.textContent = '(' + (j + 1) + ') ' + detailDefinition[i].entry[j].word;
-              body.appendChild(span);
-              body.appendChild(br);
+            for (j = 0; j < detailDefinition[i].entry.length; j++) { // entries
+              span("display: block; width: 100%;").textContent = ' • ' + detailDefinition[i].entry[j].word;
             }
           }
-          var br = document.createElement('br');
-          body.appendChild(br);
         }
       }
     }
@@ -98,6 +178,18 @@ if (window.frameElement === null) {
     background.send("context-menu-response", selectedText);
   });
   document.addEventListener('mousedown', function (e) {
+    var target = e.target || e.originalTarget;
+
+    if (target.getAttribute("id") == "bubble_container") {
+      return;
+    } 
+    else if (target.parentNode.getAttribute("id") == "bubble_container") {
+      return;
+    }
+    else if (target.parentNode.parentNode.getAttribute("id") == "bubble_container") {
+      return;
+    }
+
     bubbleDOM.style.visibility = 'hidden';
     body.innerHTML = '';
   }, false);
