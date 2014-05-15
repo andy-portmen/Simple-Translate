@@ -110,10 +110,9 @@ function insert () {
   toolbarDiv.appendChild(home);
   toolbarDiv.appendChild(settings);
   bubbleDOM.appendChild(toolbarDiv);
-  
 
   document.body.appendChild(bubbleDOM); 
-  bubbleDOM.style.visibility = 'hidden';
+  bubbleDOM.style.display = 'none';
 
   // Get options at start-up
   background.send("options-request", null);
@@ -125,7 +124,7 @@ function insert () {
   function requestBubbleTranslation(mouseX, mouseY, selectedText) {
     bubbleDOM.style.top = (mouseY + 16) + 'px';
     bubbleDOM.style.left = mouseX + 'px';
-    bubbleDOM.style.visibility = 'visible'; 
+    bubbleDOM.style.display = 'block'; 
     var img = document.createElement('img');
     img.setAttribute("style", "margin-left: 50px;");
     img.src = manifest.url + "data/content_script/loading.gif";
@@ -197,7 +196,7 @@ function insert () {
       target = target.parentNode;
     }
 
-    bubbleDOM.style.visibility = 'hidden';
+    bubbleDOM.style.display = 'none';
     body.innerHTML = '';
   }, false);
   var keyCode;

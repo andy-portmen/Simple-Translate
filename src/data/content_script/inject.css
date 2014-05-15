@@ -12,7 +12,7 @@
   opacity: 1.0;
 }
 .selection_bubble {
-  visibility: hidden;
+  display: none;
   position: absolute;
   padding: 8px;
   color: black;
