@@ -7,7 +7,7 @@ if (navigator.userAgent.toLowerCase().indexOf('firefox') !== -1) {
   background.receive = function (id, callback) {
     self.port.on(id, callback);
   }
-  manifest.url = "resource://jid1-dgnIBwQga0SIBw/igtranslator/";
+  manifest.url = "resource://jid1-dgnibwqga0sibw-at-jetpack/igtranslator/";
 }
 else {
   background.send = function (id, data) {
@@ -26,7 +26,7 @@ else {
 var word, definition;
 
 // Filter-out iFrame window
-if (window.frameElement === null) {
+function insert () {
   // make a bubble at start-up
   var isTextSelection = false;
   var isDblclick = false;
@@ -37,6 +37,8 @@ if (window.frameElement === null) {
   var toolbarDiv = document.createElement('div');
   toolbarDiv.setAttribute('class', 'header_bubble');
   var bookmarks = document.createElement('img');
+  bookmarks.setAttribute("title", "Save to Phrasebook");
+  bookmarks.setAttribute("style", "width: 16px;");
   bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
   bookmarks.addEventListener("click", function () {
     if (!bookmarks.getAttribute("status")) {
@@ -71,16 +73,18 @@ if (window.frameElement === null) {
   });
   
   var voice = document.createElement('img');
+  voice.setAttribute("title", "Listen");
   voice.src = manifest.url + "data/content_script/voice.png";
   voice.addEventListener("click", function () {
     var isVoice = voice.getAttribute("isVoice") == "true";
     if (!isVoice) return;
     background.send("play-voice", {
-      word: definition
+      word: word
     });
   }, false);
   
   var settings = document.createElement('img');
+  settings.setAttribute("title", "Open Settings");
   settings.src = manifest.url + "data/content_script/settings.png";
   settings.addEventListener("click", function () {
     background.send("open-page", {
@@ -89,6 +93,7 @@ if (window.frameElement === null) {
   }, false);
   
   var home = document.createElement('img');
+  home.setAttribute("title", "Open Google Translate");
   home.src = manifest.url + "data/content_script/home.png";
   home.addEventListener("click", function (e) {
     background.send("open-page", {
@@ -122,7 +127,7 @@ if (window.frameElement === null) {
     bubbleDOM.style.left = mouseX + 'px';
     bubbleDOM.style.visibility = 'visible'; 
     var img = document.createElement('img');
-    img.setAttribute("style", "margin-left: 40px;");
+    img.setAttribute("style", "margin-left: 50px;");
     img.src = manifest.url + "data/content_script/loading.gif";
     body.appendChild(img);
     background.send("translation-request", selectedText);
@@ -162,7 +167,8 @@ if (window.frameElement === null) {
         hr.setAttribute('class', 'selection_bubble_line');
         body.appendChild(hr);
         for (var i = 0; i < detailDefinition.length; i++) { // title
-          span("display: block; width: 100%; font-weight: bold;").textContent = detailDefinition[i].pos + ': ';
+          span("display: inline-block;").textContent = data.word + (detailDefinition[i].pos ? " -" : "");
+          span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
           if (detailDefinition[i].entry) {
             for (j = 0; j < detailDefinition[i].entry.length; j++) { // entries
               span("display: block; width: 100%;").textContent = ' • ' + detailDefinition[i].entry[j].word;
@@ -173,21 +179,22 @@ if (window.frameElement === null) {
     }
   });
 
-  background.receive("context-menu-request", function () {
-    var selectedText = window.getSelection().toString();
-    background.send("context-menu-response", selectedText);
-  });
-  document.addEventListener('mousedown', function (e) {
-    var target = e.target || e.originalTarget;
 
-    if (target.getAttribute("id") == "bubble_container") {
-      return;
-    } 
-    else if (target.parentNode.getAttribute("id") == "bubble_container") {
-      return;
-    }
-    else if (target.parentNode.parentNode.getAttribute("id") == "bubble_container") {
-      return;
+  background.receive("context-menu-word-request", function () {
+    var selectedText = window.getSelection().toString();
+    background.send("context-menu-word-response", selectedText);
+  });
+  background.receive("context-menu-url-request", function () {
+    background.send("context-menu-url-response", document.location.href);
+  });  
+  document.addEventListener('mousedown', function (e) {
+    // Do not hide the panel when user clicks inside the panel
+    var target = e.target || e.originalTarget;
+    while (target.parentNode && target.getAttribute) {
+      if (target == bubbleDOM) {
+        return;
+      }
+      target = target.parentNode;
     }
 
     bubbleDOM.style.visibility = 'hidden';
@@ -217,4 +224,8 @@ if (window.frameElement === null) {
       requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);
     }
   }, false);
+}
+
+if (window.frameElement === null) {
+  window.addEventListener("DOMContentLoaded", insert);
 }

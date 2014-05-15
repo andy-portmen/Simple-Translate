@@ -25,6 +25,13 @@ else {
   self.port.on("show", function () {
     $("question-input").focus();
   });
+  var doResize = function () {
+    self.port.emit("resize", {
+      w: document.body.getBoundingClientRect().width, 
+      h: document.body.getBoundingClientRect().height
+    });
+  }
+  window.addEventListener("resize", doResize, false);
 }
 /********/
 
@@ -113,7 +120,7 @@ background.receive("translation-response", function (obj) {
     wrongWord = '';
     $("question-input").select();
     $("definition-div").innerHTML = "";
-    span("display: inline-block; width: 100%; padding-bottom: 6px; font-size: 16px;").textContent = obj.definition;
+    span("display: inline-block; width: 100%; font-size: 16px;").textContent = obj.definition;
     $("definition-div").setAttribute("definition", obj.definition);
     
     var fs = $("from-select").children[$("from-select").selectedIndex];
@@ -134,7 +141,8 @@ background.receive("translation-response", function (obj) {
       if (detailDefinition.length > 0) {
         br();
         for (var i = 0; i < detailDefinition.length; i++) { // titles
-          span("display: block; width: 100%; font-weight: bold;").textContent = detailDefinition[i].pos + ':';
+          span("display: inline-block;").textContent = obj.word + (detailDefinition[i].pos ? " -" : "");
+          span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
           br();  
           if (detailDefinition[i].entry) {
             for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries

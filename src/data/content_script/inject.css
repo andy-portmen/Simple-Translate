@@ -4,7 +4,12 @@
   padding-top: 5px;
 }
 .header_bubble img {
-  margin: 0 5px;
+  margin: 0 7px;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.header_bubble img:hover {
+  opacity: 1.0;
 }
 .selection_bubble {
   visibility: hidden;
@@ -21,7 +26,7 @@
   white-space: -o-pre-wrap;    /* Opera 7  */    
   word-wrap: break-word;       /* IE       */
   z-index: 1000;
-  min-width: 105px;
+  min-width: 120px;
   max-width: 350px;
 }
 .selection_bubble div {

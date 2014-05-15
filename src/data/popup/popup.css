@@ -1,5 +1,5 @@
 body {
-  width: 346px;
+  width: 370px;
   margin: 5px;
   padding: 0;
   color: #444;
@@ -46,8 +46,13 @@ tr td {
   -webkit-transition: 0s; 
   -moz-transition: 0s;  
 }
-#from-select, #to-select{ 
+#from-select,
+#to-select{ 
   width: 100%;
+}
+.mac #from-select,
+.mac #to-select {
+  padding-left: 5px;
 }
 #from-td {
   border-radius: 2px 0 0 0;
@@ -59,6 +64,7 @@ tr td {
   width: 40px;
   border-width: 1px 0 !important;
   background: url("fromto.png") no-repeat center center;
+  cursor: pointer;
 }
 #question-table {
   margin: 5px 0;
@@ -96,13 +102,30 @@ tr td {
   padding: 0 10px;
   height: 98px;
   overflow-y: auto;
+  color: #000;
 }
 #definition-div[state='loading'] {
-  background: url('loading.gif') no-repeat center center;
+  background-image: url('loading.gif');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: auto 16px;
 }
-#phrasebook-td, #voice-question-td, #voice-answer-td, #home-td, #settings-td {
+#phrasebook-td, 
+#voice-question-td, 
+#voice-answer-td, 
+#home-td, 
+#settings-td {
   width: 22px;
-} 
+  opacity: 0.6;
+  cursor: pointer;
+}
+#phrasebook-td:hover, 
+#voice-question-td:hover, 
+#voice-answer-td:hover, 
+#home-td:hover, 
+#settings-td:hover {
+  opacity: 1.0;
+}
 #phrasebook-td {
   background: url(bookmarks.png) no-repeat center center;
 }

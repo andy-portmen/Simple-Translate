@@ -7,9 +7,11 @@ var self          = require("sdk/self"),
     Request       = require("sdk/request").Request,
     prefs         = sp.prefs,
     pageMod       = require("sdk/page-mod"),
+    pageWorker    = require("sdk/page-worker"),
     tabs          = require("sdk/tabs"),
     windowUtils   = require('sdk/window/utils'),
     contextMenu   = require("sdk/context-menu"),
+    array         = require('sdk/util/array'),
     {Cc, Ci, Cu}  = require('chrome');
     
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -40,17 +42,15 @@ var workers = [], content_script_arr = [];
 pageMod.PageMod({
   include: ["*"],
   contentScriptFile: data.url("./content_script/inject.js"),
+  contentScriptWhen: "start",
   contentStyleFile : data.url("./content_script/inject.css"),
   onAttach: function(worker) {
-    workers.push(worker);
+    array.add(workers, worker);
+    worker.on('pageshow', function() { array.add(workers, this); });
+    worker.on('pagehide', function() { array.remove(workers, this); });
+    worker.on('detach', function() { array.remove(workers, this); });
     content_script_arr.forEach(function (arr) {
       worker.port.on(arr[0], arr[1]);
-    });
-    worker.on('detach', function(){
-      var i = workers.indexOf(worker);
-      if (i != -1) {
-        workers.splice(i, 1);
-      }
     });
   }
 });
@@ -63,6 +63,9 @@ var popup = require("sdk/panel").Panel({
 });
 popup.on('show', function() {
   popup.port.emit('show', true);
+});
+popup.port.on("resize", function(obj) {
+  popup.resize(obj.w + 10, obj.h + 10);
 });
 
 exports.storage = {
@@ -83,10 +86,11 @@ exports.storage = {
   }
 }
 
-exports.get = function (url, data) {
+exports.get = function (url, headers, data) {
   var d = new Promise.defer();
   Request({
     url: url,
+    headers: headers || {},
     content: data,
     onComplete: function (response) {
       d.resolve(response.text);
@@ -129,11 +133,11 @@ exports.tab = {
 }
 
 exports.contextMenu = {
-  create: function (title, callback) {
+  create: function (title, type, callback) {
     var menuItem = contextMenu.Item({
       label: title,
       image: data.url('./icon16.png'),
-      context: contextMenu.SelectionContext(),
+      context: type == 'selection' ? contextMenu.SelectionContext() : contextMenu.PageContext(),
       contentScript: 'self.on("click", function () {self.postMessage();});',
       onMessage: function () {
         callback();
@@ -146,5 +150,35 @@ exports.version = function () {
   return self.version;
 }
 
+exports.notification = (function () { // https://github.com/fwenzel/copy-shorturl/blob/master/lib/simple-notify.js
+  return function (title, text) {
+    try {
+      let alertServ = Cc["@mozilla.org/alerts-service;1"].
+                      getService(Ci.nsIAlertsService);
+      alertServ.showAlertNotification(data.url("icon32.png"), title, text, null, null, null, "");
+    }
+    catch(e) {
+      let browser = window.active.gBrowser,
+          notificationBox = browser.getNotificationBox();
+
+      notification = notificationBox.appendNotification(text, 'jetpack-notification-box',
+          data.url("icon32.png"), notificationBox.PRIORITY_INFO_MEDIUM, []
+      );
+      timer.setTimeout(function() {
+          notification.close();
+      }, 5000);
+    }
+  }
+})();
+
+exports.play = function (url) {
+  var worker = pageWorker.Page({
+    contentScript: "var audio = new Audio('" + url + "'); audio.addEventListener('ended', function () {self.postMessage()}); audio.volume = 1; audio.play();",
+    contentURL: data.url("sound.html"),
+    onMessage: function(arr) {
+      worker.destroy();
+    }
+  });
+}
 exports.window = windowUtils.getMostRecentBrowserWindow();
 exports.Promise = Promise;

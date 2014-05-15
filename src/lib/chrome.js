@@ -25,10 +25,8 @@ var _chrome = {
       }
     };
     xhr.open(data ? "POST" : "GET", url, true);
-    if (headers) {
-      headers.forEach(function (header) {
-        xhr.setRequestHeader(header[0], header[1]);
-      });
+    for (var id in headers) {
+      xhr.setRequestHeader(id, headers[id]);
     }
     if (data) {
       var arr = [];
@@ -78,10 +76,10 @@ var _chrome = {
     }
   },
   contextMenu: {
-    create: function (title, callback) {
+    create: function (title, type, callback) {  //type: selection, page
       chrome.contextMenus.create({
         "title": title, 
-        "contexts": ["selection"], 
+        "contexts": [type], 
         "onclick": function () {
           callback();
         }
@@ -91,7 +89,7 @@ var _chrome = {
   
   notification: function (title, text) {
     var notification = webkitNotifications.createNotification(
-      'notification.png',  title,  text
+      chrome.extension.getURL("./") + 'data/icon48.png',  title,  text
     );
     notification.show();
     window.setTimeout(function () {
@@ -99,6 +97,25 @@ var _chrome = {
     }, 5000);
   },
 
+  play: (function () {
+    var audio = new Audio();
+    var canPlay = audio.canPlayType("audio/mpeg");
+    if (!canPlay) {
+      audio = document.createElement("iframe");
+      document.body.appendChild(audio);
+    }
+    return function (url) {
+      if (canPlay) {
+        audio.setAttribute("src", url);
+        audio.play();
+      }
+      else {
+        audio.removeAttribute('src');
+        audio.setAttribute('src', url); 
+      }
+    }
+  })(),
+  
   version: function () {
     return chrome[chrome.runtime && chrome.runtime.getManifest ? "runtime" : "extension"].getManifest().version;
   }

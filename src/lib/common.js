@@ -1,4 +1,4 @@
-var storage, get, popup, window, Deferred, content_script, tab, contextMenu, version;
+var storage, get, popup, window, Deferred, content_script, tab, contextMenu, notification, version, play;
 
 /*
 Storage Items:
@@ -24,6 +24,7 @@ if (typeof require !== 'undefined') {
   contextMenu = firefox.contextMenu;
   version = firefox.version;
   Deferred = firefox.Promise.defer;
+  play = firefox.play;
 }
 else {
   storage = _chrome.storage;
@@ -35,9 +36,11 @@ else {
   contextMenu = _chrome.contextMenu;
   version = _chrome.version;
   Deferred = task.Deferred;
+  play = _chrome.play;
 }
 /********/
 const LANGS = ["az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn","km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
+var sourceLanguage;
 
 if (storage.read("version") != version()) {
   storage.write("version", version());
@@ -55,7 +58,7 @@ function findPhrasebook(word, definition) {
   var phrasebook = "";
   if (word && definition) {
     phrasebook = lStorage_obj.filter(function (a) {
-      return (a[0] == word && a[1] == definition)
+      return (a[0].toLowerCase() == word.toLowerCase() && a[1].toLowerCase() == definition.toLowerCase())
     })[0];
   }
   return phrasebook ? phrasebook[2] : "";
@@ -71,7 +74,7 @@ function saveToHistory(obj) {
   
   var tmpPhrasebook;
   lStorage_obj = lStorage_obj.filter(function (a) { // Remove item if it is in the list
-    if (a[0] == obj.word && a[1] == obj.definition) {
+    if (a[0].toLowerCase() == obj.word && a[1].toLowerCase() == obj.definition) {
       tmpPhrasebook = a[2];
       return false;
     }
@@ -133,6 +136,7 @@ function getTranslation(word) {
 // Message Passing Between Background and Popup
 popup.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
+    sourceLanguage = obj.sourceLang;
     popup.send("translation-response", {
       word: obj.word, 
       definition: obj.definition,
@@ -171,7 +175,6 @@ popup.receive("initialization-request", function () {
 });
 
 function openPage(obj) {
-  console.error(obj);
   switch (obj.page) {
   case 'settings':
     tab.openOptions();
@@ -186,15 +189,13 @@ content_script.receive("open-page", openPage);
 
 function playVoice(data) {
   // Content script does not return lang
-  data.lang = data.lang || storage.read("to");
+  data.lang = data.lang || storage.read("from");
+  data.lang = (data.lang == 'auto' ? autoDetectedLang : data.lang);
 
   var url = 'https://translate.google.com/translate_tts?ie=UTF-8&q=' + data.word + '&tl=' + data.lang + '&total=1&textlen=' + data.word.length + '&client=t';
-  var audio = new Audio(url);
-  audio.play();
+  play(url);
 }
-popup.receive("play-voice", function (data) {
-  playVoice(data);
-});
+popup.receive("play-voice", playVoice);
 popup.receive("check-voice-request", function () {
   popup.send(
     "check-voice-response", 
@@ -205,6 +206,9 @@ popup.receive("check-voice-request", function () {
 function bookmark(question, answer, action, id) {
   var d = new Deferred();
   var from = storage.read("from");
+  if (from == "auto") {
+    from = sourceLanguage || "en";
+  }
   var to = storage.read("to");
   get("https://translate.google.com/#" + from + "/" + to + "/ok").then(function (content) {
     var usage = /USAGE\=\'([^\'\ ]*)\'/.exec(content);
@@ -213,7 +217,7 @@ function bookmark(question, answer, action, id) {
       var url = "https://translate.google.com/translate_a/sg?client=t&cm=" + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
       get(
         url, 
-        [["Content-Type", "application/x-www-form-urlencoded;charset=utf-8"]], 
+        {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}, 
         action == "a" ? {q: question, utrans: answer} : {id: id}
       ).then (
         function (content) {
@@ -282,30 +286,13 @@ popup.receive("remove-from-phrasebook", function (data) {
 // Message Passing Between Background and Content Script
 content_script.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
-  
-    console.error(obj);
-try {
-v = {
-      word: obj.word, 
-      definition: obj.definition,
-      detailDefinition: obj.detailDefinition,
-      phrasebook: findPhrasebook(obj.word, obj.definition),
-      isVoice: LANGS.indexOf(storage.read("to")) == -1
-    }
-}
-catch (e) {
-  console.error(e)
-}
-    
-    
-    
-    
+    sourceLanguage = obj.sourceLang;
     content_script.send("translation-response", {
       word: obj.word, 
       definition: obj.definition,
       detailDefinition: obj.detailDefinition,
       phrasebook: findPhrasebook(obj.word, obj.definition),
-      isVoice: LANGS.indexOf(storage.read("to")) == -1
+      isVoice: LANGS.indexOf(storage.read("from")) == -1
     });
   });
 });
@@ -317,13 +304,22 @@ content_script.receive("options-request", function () {
   }, true); // true: send to all tabs
 });
 
-contextMenu.create("Define in Google Translate", function () {
-  content_script.send("context-menu-request");
+contextMenu.create("Define in Google Translate", "selection", function () {
+  content_script.send("context-menu-word-request");
 });
-
-content_script.receive("context-menu-response", function (word) {
+content_script.receive("context-menu-word-response", function (word) {
   tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + word);
 });
+contextMenu.create("Translate page in Google Translate", "page", function () {
+  content_script.send("context-menu-url-request");
+});
+content_script.receive("context-menu-url-response", function (url) {
+  var from = storage.read("from");
+  var to = storage.read("to");
+  url = "http://translate.google.com/translate?prev=_t&hl=en&ie=UTF-8&u=" + url + "&sl=" + from + "&tl=" + to
+  tab.open(url);
+});
+
 
 content_script.receive("add-to-phrasebook", function (data) {
   bookmark(data.question, data.answer, "a").then(
@@ -372,6 +368,7 @@ content_script.receive("remove-from-phrasebook", function (data) {
   );
 });
 
+content_script.receive("play-voice", playVoice);
 // Initialization
 if (!storage.read("from")) {
   storage.write("from", "auto");
