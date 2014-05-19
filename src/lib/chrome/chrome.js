@@ -1,5 +1,3 @@
-/** version 4 **/
-
 var _chrome = {
   storage: {
     read: function (id) {
@@ -72,10 +70,10 @@ var _chrome = {
       chrome.tabs.create({url: url});
     },
     openOptions: function () {
-      chrome.tabs.create({url: "./data/options/options.html"});
+      chrome.tabs.create({url: "./data/chrome/options/options.html"});
     }
   },
-  contextMenu: {
+  context_menu: {
     create: function (title, type, callback) {  //type: selection, page
       chrome.contextMenus.create({
         "title": title, 

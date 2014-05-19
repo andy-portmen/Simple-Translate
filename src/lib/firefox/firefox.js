@@ -17,7 +17,7 @@ var self          = require("sdk/self"),
 Cu.import("resource://gre/modules/Promise.jsm");
  
 // Load overlay styles
-require("./userstyles").load(data.url("overlay.css"));
+require("./userstyles").load(data.url("firefox/overlay.css"));
 //Install toolbar button
 var button = require("./toolbarbutton").ToolbarButton({
   id: "igtranslator",
@@ -132,7 +132,7 @@ exports.tab = {
   }
 }
 
-exports.contextMenu = {
+exports.context_menu = {
   create: function (title, type, callback) {
     var menuItem = contextMenu.Item({
       label: title,
@@ -174,11 +174,13 @@ exports.notification = (function () { // https://github.com/fwenzel/copy-shortur
 exports.play = function (url) {
   var worker = pageWorker.Page({
     contentScript: "var audio = new Audio('" + url + "'); audio.addEventListener('ended', function () {self.postMessage()}); audio.volume = 1; audio.play();",
-    contentURL: data.url("sound.html"),
+    contentURL: data.url("firefox/sound.html"),
     onMessage: function(arr) {
       worker.destroy();
     }
   });
 }
+
 exports.window = windowUtils.getMostRecentBrowserWindow();
 exports.Promise = Promise;
+exports.Deferred = Promise.defer;

@@ -8,8 +8,8 @@
   "permissions": [
     "contextMenus",
     "storage",
-    "tabs", 
-    "notifications", 
+    "tabs",
+    "notifications",
     "<all_urls>"
   ],
   "browser_action": {
@@ -18,20 +18,20 @@
     "default_title": "Simple Translate"
   },
   "background": {
-    "scripts": ["lib/task.js", "lib/chrome.js", "lib/common.js"]
+    "scripts": ["lib/chrome/task.js", "lib/chrome/chrome.js", "lib/common.js"]
   },
   "web_accessible_resources": ["data/content_script/*"],
   "content_scripts": [{
-    "matches": ["<all_urls>"], 
-    "css": ["data/content_script/inject.css"], 
-    "js": ["data/content_script/inject.js"], 
-    "run_at": "document_start", 
+    "matches": ["<all_urls>"],
+    "css": ["data/content_script/inject.css"],
+    "js": ["data/content_script/inject.js"],
+    "run_at": "document_start",
     "all_frames": false
   }],
-  "options_page": "data/options/options.html",
+  "options_page": "data/chrome/options/options.html",
   "icons": {
     "16": "data/icon16.png",
     "48": "data/icon48.png",
-    "128": "data/icon128.png" 
+    "128": "data/icon128.png"
   }
 }

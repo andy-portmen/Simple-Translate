@@ -1,44 +1,26 @@
-var storage, get, popup, window, Deferred, content_script, tab, contextMenu, notification, version, play;
+var storage, get, popup, window, Deferred, content_script, tab, context_menu, notification, version, play;
 
-/*
-Storage Items:
-  "history"
-  "from"
-  "to"
-  "isTextSelection"
-  "isDblclick"
-  "enableHistory"
-  "numberHistoryItems"
-*/
-
-/********/
-if (typeof require !== 'undefined') {
-  var firefox = require("./firefox.js");
-  storage = firefox.storage;
-  notification = firefox.notification;
-  get = firefox.get;
-  popup = firefox.popup;
-  window = firefox.window;
-  content_script = firefox.content_script;
-  tab = firefox.tab;
-  contextMenu = firefox.contextMenu;
-  version = firefox.version;
-  Deferred = firefox.Promise.defer;
-  play = firefox.play;
+/**** wrapper (start) ****/
+if (typeof require !== 'undefined') { //Firefox
+  var firefox = require("./firefox/firefox.js");
+  ["storage", "notification", "get", "popup", "window", "content_script", "tab", "context_menu", "version", "play", "Deferred"].forEach(function (id) {
+    this[id] = firefox[id];
+  });
 }
-else {
-  storage = _chrome.storage;
-  notification = _chrome.notification;
-  get = _chrome.get;
-  popup = _chrome.popup;
-  content_script = _chrome.content_script;
-  tab = _chrome.tab;
-  contextMenu = _chrome.contextMenu;
-  version = _chrome.version;
+else if (typeof safari !== 'undefined') {  // Safari
+  ["storage", "notification", "get", "popup", "content_script", "tab", "context_menu", "version", "play"].forEach(function (id) {
+    this[id] = _safari[id];
+  });
   Deferred = task.Deferred;
-  play = _chrome.play;
 }
-/********/
+else {  //Chrome
+  ["storage", "notification", "get", "popup", "content_script", "tab", "context_menu", "version", "play"].forEach(function (id) {
+    this[id] = _chrome[id];
+  });
+  Deferred = task.Deferred;
+}
+/**** wrapper (end) ****/
+
 const LANGS = ["az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn","km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
 var sourceLanguage;
 
@@ -166,6 +148,7 @@ popup.receive("toggle-request", function () {
     to: storage.read("to")
   });
 });
+
 popup.receive("initialization-request", function () {
   popup.send("initialization-response", {
     from: storage.read("from"),
@@ -180,7 +163,7 @@ function openPage(obj) {
     tab.openOptions();
     break;
   case 'define':
-    tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
+    tab.open("https://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
     break;
   }
 }
@@ -203,57 +186,65 @@ popup.receive("check-voice-request", function () {
   );
 });
 
-function bookmark(question, answer, action, id) {
-  var d = new Deferred();
-  var from = storage.read("from");
-  if (from == "auto") {
-    from = sourceLanguage || "en";
-  }
-  var to = storage.read("to");
-  get("https://translate.google.com/#" + from + "/" + to + "/ok").then(function (content) {
-    var usage = /USAGE\=\'([^\'\ ]*)\'/.exec(content);
-    if (usage && usage.length) {
-      usage = usage[1];
-      var url = "https://translate.google.com/translate_a/sg?client=t&cm=" + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
-      get(
-        url, 
-        {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}, 
-        action == "a" ? {q: question, utrans: answer} : {id: id}
-      ).then (
-        function (content) {
-          var key = /\"([^\"]*)\"\]/.exec(content);
-          if (key && key.length) {
-            d.resolve(key[1]);
-          }
-          else {
-            d.reject({message: "no-key"});
-          }
-        },
-        d.reject
-      );
+var bookmark = {
+  server: function (question, answer, action, id) {
+    var d = new Deferred();
+    var from = storage.read("from");
+    if (from == "auto") {
+      from = sourceLanguage || "en";
     }
-  });
-  return d.promise;
+    var to = storage.read("to");
+    get("https://translate.google.com/#" + from + "/" + to + "/ok").then(function (content) {
+      var usage = /USAGE\=\'([^\'\ ]*)\'/.exec(content);
+      if (usage && usage.length) {
+        usage = usage[1];
+        var url = "https://translate.google.com/translate_a/sg?client=t&cm=" + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
+        get(
+          url, 
+          {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}, 
+          action == "a" ? {q: question, utrans: answer} : {id: id}
+        ).then (
+          function (content) {
+            var key = /\"([^\"]*)\"\]/.exec(content);
+            if (key && key.length) {
+              d.resolve(key[1]);
+            }
+            else {
+              d.reject({message: "no-key"});
+            }
+          },
+          d.reject
+        );
+      }
+    });
+    return d.promise;
+  },
+  onSuccess: function (data, key) {
+    saveToHistory({
+      word: data.question,
+      definition: data.answer,
+      phrasebook: key
+    });
+  },
+  onReject: function (e) {
+    if (e.message == "Unauthorized") {
+      notification("Google Translator", "Please sign-in to your Google account first.");
+    }
+    if (e.message == "no-key") {
+      notification("Google Translator", "Internal error. Are you logged-in?");
+    }
+  }
 }
 
 popup.receive("add-to-phrasebook", function (data) {
-  bookmark(data.question, data.answer, "a").then(
+  bookmark.server(data.question, data.answer, "a").then(
     function (key) {
       popup.send("saved-to-phrasebook");
-      saveToHistory({
-        word: data.question,
-        definition: data.answer,
-        phrasebook: key
-      });
+      bookmark.onSuccess(data, key);
     },
     function (e) {
-      if (e.message == "Unauthorized") {
-        notification("Google™ Translator", "Please sign-in to your Google account first.");
-      }
-      if (e.message == "no-key") {
-        notification("Google™ Translator", "Internal error.");
-      }
       popup.send("failed-phrasebook", "");
+      bookmark.onReject(e);
     }
   );
 });
@@ -262,23 +253,14 @@ popup.receive("remove-from-phrasebook", function (data) {
   var id = findPhrasebook(data.question, data.answer);
   if (!id) return;
   
-  bookmark(data.question, data.answer, "d", id).then(
+  bookmark.server(data.question, data.answer, "d", id).then(
     function () {
       popup.send("removed-from-phrasebook");
-      saveToHistory({
-        word: data.question,
-        definition: data.answer,
-        phrasebook: ""
-      });
+      bookmark.onSuccess(data, "");
     },
     function (e) {
-      if (e.message == "Unauthorized") {
-        notification("Google™ Translator", "Please sign-in to your Google account first.");
-      }
-      if (e.message == "no-key") {
-        notification("Google™ Translator", "Internal error.");
-      }
       popup.send("failed-phrasebook", "saved");
+      bookmark.onReject(e);
     }
   );
 });
@@ -304,41 +286,32 @@ content_script.receive("options-request", function () {
   }, true); // true: send to all tabs
 });
 
-contextMenu.create("Define in Google Translate", "selection", function () {
+context_menu.create("Define in Google Translate", "selection", function () {
   content_script.send("context-menu-word-request");
 });
 content_script.receive("context-menu-word-response", function (word) {
-  tab.open("http://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + word);
+  tab.open("https://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + word);
 });
-contextMenu.create("Translate page in Google Translate", "page", function () {
+context_menu.create("Translate page in Google Translate", "page", function () {
   content_script.send("context-menu-url-request");
 });
 content_script.receive("context-menu-url-response", function (url) {
   var from = storage.read("from");
   var to = storage.read("to");
-  url = "http://translate.google.com/translate?prev=_t&hl=en&ie=UTF-8&u=" + url + "&sl=" + from + "&tl=" + to
+  url = "https://translate.google.com/translate?prev=_t&hl=en&ie=UTF-8&u=" + url + "&sl=" + from + "&tl=" + to
   tab.open(url);
 });
 
 
 content_script.receive("add-to-phrasebook", function (data) {
-  bookmark(data.question, data.answer, "a").then(
+  bookmark.server(data.question, data.answer, "a").then(
     function (key) {
       content_script.send("saved-to-phrasebook");
-      saveToHistory({
-        word: data.question,
-        definition: data.answer,
-        phrasebook: key
-      });
+      bookmark.onSuccess(data, key);
     },
     function (e) {
-      if (e.message == "Unauthorized") {
-        notification("Google™ Translator", "Please sign-in to your Google account first.");
-      }
-      if (e.message == "no-key") {
-        notification("Google™ Translator", "Internal error.");
-      }
       content_script.send("failed-phrasebook", "");
+      bookmark.onReject(e);
     }
   );
 });
@@ -347,23 +320,14 @@ content_script.receive("remove-from-phrasebook", function (data) {
   var id = findPhrasebook(data.question, data.answer);
   if (!id) return;
   
-  bookmark(data.question, data.answer, "d", id).then(
+  bookmark.server(data.question, data.answer, "d", id).then(
     function () {
       content_script.send("removed-from-phrasebook");
-      saveToHistory({
-        word: data.question,
-        definition: data.answer,
-        phrasebook: ""
-      });
+      bookmark.onSuccess(data, "");
     },
     function (e) {
-      if (e.message == "Unauthorized") {
-        notification("Google™ Translator", "Please sign-in to your Google account first.");
-      }
-      if (e.message == "no-key") {
-        notification("Google™ Translator", "Internal error.");
-      }
       content_script.send("failed-phrasebook", "saved");
+      bookmark.onReject(e);
     }
   );
 });

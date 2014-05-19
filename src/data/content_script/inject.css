@@ -1,10 +1,10 @@
 .header_bubble {
   height: 19px;
   overflow: visible !important;
-  padding-top: 5px;
+  padding-top: 5px !important;
 }
 .header_bubble img {
-  margin: 0 7px;
+  margin: 0 7px !important;
   opacity: 0.6;
   cursor: pointer;
 }
@@ -14,16 +14,16 @@
 .selection_bubble {
   display: none;
   position: absolute;
-  padding: 8px;
-  color: black;
-  font: 13px Arial;
-  background: #FAEBD7;
-  border: 1px solid #DEB887;
+  padding: 8px !important;
+  color: black !important;
+  font: 13px Arial !important;
+  background: #FAEBD7 !important;
+  border: 1px solid #DEB887 !important;
   border-radius: 3px;
-  white-space: pre-wrap;       /* CSS3     */   
-  white-space: -moz-pre-wrap;  /* Firefox  */    
-  white-space: -pre-wrap;      /* Opera <7 */   
-  white-space: -o-pre-wrap;    /* Opera 7  */    
+  white-space: pre-wrap;       /* CSS3     */
+  white-space: -moz-pre-wrap;  /* Firefox  */
+  white-space: -pre-wrap;      /* Opera <7 */
+  white-space: -o-pre-wrap;    /* Opera 7  */
   word-wrap: break-word;       /* IE       */
   z-index: 1000;
   min-width: 120px;

@@ -1,0 +1,3 @@
+Mozilla clean up:
+	1. Remove src/data/options
+	2. remove src/data/popup/popup.html -> script

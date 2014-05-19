@@ -1,6 +1,6 @@
-/********/
 var background = {};
-if (typeof chrome !== 'undefined') {
+/**** wrapper (start) ****/
+if (typeof chrome !== 'undefined') {  // Chrome
   background.send = function (id, data) {
     chrome.extension.sendRequest({method: id, data: data});
   }
@@ -15,7 +15,35 @@ if (typeof chrome !== 'undefined') {
     $("question-input").focus();
   }, 100);
 }
-else {
+else if (typeof safari !== 'undefined') { // Safari
+  background = (function () {
+    var callbacks = {};
+    return {
+      send: function (id, data) {
+        safari.extension.globalPage.contentWindow.popup.dispatchMessage(id, data);
+      },
+      receive: function (id, callback) {
+        callbacks[id] = callback;
+      },
+      dispatchMessage: function (id, data) {
+        if (callbacks[id]) {
+          callbacks[id](data);
+        }
+      }
+    }
+  })();
+  var doResize = function () {
+    safari.self.width = document.body.getBoundingClientRect().width + 10;
+    safari.self.height = document.body.getBoundingClientRect().height + 10;
+  }
+  window.addEventListener("resize", doResize, false);
+  safari.application.addEventListener("popover", function (){
+    window.setTimeout(function () {
+      $("question-input").focus();
+    }, 100);
+  }, false);
+}
+else {  // Firefox
   background.send = function (id, data) {
     self.port.emit(id, data);
   }
@@ -27,13 +55,13 @@ else {
   });
   var doResize = function () {
     self.port.emit("resize", {
-      w: document.body.getBoundingClientRect().width, 
+      w: document.body.getBoundingClientRect().width,
       h: document.body.getBoundingClientRect().height
     });
   }
   window.addEventListener("resize", doResize, false);
 }
-/********/
+/**** wrapper (end) ****/
 
 function $ (id) {
   return document.getElementById(id);
@@ -50,7 +78,7 @@ $('fromto-td').addEventListener('click', function () {
 
 $('home-td').addEventListener('click', function () {
     background.send("open-page", {
-      page: 'define', 
+      page: 'define',
       word: $("question-input").getAttribute("word")
     });
 }, false);
@@ -95,7 +123,7 @@ var wrongWord = '';
 background.receive("translation-response", function (obj) {
   function br () {
     var br = document.createElement('br');
-    $("definition-div").appendChild(br); 
+    $("definition-div").appendChild(br);
   }
   function span (style) {
     var span = document.createElement('span');
@@ -110,7 +138,7 @@ background.receive("translation-response", function (obj) {
   $("definition-div").removeAttribute('state');
   if (obj.wordIsCorrect) {
     $("question-input").setAttribute("word", obj.word);
-    
+
     if (wrongWord) {
       $("question-input").value = wrongWord + " >> " + obj.word;
     }
@@ -122,7 +150,7 @@ background.receive("translation-response", function (obj) {
     $("definition-div").innerHTML = "";
     span("display: inline-block; width: 100%; font-size: 16px;").textContent = obj.definition;
     $("definition-div").setAttribute("definition", obj.definition);
-    
+
     var fs = $("from-select").children[$("from-select").selectedIndex];
     if (fs.value == 'auto' && obj.sourceLang) {
       fs.textContent = 'Auto (' + obj.sourceLang + ')';
@@ -137,13 +165,13 @@ background.receive("translation-response", function (obj) {
       $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
     }
     if (obj.detailDefinition) {
-      var detailDefinition = obj.detailDefinition; 
+      var detailDefinition = obj.detailDefinition;
       if (detailDefinition.length > 0) {
         br();
         for (var i = 0; i < detailDefinition.length; i++) { // titles
           span("display: inline-block;").textContent = obj.word + (detailDefinition[i].pos ? " -" : "");
           span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
-          br();  
+          br();
           if (detailDefinition[i].entry) {
             for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
               span("display: inline-block; width: 100%;").textContent = ' • ' + detailDefinition[i].entry[j].word;
@@ -165,7 +193,7 @@ background.receive("translation-response", function (obj) {
 background.receive("history-update", function (obj) {
   var historySelect = $("history-select");
   historySelect.innerHTML = "";
-  
+
   function addNewItem(word, definition, index) {
     var option = document.createElement("option");
     option.textContent = word + ": " + definition;
@@ -221,7 +249,7 @@ $('voice-question-td').addEventListener("click", function(e) {
 $('voice-answer-td').addEventListener("click", function(e) {
   var target = e.target || e.originalTarget;
   if (target.getAttribute("voice") == "false") return;
-  
+
   var word = $('definition-div').getAttribute("definition");
   var lang = $('to-select').children[$('to-select').selectedIndex].value;
   playVoice(word, lang);
@@ -234,13 +262,13 @@ $('phrasebook-td').addEventListener("click", function(e) {
   if (!word || !definition) return;
   if (!target.getAttribute("status")) {
     background.send("add-to-phrasebook", {
-      question: word, 
+      question: word,
       answer: definition
     });
   }
   else {
     background.send("remove-from-phrasebook", {
-      question: word, 
+      question: word,
       answer: definition
     });
   }
@@ -249,13 +277,13 @@ $('phrasebook-td').addEventListener("click", function(e) {
 
 function playVoice(word, lang) {
   background.send("play-voice", {
-    word: word, 
+    word: word,
     lang: lang
   });
 }
 
 function checkVoice() {
-  background.send("check-voice-request"); 
+  background.send("check-voice-request");
 }
 background.receive("check-voice-response", function (arr) {
   var fromLang = $('from-select').children[$('from-select').selectedIndex].value;
@@ -263,7 +291,7 @@ background.receive("check-voice-response", function (arr) {
     fromLang = $('from-select').getAttribute("detected-language") || "en";
   }
   var toLang = $('to-select').children[$('to-select').selectedIndex].value;
-  
+
   $("voice-question-td").setAttribute("voice", arr.indexOf(fromLang) == -1);
   $("voice-answer-td").setAttribute("voice", arr.indexOf(toLang) == -1);
 });
@@ -281,7 +309,6 @@ background.receive("failed-phrasebook", function (status) {
   $("phrasebook-td").setAttribute("status", status);
 });
 // Initialization
-background.send("initialization-request");
 background.receive("initialization-response", function (obj) {
   var fromSelect = $("from-select");
   for (var i = 0; i < fromSelect.children.length; i++) {
@@ -300,3 +327,5 @@ background.receive("initialization-response", function (obj) {
   checkVoice();
   onClick();
 });
+//This needs to be after background.receive("initialization-response")
+background.send("initialization-request");

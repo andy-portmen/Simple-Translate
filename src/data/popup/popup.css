@@ -93,7 +93,8 @@ tr td {
 }
 #search-td {
   width: 50px; 
-  background: rgba(76, 142, 251, 1.0) url('search.png') no-repeat center center; 
+  background: rgba(76, 142, 251, 1.0) url('search.png') no-repeat center center;
+  cursor: pointer;
 }
 #answer-table {
   border-radius: 0 0 2px 2px;
