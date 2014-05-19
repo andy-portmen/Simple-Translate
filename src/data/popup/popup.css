@@ -63,8 +63,12 @@ tr td {
 #fromto-td {
   width: 40px;
   border-width: 1px 0 !important;
-  background: url("fromto.png") no-repeat center center;
+  background: rgba(76, 142, 251, 1.0) url("fromto.png") no-repeat center center;
   cursor: pointer;
+  opacity: 0.8;
+}
+#fromto-td:hover {
+  opacity: 1.0;
 }
 #question-table {
   margin: 5px 0;
@@ -95,6 +99,10 @@ tr td {
   width: 50px; 
   background: rgba(76, 142, 251, 1.0) url('search.png') no-repeat center center;
   cursor: pointer;
+  opacity: 0.8;
+}
+#search-td:hover {
+  opacity: 1.0;
 }
 #answer-table {
   border-radius: 0 0 2px 2px;

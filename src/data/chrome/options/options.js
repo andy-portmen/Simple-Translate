@@ -5,6 +5,10 @@ var clearHistory = chrome.extension.getBackgroundPage().clearHistory;
 
 // background.receive("loadOptions", loadOptions());
 
+function $ (id) {
+  return document.getElementById(id)
+};
+
 function loadOptions() {
   var fromSelect = document.getElementById('from-select');
   for (var i = 0; i < fromSelect.children.length; i++) {
@@ -92,33 +96,32 @@ document.getElementsByName('numberHistoryItems')[0].addEventListener('change', f
   storage.write('numberHistoryItems', e.target.value);
   loadOptions();
 }, false);
-$(window).load(function() {
+
+window.onload = function() {
   loadOptions();
-  $('#Settings_Tabs_Translation').addClass('active-tab');
-  $(function() {
-    $('#Settings_Tabs_Translation').click(function() {
-      $('#Settings_Tabs_Translation').addClass('active-tab');
-      $('#Settings_Tabs_Interface').removeClass('active-tab');
-      $('#Settings_Tabs_General').removeClass('active-tab');
-      $('#tc-1').css('display', 'block');
-      $('#tc-2').css('display', 'none');
-      $('#tc-3').css('display', 'none');
-    });
-    $('#Settings_Tabs_Interface').click(function() {
-      $('#Settings_Tabs_Translation').removeClass('active-tab');
-      $('#Settings_Tabs_Interface').addClass('active-tab');
-      $('#Settings_Tabs_General').removeClass('active-tab');
-      $('#tc-1').css('display', 'none');
-      $('#tc-2').css('display', 'block');
-      $('#tc-3').css('display', 'none');
-    });
-    $('#Settings_Tabs_General').click(function() {
-      $('#Settings_Tabs_Translation').removeClass('active-tab');
-      $('#Settings_Tabs_Interface').removeClass('active-tab');
-      $('#Settings_Tabs_General').addClass('active-tab');
-      $('#tc-1').css('display', 'none');
-      $('#tc-2').css('display', 'none');
-      $('#tc-3').css('display', 'block');
-    });
-  });
-});
+  $('Settings_Tabs_Translation').setAttribute('active', 'true');
+  $('Settings_Tabs_Translation').addEventListener('click', function() {
+    $('Settings_Tabs_Translation').setAttribute('active', 'true');
+    $('Settings_Tabs_Interface').removeAttribute('active');
+    $('Settings_Tabs_General').removeAttribute('active');
+    $('tc-1').style.display = 'block';
+    $('tc-2').style.display = 'none';
+    $('tc-3').style.display = 'none';
+  }, false);
+  $('Settings_Tabs_Interface').addEventListener('click', function() {
+    $('Settings_Tabs_Translation').removeAttribute('active');
+    $('Settings_Tabs_Interface').setAttribute('active', 'true');
+    $('Settings_Tabs_General').removeAttribute('active');
+    $('tc-1').style.display = 'none';
+    $('tc-2').style.display = 'block';
+    $('tc-3').style.display = 'none';
+  }, false);
+  $('Settings_Tabs_General').addEventListener('click', function() {
+    $('Settings_Tabs_Translation').removeAttribute('active');
+    $('Settings_Tabs_Interface').removeAttribute('active');
+    $('Settings_Tabs_General').setAttribute('active', 'true');
+    $('tc-1').style.display = 'none';
+    $('tc-2').style.display = 'none';
+    $('tc-3').style.display = 'block';
+  }, false);
+};
