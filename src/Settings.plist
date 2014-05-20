@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>DefaultValue</key>
+		<false/>
+		<key>Key</key>
+		<string>isTextSelection</string>
+		<key>Title</key>
+		<string>Do translation when text is selected by mouse while Command key is hold</string>
+		<key>Type</key>
+		<string>CheckBox</string>
+	</dict>
+	<dict>
+		<key>DefaultValue</key>
+		<true/>
+		<key>Key</key>
+		<string>isDblclick</string>
+		<key>Title</key>
+		<string>Do translation when selecting text by mouse double-clicking</string>
+		<key>Type</key>
+		<string>CheckBox</string>
+	</dict>
+	<dict>
+		<key>DefaultValue</key>
+		<true/>
+		<key>Key</key>
+		<string>enableHistory</string>
+		<key>Title</key>
+		<string>Save words and definitions to history</string>
+		<key>Type</key>
+		<string>CheckBox</string>
+	</dict>
+	<dict>
+		<key>DefaultValue</key>
+		<real>100</real>
+		<key>Key</key>
+		<string>numberHistoryItems</string>
+		<key>MaximumValue</key>
+		<real>200</real>
+		<key>MinimumValue</key>
+		<real>10</real>
+		<key>Title</key>
+		<string>Number of Items saved in History</string>
+		<key>Type</key>
+		<string>Slider</string>
+	</dict>
+</array>
+</plist>

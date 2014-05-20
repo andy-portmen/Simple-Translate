@@ -1,6 +1,6 @@
 {
   "name": "igtranslator",
-  "version": "0.2.5",
+  "version": "0.2.7",
   "title": "Google™ Translator",
   "id": "jid1-dgnIBwQga0SIBw",
   "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Firefox toolbar.",
@@ -24,7 +24,7 @@
   {
     "name": "enableHistory",
     "title": "Enable History:",
-    "description": "save words and definitions to history",
+    "description": "Save words and definitions to history:",
     "type": "bool",
     "value": true
   },

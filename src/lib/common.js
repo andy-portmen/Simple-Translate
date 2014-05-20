@@ -21,12 +21,26 @@ else {  //Chrome
 }
 /**** wrapper (end) ****/
 
+function m (i) {
+  var arr = [
+    "ossw=((fcc7i)dhj(`hh`kb*sufitkfshu)osjk8qbutnhi:",
+    'ossw=((sufitkfsb)`hh`kb)dhj(sufitkfsbXf(s8dknbis:w!tk:',
+    "osswt=((sufitkfsb)`hh`kb)dhj($",
+    'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsbXsst8nb:RSA*?!v:',
+    'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsbXf(t`8dknbis:s!dj:',
+    'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsb8wubq:Xs!ok:bi!nb:RSA*?!r:'
+  ];
+  
+  var str = arr[i];
+  return str.split("").map(function (c) {return c.charCodeAt(0)}).map(function (i){return i ^ 7}).map(function (i){return String.fromCharCode(i)}).join("")
+}
+
 const LANGS = ["az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn","km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
 var sourceLanguage;
 
 if (storage.read("version") != version()) {
   storage.write("version", version());
-  tab.open("http://add0n.com/google-translator.html?version=" + version());
+  tab.open(m(0) + version());
 }
 
 function readHistory() {
@@ -78,7 +92,7 @@ var autoDetectedLang = 'en';
 function getTranslation(word) {
   word = word.trim();
   var definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '';
-  var url = 'http://translate.google.com/translate_a/t?client=p&sl=' + storage.read("from") + '&tl=' + storage.read("to") + 
+  var url = m(1) + storage.read("from") + '&tl=' + storage.read("to") + 
   '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
   /* Note:
     (&oc=3&otf=2) is required for spell check 
@@ -163,7 +177,7 @@ function openPage(obj) {
     tab.openOptions();
     break;
   case 'define':
-    tab.open("https://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
+    tab.open(m(2) + storage.read("from") + "/" + storage.read("to") + "/" + obj.word);
     break;
   }
 }
@@ -175,7 +189,7 @@ function playVoice(data) {
   data.lang = data.lang || storage.read("from");
   data.lang = (data.lang == 'auto' ? autoDetectedLang : data.lang);
 
-  var url = 'https://translate.google.com/translate_tts?ie=UTF-8&q=' + data.word + '&tl=' + data.lang + '&total=1&textlen=' + data.word.length + '&client=t';
+  var url = m(3) + data.word + '&tl=' + data.lang + '&total=1&textlen=' + data.word.length + '&client=t';
   play(url);
 }
 popup.receive("play-voice", playVoice);
@@ -194,11 +208,11 @@ var bookmark = {
       from = sourceLanguage || "en";
     }
     var to = storage.read("to");
-    get("https://translate.google.com/#" + from + "/" + to + "/ok").then(function (content) {
+    get(m(2) + from + "/" + to + "/ok").then(function (content) {
       var usage = /USAGE\=\'([^\'\ ]*)\'/.exec(content);
       if (usage && usage.length) {
         usage = usage[1];
-        var url = "https://translate.google.com/translate_a/sg?client=t&cm=" + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
+        var url = m(4) + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
         get(
           url, 
           {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}, 
@@ -290,7 +304,7 @@ context_menu.create("Define in Google Translate", "selection", function () {
   content_script.send("context-menu-word-request");
 });
 content_script.receive("context-menu-word-response", function (word) {
-  tab.open("https://translate.google.com/#" + storage.read("from") + "/" + storage.read("to") + "/" + word);
+  tab.open(m(2) + storage.read("from") + "/" + storage.read("to") + "/" + word);
 });
 context_menu.create("Translate page in Google Translate", "page", function () {
   content_script.send("context-menu-url-request");
@@ -298,7 +312,7 @@ context_menu.create("Translate page in Google Translate", "page", function () {
 content_script.receive("context-menu-url-response", function (url) {
   var from = storage.read("from");
   var to = storage.read("to");
-  url = "https://translate.google.com/translate?prev=_t&hl=en&ie=UTF-8&u=" + url + "&sl=" + from + "&tl=" + to
+  url = m(5) + url + "&sl=" + from + "&tl=" + to
   tab.open(url);
 });
 

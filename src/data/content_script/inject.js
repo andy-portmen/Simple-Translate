@@ -234,7 +234,7 @@ function insert () {
     keyCode = null;
   }, false);
   document.addEventListener('mouseup', function (e) {
-    if (!isTextSelection || !(e.altKey || keyCode == 45)) return;
+    if (!isTextSelection || !(e.metaKey || e.altKey || keyCode == 45)) return;
     var selectedText = window.getSelection().toString();
     if (selectedText.length > 2) {
       requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);

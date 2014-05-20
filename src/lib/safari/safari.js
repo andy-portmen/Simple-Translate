@@ -7,7 +7,7 @@ var _safari = {
       localStorage[id] = data + "";
     }
   },
-  
+
   get: function (url, headers, data) {
     var xhr = new XMLHttpRequest();
     var deferred = new task.Deferred();
@@ -17,7 +17,7 @@ var _safari = {
           var e = new Error(xhr.statusText);
           e.status = xhr.status;
           deferred.reject(e);
-        } 
+        }
         else {
           deferred.resolve(xhr.responseText);
         }
@@ -37,7 +37,7 @@ var _safari = {
     xhr.send(data ? data : "");
     return deferred.promise;
   },
-  
+
   popup: (function () {
     var callbacks = {};
     return {
@@ -54,16 +54,16 @@ var _safari = {
       }
     }
   })(),
-  
+
   tab: {
     open: function (url) {
       safari.application.activeBrowserWindow.openTab().url = url;
     },
     openOptions: function () {
-        ///////////////
+        _safari.notification("Google Translator", "To change Settings go to Safari -> Preferences -> Extensions");
     }
   },
-  
+
   notification: function (title, text) {
     var notification = webkitNotifications.createNotification(
       safari.extension.baseURI + 'data/icon48.png',  title,  text
@@ -73,7 +73,7 @@ var _safari = {
       notification.cancel();
     }, 5000);
   },
-  
+
   play: (function () {
     var audio = new Audio();
     var canPlay = audio.canPlayType("audio/mpeg");
@@ -88,15 +88,15 @@ var _safari = {
       }
       else {
         audio.removeAttribute('src');
-        audio.setAttribute('src', url); 
+        audio.setAttribute('src', url);
       }
     }
   })(),
-  
+
   version: function () {
     return safari.extension.displayVersion;
   },
-  
+
   content_script: (function () {
     var callbacks = {};
     safari.application.addEventListener("message", function (e) {
@@ -122,14 +122,14 @@ var _safari = {
       }
     }
   })(),
-  
+
   context_menu: (function () {
     var onSelection = [];
     var onPage = [];
-  
+
     safari.application.addEventListener("contextmenu", function (e) {
       var selected = e.userInfo && "selectedText" in e.userInfo && e.userInfo.selectedText;
-      
+
       onPage.forEach(function (arr, i) {
         e.contextMenu.appendContextMenuItem("igtranslator.onPage:" + i, arr[0]);
       });
@@ -163,3 +163,9 @@ var _safari = {
     }
   })()
 }
+// Transfer settings
+safari.extension.settings.addEventListener("change", function (e) {
+  var index = ["isTextSelection", "isDblclick", "enableHistory", "numberHistoryItems"].indexOf(e.key);
+  if (index == -1) return;
+  _safari.storage.write(e.key, e.newValue);
+}, false);
