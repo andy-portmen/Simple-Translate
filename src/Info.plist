@@ -78,7 +78,7 @@
 		</dict>
 	</dict>
 	<key>Update Manifest URL</key>
-	<string>https://github.com/andy-portmen/Simple-Translate/blob/master/update.plist?raw=true</string>
+	<string>https://raw.githubusercontent.com/andy-portmen/Simple-Translate/master/src/update.plist</string>
 	<key>Website</key>
 	<string>http://add0n.com/google-translator.html</string>
 </dict>
