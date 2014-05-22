@@ -1,4 +1,5 @@
 var background = {}, manifest = {};
+
 /**** wrapper (start) ****/
 if (typeof self !== 'undefined' && self.port) { //Firefox
   background.send = function (id, data) {
@@ -32,7 +33,9 @@ else if (typeof safari !== 'undefined') { // Safari
   
   document.addEventListener('contextmenu', function () {
     var selectedText = window.getSelection().toString();
-    safari.self.tab.setContextMenuEventUserInfo(event, {selectedText: selectedText});
+    try {
+      safari.self.tab.setContextMenuEventUserInfo(event, {selectedText: selectedText});
+    } catch (e) {}
   }, false);
 }
 else {  // Chrome
@@ -49,7 +52,6 @@ else {  // Chrome
   manifest.url = chrome.extension.getURL("./");
 }
 /**** wrapper (end) ****/
-
 var word, definition;
 
 // Filter-out iFrame window
@@ -251,7 +253,6 @@ function insert () {
     }
   }, false);
 }
-
-if (window.frameElement === null) {
+if (window.top === window) {
   window.addEventListener("DOMContentLoaded", insert);
 }

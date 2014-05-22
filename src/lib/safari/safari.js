@@ -75,8 +75,11 @@ var _safari = {
   },
 
   play: (function () {
-    var audio = new Audio();
-    var canPlay = audio.canPlayType("audio/mpeg");
+    var canPlay = false;
+    try {
+      var audio = new Audio();
+      canPlay = audio.canPlayType("audio/mpeg");
+    } catch (e) {}
     if (!canPlay) {
       audio = document.createElement("iframe");
       document.body.appendChild(audio);
@@ -87,6 +90,7 @@ var _safari = {
         audio.play();
       }
       else {
+        console.error(url);
         audio.removeAttribute('src');
         audio.setAttribute('src', url);
       }
