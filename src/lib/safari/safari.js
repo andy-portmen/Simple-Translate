@@ -90,7 +90,6 @@ var _safari = {
         audio.play();
       }
       else {
-        console.error(url);
         audio.removeAttribute('src');
         audio.setAttribute('src', url);
       }
