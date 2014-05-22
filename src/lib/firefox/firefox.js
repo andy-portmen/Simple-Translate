@@ -12,14 +12,21 @@ var self          = require("sdk/self"),
     windowUtils   = require('sdk/window/utils'),
     contextMenu   = require("sdk/context-menu"),
     array         = require('sdk/util/array'),
-    {Cc, Ci, Cu}  = require('chrome');
+    {Cc, Ci, Cu}  = require('chrome'),
+    windows       = {
+      get active () { // Chrome window
+        return windowUtils.getMostRecentBrowserWindow()
+      }
+    },
+    isAustralis   = "gCustomizeMode" in windows.active,
+    toolbarbutton = isAustralis ? require("./toolbarbutton/new") : require("./toolbarbutton/old");
     
 Cu.import("resource://gre/modules/Promise.jsm");
  
 // Load overlay styles
 require("./userstyles").load(data.url("firefox/overlay.css"));
 //Install toolbar button
-var button = require("./toolbarbutton").ToolbarButton({
+var button = toolbarbutton.ToolbarButton({
   id: "igtranslator",
   label: "Google™ Translator",
   tooltiptext: "Google™ Translator",
@@ -122,8 +129,16 @@ exports.content_script = {
 }
 
 exports.tab = {
-  open: function (url) {
-    tabs.open(url);
+  open: function (url, inBackground, inCurrent) {
+    if (inCurrent) {
+      tabs.activeTab.url = url;
+    }
+    else {
+      tabs.open({
+        url: url,
+        inBackground: typeof inBackground == 'undefined' ? false : inBackground
+      });
+    }
   },
   openOptions: function () {
     windowUtils.getMostRecentBrowserWindow().BrowserOpenAddonsMgr(

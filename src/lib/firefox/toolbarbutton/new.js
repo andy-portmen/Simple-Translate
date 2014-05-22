@@ -6,6 +6,8 @@ exports.ToolbarButton = function (options) {
   var listen = {
     onWidgetBeforeDOMChange: function(tbb, aNextNode, aContainer, aIsRemoval) {
       if (tbb.id != options.id) return;
+      if (tbb.isInstalled) return;
+      tbb.isInstalled = true;
       
       tbb.addEventListener("command", function(e) {
         if (e.ctrlKey) return;
@@ -55,7 +57,7 @@ exports.ToolbarButton = function (options) {
     }
   }
   CustomizableUI.addListener(listen);
-
+  
   var getButton = () => utils.getMostRecentBrowserWindow().document.getElementById(options.id);
   var button = CustomizableUI.createWidget({
     id : options.id,
@@ -63,7 +65,7 @@ exports.ToolbarButton = function (options) {
     label : options.label,
     tooltiptext : options.tooltiptext
   });
-  
+
   //Destroy on unload
   require("sdk/system/unload").when(function () {
     CustomizableUI.removeListener(listen);
