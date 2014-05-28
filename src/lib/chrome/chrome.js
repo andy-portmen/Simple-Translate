@@ -70,7 +70,7 @@ var _chrome = {
       chrome.tabs.create({url: url});
     },
     openOptions: function () {
-      chrome.tabs.create({url: "./data/chrome/options/options.html"});
+      chrome.tabs.create({url: "./data/options/options.html"});
     }
   },
   context_menu: {

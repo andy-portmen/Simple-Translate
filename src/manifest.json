@@ -28,7 +28,7 @@
     "run_at": "document_start",
     "all_frames": false
   }],
-  "options_page": "data/chrome/options/options.html",
+  "options_page": "data/options/options.html",
   "icons": {
     "16": "data/icon16.png",
     "48": "data/icon48.png",

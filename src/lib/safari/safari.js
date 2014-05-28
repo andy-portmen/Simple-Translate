@@ -60,18 +60,12 @@ var _safari = {
       safari.application.activeBrowserWindow.openTab().url = url;
     },
     openOptions: function () {
-        _safari.notification("Google Translator", "To change Settings go to Safari -> Preferences -> Extensions");
+      safari.application.activeBrowserWindow.openTab().url = safari.extension.baseURI + "data/options/options.html";
     }
   },
 
   notification: function (title, text) {
-    var notification = webkitNotifications.createNotification(
-      safari.extension.baseURI + 'data/icon48.png',  title,  text
-    );
-    notification.show();
-    window.setTimeout(function () {
-      notification.cancel();
-    }, 5000);
+    alert(text);
   },
 
   play: (function () {

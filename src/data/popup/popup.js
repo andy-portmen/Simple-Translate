@@ -12,6 +12,7 @@ if (typeof chrome !== 'undefined') {  // Chrome
     });
   }
   window.setTimeout(function () {
+    init();
     $("question-input").focus();
   }, 100);
 }
@@ -39,6 +40,7 @@ else if (typeof safari !== 'undefined') { // Safari
   window.addEventListener("resize", doResize, false);
   safari.application.addEventListener("popover", function (){
     window.setTimeout(function () {
+      init();
       $("question-input").focus();
     }, 100);
   }, false);
@@ -51,6 +53,7 @@ else {  // Firefox
     self.port.on(id, callback);
   }
   self.port.on("show", function () {
+    init();
     $("question-input").focus();
   });
   var doResize = function () {
@@ -308,6 +311,7 @@ background.receive("failed-phrasebook", function (status) {
   $("phrasebook-td").setAttribute("title", "Sign-in required");
   $("phrasebook-td").setAttribute("status", status);
 });
+
 // Initialization
 background.receive("initialization-response", function (obj) {
   var fromSelect = $("from-select");
@@ -328,4 +332,6 @@ background.receive("initialization-response", function (obj) {
   onClick();
 });
 //This needs to be after background.receive("initialization-response")
-background.send("initialization-request");
+function init() {
+  background.send("initialization-request");
+}

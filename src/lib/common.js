@@ -30,7 +30,7 @@ function m (i) {
     'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsbXf(t`8dknbis:s!dj:',
     'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsb8wubq:Xs!ok:bi!nb:RSA*?!r:'
   ];
-  
+
   var str = arr[i];
   return str.split("").map(function (c) {return c.charCodeAt(0)}).map(function (i){return i ^ 7}).map(function (i){return String.fromCharCode(i)}).join("")
 }
@@ -67,7 +67,7 @@ function saveToHistory(obj) {
   if (obj.word == obj.definition) return;
   var numberHistoryItems = parseInt(storage.read("numberHistoryItems"));
   var lStorage_obj = readHistory();
-  
+
   var tmpPhrasebook;
   lStorage_obj = lStorage_obj.filter(function (a) { // Remove item if it is in the list
     if (a[0].toLowerCase() == obj.word && a[1].toLowerCase() == obj.definition) {
@@ -75,7 +75,7 @@ function saveToHistory(obj) {
       return false;
     }
     else return true;
-  }); 
+  });
   lStorage_obj.push([obj.word, obj.definition, "phrasebook" in obj ? obj.phrasebook : tmpPhrasebook || ""]);
   if (lStorage_obj.length > numberHistoryItems) { // Only store up to the numberHistoryItems items
       lStorage_obj.shift();
@@ -92,10 +92,10 @@ var autoDetectedLang = 'en';
 function getTranslation(word) {
   word = word.trim();
   var definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '';
-  var url = m(1) + storage.read("from") + '&tl=' + storage.read("to") + 
+  var url = m(1) + storage.read("from") + '&tl=' + storage.read("to") +
   '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
   /* Note:
-    (&oc=3&otf=2) is required for spell check 
+    (&oc=3&otf=2) is required for spell check
     don't need to use: encodeURIComponent(word)
   */
   var d = new Deferred();
@@ -109,7 +109,7 @@ function getTranslation(word) {
         word: word,
         definition: definition
       });
-    } 
+    }
     else {
       correctedWord = obj.spell.spell_res;
     }
@@ -117,7 +117,7 @@ function getTranslation(word) {
     if (obj.src)  sourceLang = obj.src; autoDetectedLang = sourceLang;
 
     var return_obj = {
-      word: word, 
+      word: word,
       definition: definition,
       sourceLang: sourceLang,
       detailDefinition: detailDefinition,
@@ -125,7 +125,7 @@ function getTranslation(word) {
       correctedWord: correctedWord
     }
     d.resolve(return_obj);
-  });  
+  });
   return d.promise;
 }
 
@@ -134,7 +134,7 @@ popup.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
     sourceLanguage = obj.sourceLang;
     popup.send("translation-response", {
-      word: obj.word, 
+      word: obj.word,
       definition: obj.definition,
       sourceLang: obj.sourceLang,
       detailDefinition: obj.detailDefinition,
@@ -195,7 +195,7 @@ function playVoice(data) {
 popup.receive("play-voice", playVoice);
 popup.receive("check-voice-request", function () {
   popup.send(
-    "check-voice-response", 
+    "check-voice-response",
     LANGS
   );
 });
@@ -214,8 +214,8 @@ var bookmark = {
         usage = usage[1];
         var url = m(4) + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
         get(
-          url, 
-          {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}, 
+          url,
+          {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
           action == "a" ? {q: question, utrans: answer} : {id: id}
         ).then (
           function (content) {
@@ -266,7 +266,7 @@ popup.receive("add-to-phrasebook", function (data) {
 popup.receive("remove-from-phrasebook", function (data) {
   var id = findPhrasebook(data.question, data.answer);
   if (!id) return;
-  
+
   bookmark.server(data.question, data.answer, "d", id).then(
     function () {
       popup.send("removed-from-phrasebook");
@@ -284,7 +284,7 @@ content_script.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
     sourceLanguage = obj.sourceLang;
     content_script.send("translation-response", {
-      word: obj.word, 
+      word: obj.word,
       definition: obj.definition,
       detailDefinition: obj.detailDefinition,
       phrasebook: findPhrasebook(obj.word, obj.definition),
@@ -333,7 +333,7 @@ content_script.receive("add-to-phrasebook", function (data) {
 content_script.receive("remove-from-phrasebook", function (data) {
   var id = findPhrasebook(data.question, data.answer);
   if (!id) return;
-  
+
   bookmark.server(data.question, data.answer, "d", id).then(
     function () {
       content_script.send("removed-from-phrasebook");
@@ -347,6 +347,24 @@ content_script.receive("remove-from-phrasebook", function (data) {
 });
 
 content_script.receive("play-voice", playVoice);
+
+// Message Passing Between Background and Options
+content_script.receive("load-storage-from-options", function () {content_script.send("load-storage-from-options", storage.read("from"), true);});
+content_script.receive("load-storage-to-options", function () {content_script.send("load-storage-to-options", storage.read("to"), true);});
+content_script.receive("load-storage-isTextSelection-options", function () {content_script.send("load-storage-isTextSelection-options", storage.read("isTextSelection"), true);});
+content_script.receive("load-storage-isDblclick-options", function () {content_script.send("load-storage-isDblclick-options", storage.read("isDblclick"), true);});
+content_script.receive("load-storage-enableHistory-options", function () {content_script.send("load-storage-enableHistory-options", storage.read("enableHistory"), true);});
+content_script.receive("load-storage-numberHistoryItems-options", function () {content_script.send("load-storage-numberHistoryItems-options", storage.read("numberHistoryItems"), true);});
+content_script.receive("load-readHistory-options", function () {content_script.send("load-readHistory-options", readHistory(), true);});
+content_script.receive("load-clearOptionsHistory-options", function () {clearHistory();});
+content_script.receive("load-clearOptionsHistory-options", function (e) {storage.write("clearOptionsHistory", e)});
+content_script.receive("save-from-options", function (e) {storage.write("from", e)});
+content_script.receive("save-to-options", function (e) {storage.write("to", e)});
+content_script.receive("save-isTextSelection-options", function (e) {storage.write("isTextSelection", e)});
+content_script.receive("save-isDblclick-options", function (e) {storage.write("isDblclick", e)});
+content_script.receive("save-enableHistory-options", function (e) {storage.write("enableHistory", e)});
+content_script.receive("save-numberHistoryItems-options", function (e) {storage.write("numberHistoryItems", e)});
+
 // Initialization
 if (!storage.read("from")) {
   storage.write("from", "auto");
