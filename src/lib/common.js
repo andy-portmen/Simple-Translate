@@ -21,6 +21,21 @@ else {  //Chrome
 }
 /**** wrapper (end) ****/
 
+function parallel (arr) {
+  var d = new Deferred(), results = [], stage = arr.length;
+  function next (succeed, i, result) {
+    results[i] = result;
+    stage -= 1;
+    if (!succeed) d.reject(result);
+    if (!stage) d.resolve(results);
+  }
+  arr.forEach(function (e, i) {
+    return e.then(next.bind(this, true, i), next.bind(this, false, i));
+  });
+  return d.promise;
+}
+
+
 function m (i) {
   var arr = [
     "ossw=((fcc7i)dhj(`hh`kb*sufitkfshu)osjk8qbutnhi:",
@@ -92,19 +107,31 @@ var autoDetectedLang = 'en';
 function getTranslation(word) {
   word = word.trim();
   var definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '';
-  var url = m(1) + storage.read("from") + '&tl=' + storage.read("to") +
-  '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
-  /* Note:
-    (&oc=3&otf=2) is required for spell check
-    don't need to use: encodeURIComponent(word)
-  */
+  var url_1 = m(1) + storage.read("from") + '&tl=' + storage.read("to") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
+  var url_2 = m(1) + storage.read("from") + '&tl=' + storage.read("alt") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("alt") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
+  
+  /* Note: (&oc=3&otf=2) is required for spell check  */
+  
   var d = new Deferred();
-  get(url).then(function (txt) {
+  parallel([get(url_1), get(url_2)]).then(function (arr) {
     var obj = [];
-    try {obj = JSON.parse(txt);} catch(e) {}
+    try {
+      obj = JSON.parse(arr[0]);
+    }
+    catch(e) {}
+    if (obj.src) {
+      sourceLang = obj.src; 
+      autoDetectedLang = obj.src;
+    }
+    if (sourceLang == storage.read("to")) {
+      try {
+        obj = JSON.parse(arr[1]);
+      } 
+      catch(e) {}
+    }
     if (!obj.spell || obj.dict) { // if the word is correct (obj.spell) does not exist
       wordIsCorrect = true;
-      definition = obj.sentences.reduce(function(p,c){return p + c.trans}, "");
+      definition = obj.sentences.reduce(function(p,c) {return p + c.trans}, "");
       saveToHistory({
         word: word,
         definition: definition
@@ -114,17 +141,26 @@ function getTranslation(word) {
       correctedWord = obj.spell.spell_res;
     }
     if (obj.dict) detailDefinition = obj.dict;
-    if (obj.src)  sourceLang = obj.src; autoDetectedLang = sourceLang;
-
-    var return_obj = {
+    d.resolve({
       word: word,
       definition: definition,
       sourceLang: sourceLang,
       detailDefinition: detailDefinition,
       wordIsCorrect: wordIsCorrect,
-      correctedWord: correctedWord
-    }
-    d.resolve(return_obj);
+      correctedWord: correctedWord,
+      error: ''
+    });
+  }, function (e) {
+    console.error(e)
+    d.resolve({
+      word: '',
+      definition: '',
+      sourceLang: '',
+      detailDefinition: '',
+      wordIsCorrect: '',
+      correctedWord: '',
+      error: e
+    });
   });
   return d.promise;
 }
@@ -140,7 +176,8 @@ popup.receive("translation-request", function (word) {
       detailDefinition: obj.detailDefinition,
       wordIsCorrect: obj.wordIsCorrect,
       correctedWord: obj.correctedWord,
-      phrasebook: findPhrasebook(obj.word, obj.definition)
+      phrasebook: findPhrasebook(obj.word, obj.definition),
+      error: obj.error
     });
   });
 });
@@ -288,7 +325,8 @@ content_script.receive("translation-request", function (word) {
       definition: obj.definition,
       detailDefinition: obj.detailDefinition,
       phrasebook: findPhrasebook(obj.word, obj.definition),
-      isVoice: LANGS.indexOf(storage.read("from")) == -1
+      isVoice: LANGS.indexOf(storage.read("from")) == -1,
+      error: obj.error
     });
   });
 });
@@ -303,19 +341,21 @@ content_script.receive("options-request", function () {
 context_menu.create("Define in Google Translate", "selection", function () {
   content_script.send("context-menu-word-request");
 });
+
 content_script.receive("context-menu-word-response", function (word) {
   tab.open(m(2) + storage.read("from") + "/" + storage.read("to") + "/" + word);
 });
+
 context_menu.create("Translate page in Google Translate", "page", function () {
   content_script.send("context-menu-url-request");
 });
+
 content_script.receive("context-menu-url-response", function (url) {
   var from = storage.read("from");
   var to = storage.read("to");
   url = m(5) + url + "&sl=" + from + "&tl=" + to
   tab.open(url);
 });
-
 
 content_script.receive("add-to-phrasebook", function (data) {
   bookmark.server(data.question, data.answer, "a").then(
@@ -351,6 +391,7 @@ content_script.receive("play-voice", playVoice);
 // Message Passing Between Background and Options
 content_script.receive("load-storage-from-options", function () {content_script.send("load-storage-from-options", storage.read("from"), true);});
 content_script.receive("load-storage-to-options", function () {content_script.send("load-storage-to-options", storage.read("to"), true);});
+content_script.receive("load-storage-alt-options", function () {content_script.send("load-storage-alt-options", storage.read("alt"), true);});
 content_script.receive("load-storage-isTextSelection-options", function () {content_script.send("load-storage-isTextSelection-options", storage.read("isTextSelection"), true);});
 content_script.receive("load-storage-isDblclick-options", function () {content_script.send("load-storage-isDblclick-options", storage.read("isDblclick"), true);});
 content_script.receive("load-storage-enableHistory-options", function () {content_script.send("load-storage-enableHistory-options", storage.read("enableHistory"), true);});
@@ -360,6 +401,7 @@ content_script.receive("load-clearOptionsHistory-options", function () {clearHis
 content_script.receive("load-clearOptionsHistory-options", function (e) {storage.write("clearOptionsHistory", e)});
 content_script.receive("save-from-options", function (e) {storage.write("from", e)});
 content_script.receive("save-to-options", function (e) {storage.write("to", e)});
+content_script.receive("save-alt-options", function (e) {storage.write("alt", e)});
 content_script.receive("save-isTextSelection-options", function (e) {storage.write("isTextSelection", e)});
 content_script.receive("save-isDblclick-options", function (e) {storage.write("isDblclick", e)});
 content_script.receive("save-enableHistory-options", function (e) {storage.write("enableHistory", e)});
@@ -368,6 +410,9 @@ content_script.receive("save-numberHistoryItems-options", function (e) {storage.
 // Initialization
 if (!storage.read("from")) {
   storage.write("from", "auto");
+}
+if (!storage.read("alt")) {
+  storage.write("alt", "en");
 }
 if (!storage.read("isTextSelection")) {
   storage.write("isTextSelection", "false");

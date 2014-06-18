@@ -1,5 +1,6 @@
 body {
-  width: 370px;
+  width: 400px;
+  height: 200px;
   margin: 5px;
   padding: 0;
   color: #444;
@@ -101,7 +102,7 @@ tr td {
 }
 #definition-div {
   padding: 0 10px;
-  height: 98px;
+  height: 126px;
   overflow-y: auto;
   color: #000;
 }
@@ -110,6 +111,12 @@ tr td {
   background-repeat: no-repeat;
   background-position: center center;
   background-size: auto 16px;
+}
+#definition-div[state='error'] {
+  background-image: url('error.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: auto 32px;
 }
 #phrasebook-td, 
 #voice-question-td, 

@@ -155,7 +155,7 @@ function insert () {
     bubbleDOM.style.left = mouseX + 'px';
     bubbleDOM.style.display = 'block'; 
     var img = document.createElement('img');
-    img.setAttribute("style", "margin-left: 50px;");
+    img.setAttribute("style", "margin-left: 67px !important;");
     img.src = manifest.url + "data/content_script/loading.gif";
     body.appendChild(img);
     background.send("translation-request", selectedText);
@@ -163,47 +163,63 @@ function insert () {
 
   background.receive("translation-response", function (data) {
     // Global
+    body.innerHTML = '';
     definition = data.definition;
     word = data.word;
-    function span (style) {
+    function span (style, width) {
       var span = document.createElement('span');
       if (style) {
         span.setAttribute("style", style);
       }
       span.dir = "auto";
+      span.style.width = width + 'px' || "100%";
       body.appendChild(span);
       return span;
     }
-
-    if (data.phrasebook) {
-      bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
-      bookmarks.setAttribute("status", "saved");
-    }
-    else {
-      bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
-      bookmarks.removeAttribute("status");
-    }
-    voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
-    voice.setAttribute("isVoice", data.isVoice);
-  
-    body.innerHTML = '';
-    span("font-size: 130%; display: block; width: 100%;").textContent = data.definition || "not found";
-    if (data.detailDefinition) {
-      var detailDefinition = data.detailDefinition; 
-      if (detailDefinition.length > 0) {
-        var hr = document.createElement('hr');
-        hr.setAttribute('class', 'selection_bubble_line');
-        body.appendChild(hr);
-        for (var i = 0; i < detailDefinition.length; i++) { // title
-          span("display: inline-block;").textContent = data.word + (detailDefinition[i].pos ? " -" : "");
-          span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
-          if (detailDefinition[i].entry) {
-            for (j = 0; j < detailDefinition[i].entry.length; j++) { // entries
-              span("display: block; width: 100%;").textContent = ' • ' + detailDefinition[i].entry[j].word;
+    if (!data.error) {
+      if (data.phrasebook) {
+        bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
+        bookmarks.setAttribute("status", "saved");
+      }
+      else {
+        bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
+        bookmarks.removeAttribute("status");
+      }
+      voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
+      voice.setAttribute("isVoice", data.isVoice);
+      span("font-size: 130%; display: block; width: 100%;").textContent = '  ' + data.definition || "not found";
+      if (data.detailDefinition) {
+        var detailDefinition = data.detailDefinition; 
+        if (detailDefinition.length > 0) {
+          var hr = document.createElement('hr');
+          hr.setAttribute('class', 'selection_bubble_line');
+          body.appendChild(hr);
+          for (var i = 0; i < detailDefinition.length; i++) { // title
+            span("display: inline-block;").textContent = data.word + (detailDefinition[i].pos ? " -" : "");
+            span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
+            if (detailDefinition[i].entry) {  
+              for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
+                var score = Math.round(detailDefinition[i].entry[j].score * 100);
+                var line_span = span("display: block; height: 16px; width: 100%;");
+                var percent_span = span("display: inline-block; height: 9px; margin: 0 0 0 10px; background-color: rgba(222, 184, 135, 0.3); vertical-align: middle;", 30);
+                var percent = span("display: inline-block; height: 5px; margin: 0 0 10px 0; background-color: rgba(222, 184, 135, 1.0); vertical-align: middle;", 0.3 * score);
+                percent_span.appendChild(percent);
+                line_span.appendChild(percent_span);
+                line_span.appendChild(document.createTextNode(detailDefinition[i].entry[j].word));
+              }
             }
           }
         }
       }
+    }
+    else {
+      voice.src = manifest.url + "data/content_script/novoice.png";
+      voice.setAttribute("isVoice", "no");
+      var img = document.createElement('img');
+      img.setAttribute("style", "margin-left: 70px !important;");
+      img.src = manifest.url + "data/content_script/error.png";
+      body.appendChild(img);
+      span("font-size: 100%; display: block; width: 100%; padding: 10px 0 10px 0;").textContent = "Can't Access Google Translate";
     }
   });
 

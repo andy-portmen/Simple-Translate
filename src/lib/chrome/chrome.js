@@ -8,11 +8,15 @@ var _chrome = {
     }
   },
   get: function (url, headers, data) {
+  
+  
+    console.error('get')
     var xhr = new XMLHttpRequest();
     var deferred = new task.Deferred();
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
-        if (xhr.status >= 400) {
+        console.error(0)
+        if (xhr.status >= 400 || xhr.status < 200) {
           var e = new Error(xhr.statusText);
           e.status = xhr.status;
           deferred.reject(e);

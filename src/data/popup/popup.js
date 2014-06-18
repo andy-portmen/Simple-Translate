@@ -128,68 +128,80 @@ background.receive("translation-response", function (obj) {
     var br = document.createElement('br');
     $("definition-div").appendChild(br);
   }
-  function span (style) {
+  function span (style, width) {
     var span = document.createElement('span');
     if (style) {
       span.setAttribute("style", style);
     }
     span.dir = "auto";
-    $("definition-div").appendChild(span);
+    span.style.width = width + 'px' || "100%";
+    ($("definition-div")).appendChild(span);
     return span;
   }
+  $("definition-div").removeAttribute('state');  
+  if (!obj.error) {
+    if (obj.wordIsCorrect) {
+      $("question-input").setAttribute("word", obj.word);
 
-  $("definition-div").removeAttribute('state');
-  if (obj.wordIsCorrect) {
-    $("question-input").setAttribute("word", obj.word);
+      if (wrongWord) {
+        $("question-input").value = wrongWord + " >> " + obj.word;
+      }
+      else {
+        $("question-input").value = obj.word;
+      }
+      wrongWord = '';
+      $("question-input").select();
+      $("definition-div").innerHTML = "";
+      span("display: inline-block; width: 100%; font-size: 16px;").textContent = obj.definition;
+      $("definition-div").setAttribute("definition", obj.definition);
 
-    if (wrongWord) {
-      $("question-input").value = wrongWord + " >> " + obj.word;
-    }
-    else {
-      $("question-input").value = obj.word;
-    }
-    wrongWord = '';
-    $("question-input").select();
-    $("definition-div").innerHTML = "";
-    span("display: inline-block; width: 100%; font-size: 16px;").textContent = obj.definition;
-    $("definition-div").setAttribute("definition", obj.definition);
-
-    var fs = $("from-select").children[$("from-select").selectedIndex];
-    if (fs.value == 'auto' && obj.sourceLang) {
-      fs.textContent = 'Auto (' + obj.sourceLang + ')';
-      $("from-select").setAttribute("detected-language", obj.sourceLang);
-    }
-    if (obj.phrasebook) {
-      $("phrasebook-td").setAttribute("status", "saved");
-      $("phrasebook-td").setAttribute("title", "Saved");
-    }
-    else {
-      $("phrasebook-td").removeAttribute("status");
-      $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
-    }
-    if (obj.detailDefinition) {
-      var detailDefinition = obj.detailDefinition;
-      if (detailDefinition.length > 0) {
-        br();
-        for (var i = 0; i < detailDefinition.length; i++) { // titles
-          span("display: inline-block;").textContent = obj.word + (detailDefinition[i].pos ? " -" : "");
-          span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
+      var fs = $("from-select").children[$("from-select").selectedIndex];
+      if (fs.value == 'auto' && obj.sourceLang) {
+        fs.textContent = 'Auto (' + obj.sourceLang + ')';
+        $("from-select").setAttribute("detected-language", obj.sourceLang);
+      }
+      if (obj.phrasebook) {
+        $("phrasebook-td").setAttribute("status", "saved");
+        $("phrasebook-td").setAttribute("title", "Saved");
+      }
+      else {
+        $("phrasebook-td").removeAttribute("status");
+        $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
+      }
+      if (obj.detailDefinition) {
+        var detailDefinition = obj.detailDefinition;
+        if (detailDefinition.length > 0) {
           br();
-          if (detailDefinition[i].entry) {
-            for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
-              span("display: inline-block; width: 100%;").textContent = ' • ' + detailDefinition[i].entry[j].word;
-              br();
+          for (var i = 0; i < detailDefinition.length; i++) { // titles
+            span("display: inline-block;").textContent = obj.word + (detailDefinition[i].pos ? " -" : "");
+            span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
+            br();
+            if (detailDefinition[i].entry) {
+              for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
+                var score = Math.round(detailDefinition[i].entry[j].score * 100);
+                var line_span = span("display: inline-block; height: 16px; width: 100%;");
+                var percent_span = span("display: inline-block; height: 9px; margin: 0 0 0 10px; background-color: rgba(76, 142, 251, 0.3); vertical-align: middle;", 40);
+                var percent = span("display: inline-block; height: 5px; margin: 0 0 9px 0; background-color: rgba(76, 142, 251, 1.0); vertical-align: middle;", 0.4 * score);
+                percent_span.appendChild(percent);
+                line_span.appendChild(percent_span);
+                line_span.appendChild(document.createTextNode(detailDefinition[i].entry[j].word));
+                br();
+              }
             }
           }
         }
       }
     }
+    else {
+      background.send("translation-request", obj.correctedWord);
+      $("definition-div").textContent = "check spelling";
+      $("definition-div").setAttribute('state', 'loading');
+      wrongWord = obj.word;
+    }
   }
   else {
-    background.send("translation-request", obj.correctedWord);
-    $("definition-div").textContent = "check spelling";
-    $("definition-div").setAttribute('state', 'loading');
-    wrongWord = obj.word;
+    span("display: inline-block; width: 100%; font-size: 16px; padding: 10px 0 0 0;").textContent = "Can't Access Google Translate";
+    $("definition-div").setAttribute('state', 'error');
   }
 })
 ;

@@ -1,10 +1,12 @@
 .header_bubble {
   height: 19px;
   overflow: visible !important;
-  padding-top: 5px !important;
+  padding-top: 3px !important;
+  background: rgba(222, 184, 135, 0.3) !important;
+  border-radius: 3px;
 }
 .header_bubble img {
-  margin: 0 7px !important;
+  margin: 0 11px !important;
   opacity: 0.6;
   cursor: pointer;
 }
@@ -26,7 +28,7 @@
   white-space: -o-pre-wrap;    /* Opera 7  */
   word-wrap: break-word;       /* IE       */
   z-index: 1000;
-  min-width: 120px;
+  min-width: 150px;
   max-width: 350px;
 }
 .selection_bubble div {

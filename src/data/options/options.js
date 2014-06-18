@@ -48,10 +48,11 @@ function $ (id) {
   return document.getElementById(id)
 };
 
-var from, to, isTextSelection, isDblclick, enableHistory, numberHistoryItems;
+var from, to, alt, isTextSelection, isDblclick, enableHistory, numberHistoryItems;
 
 background.send("load-storage-from-options", "");
 background.send("load-storage-to-options", "");
+background.send("load-storage-alt-options", "");
 background.send("load-storage-isTextSelection-options", "");
 background.send("load-storage-isDblclick-options", "");
 background.send("load-storage-enableHistory-options", "");
@@ -60,6 +61,7 @@ background.send("load-readHistory-options", "");
 
 background.receive("load-storage-from-options", function (e) {from = e;});
 background.receive("load-storage-to-options", function (e) {to = e;});
+background.receive("load-storage-alt-options", function (e) {alt = e;});
 background.receive("load-storage-isTextSelection-options", function (e) {isTextSelection = e;});
 background.receive("load-storage-isDblclick-options", function (e) {isDblclick = e;});
 background.receive("load-storage-enableHistory-options", function (e) {enableHistory = e;});
@@ -78,6 +80,13 @@ background.receive("load-readHistory-options", function (e) {
     for (var i = 0; i < toSelect.children.length; i++) {
       if (toSelect.children[i].getAttribute('value') == to) {
         toSelect.children[i].selected = 'true';
+        break;
+      }
+    }
+    var altSelect = document.getElementById('alt-select');
+    for (var i = 0; i < altSelect.children.length; i++) {
+      if (altSelect.children[i].getAttribute('value') == alt) {
+        altSelect.children[i].selected = 'true';
         break;
       }
     }
@@ -124,6 +133,10 @@ background.receive("load-readHistory-options", function (e) {
   document.getElementById('to-select').addEventListener('change', function (e) {
     var toSelect = e.target.children[e.target.selectedIndex].value;
     background.send("save-to-options", toSelect);
+  }, false);
+  document.getElementById('alt-select').addEventListener('change', function (e) {
+    var altSelect = e.target.children[e.target.selectedIndex].value;
+    background.send("save-alt-options", altSelect);
   }, false);
   document.getElementById('saveAsHistory').addEventListener('click', function () {
     var data = '';
