@@ -2,6 +2,7 @@
   height: 19px;
   overflow: visible !important;
   padding-top: 3px !important;
+  margin-top: 7px !important;
   background: rgba(222, 184, 135, 0.3) !important;
   border-radius: 3px;
 }
@@ -16,7 +17,7 @@
 .selection_bubble {
   display: none;
   position: absolute;
-  padding: 8px !important;
+  padding: 5px !important;
   color: black !important;
   font: 13px Arial !important;
   background: #FAEBD7 !important;

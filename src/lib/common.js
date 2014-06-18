@@ -129,7 +129,10 @@ function getTranslation(word) {
       } 
       catch(e) {}
     }
-    if (!obj.spell || obj.dict) { // if the word is correct (obj.spell) does not exist
+    
+    console.error(obj)
+    
+    if (!obj.spell && (obj.dict || obj.sentences)) { // if the word is correct (obj.spell) does not exist
       wordIsCorrect = true;
       definition = obj.sentences.reduce(function(p,c) {return p + c.trans}, "");
       saveToHistory({
@@ -138,6 +141,7 @@ function getTranslation(word) {
       });
     }
     else {
+      console.error("word is in-correct")
       correctedWord = obj.spell.spell_res;
     }
     if (obj.dict) detailDefinition = obj.dict;
@@ -151,7 +155,6 @@ function getTranslation(word) {
       error: ''
     });
   }, function (e) {
-    console.error(e)
     d.resolve({
       word: '',
       definition: '',
@@ -324,6 +327,8 @@ content_script.receive("translation-request", function (word) {
       word: obj.word,
       definition: obj.definition,
       detailDefinition: obj.detailDefinition,
+      wordIsCorrect: obj.wordIsCorrect,
+      correctedWord: obj.correctedWord,
       phrasebook: findPhrasebook(obj.word, obj.definition),
       isVoice: LANGS.indexOf(storage.read("from")) == -1,
       error: obj.error

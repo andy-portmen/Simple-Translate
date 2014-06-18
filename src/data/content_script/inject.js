@@ -62,6 +62,7 @@ function insert () {
   var bubbleDOM = document.createElement('div');
   bubbleDOM.setAttribute('class', 'selection_bubble');
   bubbleDOM.setAttribute('id', 'bubble_container');
+  bubbleDOM.setAttribute('dir', 'auto');
   
   var toolbarDiv = document.createElement('div');
   toolbarDiv.setAttribute('class', 'header_bubble');
@@ -132,6 +133,7 @@ function insert () {
   });
 
   var body = document.createElement('div');
+  body.setAttribute('dir', 'auto');
   bubbleDOM.appendChild(body);
   
   toolbarDiv.appendChild(bookmarks);
@@ -149,80 +151,103 @@ function insert () {
     isTextSelection = data.isTextSelection;
     isDblclick = data.isDblclick;
   });
-
+  
+  function span (style, width) {
+    var span = document.createElement('span');
+    if (style) {
+      span.setAttribute("style", style);
+    }
+    span.dir = 'auto';
+    span.style.width = width ? (width == 'auto' ? 'auto' : width + 'px') : "100%";
+    body.appendChild(span);
+    return span;
+  }
+  
   function requestBubbleTranslation(mouseX, mouseY, selectedText) {
     bubbleDOM.style.top = (mouseY + 16) + 'px';
     bubbleDOM.style.left = mouseX + 'px';
     bubbleDOM.style.display = 'block'; 
     var img = document.createElement('img');
-    img.setAttribute("style", "margin-left: 67px !important;");
+    img.setAttribute("style", "margin: 0 !important;");
     img.src = manifest.url + "data/content_script/loading.gif";
-    body.appendChild(img);
+    var img_span = span("display: block; height: 18px; text-align:center;");
+    img_span.appendChild(img);
+    body.appendChild(img_span);
     background.send("translation-request", selectedText);
   }
 
+  var wrongWord = '';
   background.receive("translation-response", function (data) {
-    // Global
-    body.innerHTML = '';
-    definition = data.definition;
-    word = data.word;
-    function span (style, width) {
-      var span = document.createElement('span');
-      if (style) {
-        span.setAttribute("style", style);
-      }
-      span.dir = "auto";
-      span.style.width = width + 'px' || "100%";
-      body.appendChild(span);
-      return span;
+    //$("definition-div").textContent = "check spelling";
+    //$("definition-div").setAttribute('state', 'loading');
+    //wrongWord = obj.word;
+    if (!data.wordIsCorrect && data.correctedWord) {
+      wrongWord = data.word;
+      background.send("translation-request", data.correctedWord);
     }
-    if (!data.error) {
-      if (data.phrasebook) {
-        bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
-        bookmarks.setAttribute("status", "saved");
-      }
-      else {
-        bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
-        bookmarks.removeAttribute("status");
-      }
-      voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
-      voice.setAttribute("isVoice", data.isVoice);
-      span("font-size: 130%; display: block; width: 100%;").textContent = '  ' + data.definition || "not found";
-      if (data.detailDefinition) {
-        var detailDefinition = data.detailDefinition; 
-        if (detailDefinition.length > 0) {
-          var hr = document.createElement('hr');
-          hr.setAttribute('class', 'selection_bubble_line');
-          body.appendChild(hr);
-          for (var i = 0; i < detailDefinition.length; i++) { // title
-            span("display: inline-block;").textContent = data.word + (detailDefinition[i].pos ? " -" : "");
-            span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
-            if (detailDefinition[i].entry) {  
-              for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
-                var score = Math.round(detailDefinition[i].entry[j].score * 100);
-                var line_span = span("display: block; height: 16px; width: 100%;");
-                var percent_span = span("display: inline-block; height: 9px; margin: 0 0 0 10px; background-color: rgba(222, 184, 135, 0.3); vertical-align: middle;", 30);
-                var percent = span("display: inline-block; height: 5px; margin: 0 0 10px 0; background-color: rgba(222, 184, 135, 1.0); vertical-align: middle;", 0.3 * score);
-                percent_span.appendChild(percent);
-                line_span.appendChild(percent_span);
-                line_span.appendChild(document.createTextNode(detailDefinition[i].entry[j].word));
+    else {
+      body.innerHTML = '';
+      definition = data.definition;
+      word = data.word;
+      if (!data.error) {
+        if (data.phrasebook) {
+          bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
+          bookmarks.setAttribute("status", "saved");
+        }
+        else {
+          bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
+          bookmarks.removeAttribute("status");
+        }
+        voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
+        voice.setAttribute("isVoice", data.isVoice);
+        var title_span = span("font-size: 130%; display: block; text-align: center;");
+        if (!wrongWord) title_span.textContent = '  ' + data.definition || "not found";
+        else title_span.textContent = (data.word + ': ' + data.definition) || "not found";
+        
+        if (data.detailDefinition) {
+          var detailDefinition = data.detailDefinition; 
+          if (detailDefinition.length > 0) {
+            var hr = document.createElement('hr');
+            hr.setAttribute('class', 'selection_bubble_line');
+            body.appendChild(hr);
+            for (var i = 0; i < detailDefinition.length; i++) { // title
+              var title_text_1 = span("display: inline-block; text-align: left;", 'auto'); 
+              title_text_1.textContent = data.word + (detailDefinition[i].pos ? " -" : "");
+              var title_text_2 = span("display: inline-block; text-align: left; font-style:italic; padding: 10px 0 0 5px; color: #777", 'auto'); 
+              title_text_2.textContent = detailDefinition[i].pos;
+              var title_text = span("display: inline-block; text-align: left;"); // this is only in English
+              title_text.appendChild(title_text_1);
+              title_text.appendChild(title_text_2);
+              if (detailDefinition[i].entry) {  
+                for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
+                  var score = Math.round(detailDefinition[i].entry[j].score * 100) + 10;
+                  var line_span = span("display: block; height: 16px;");
+                  var percent_span = span("display: inline-block; height: 9px; margin: 0 5px 0 5px; background-color: rgba(222, 184, 135, 0.3); vertical-align: middle; text-align: left;", 33);  // this is only in LTR
+                  var percent = span("display: inline-block; height: 5px; margin: 0 0 10px 0; background-color: rgba(222, 184, 135, 1.0); vertical-align: middle; text-align: left;", 0.3 * score);  // this is only in LTR
+                  percent_span.appendChild(percent);
+                  line_span.appendChild(percent_span);
+                  line_span.appendChild(document.createTextNode(detailDefinition[i].entry[j].word));
+                  var text_direction = window.getComputedStyle(line_span, null).direction || '';
+                  if (text_direction == 'rtl') line_span.style.textAlign = "right";
+                  if (text_direction == 'ltr') line_span.style.textAlign = "left";
+                  if (text_direction == '')    line_span.style.textAlign = "left";
+                }
               }
             }
           }
         }
       }
-    }
-    else {
-      voice.src = manifest.url + "data/content_script/novoice.png";
-      voice.setAttribute("isVoice", "no");
-      var img = document.createElement('img');
-      img.setAttribute("style", "margin-left: 70px !important;");
-      img.src = manifest.url + "data/content_script/error.png";
-      body.appendChild(img);
-      span("font-size: 100%; display: block; width: 100%; padding: 10px 0 10px 0;").textContent = "Can't Access Google Translate";
+      else {
+        voice.src = manifest.url + "data/content_script/novoice.png";
+        voice.setAttribute("isVoice", "no");
+        var img = document.createElement('img');
+        img.setAttribute("style", "margin-left: 70px !important;");
+        img.src = manifest.url + "data/content_script/error.png";
+        body.appendChild(img);
+        span("font-size: 100%; display: block; padding: 10px 0 10px 0;").textContent = "Can't Access Google Translate";
+      }
     }
   });
-
 
   background.receive("context-menu-word-request", function () {
     var selectedText = window.getSelection().toString();

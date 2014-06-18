@@ -8,9 +8,6 @@ var _chrome = {
     }
   },
   get: function (url, headers, data) {
-  
-  
-    console.error('get')
     var xhr = new XMLHttpRequest();
     var deferred = new task.Deferred();
     xhr.onreadystatechange = function() {
