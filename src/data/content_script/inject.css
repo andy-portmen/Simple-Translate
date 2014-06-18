@@ -8,6 +8,7 @@
 }
 .header_bubble img {
   margin: 0 11px !important;
+  display: inline-block !important;
   opacity: 0.6;
   cursor: pointer;
 }

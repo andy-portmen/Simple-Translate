@@ -168,7 +168,7 @@ function insert () {
     bubbleDOM.style.left = mouseX + 'px';
     bubbleDOM.style.display = 'block'; 
     var img = document.createElement('img');
-    img.setAttribute("style", "margin: 0 !important;");
+    img.setAttribute("style", "margin: 0 !important; display: inline-block;");
     img.src = manifest.url + "data/content_script/loading.gif";
     var img_span = span("display: block; height: 18px; text-align:center;");
     img_span.appendChild(img);
@@ -178,9 +178,6 @@ function insert () {
 
   var wrongWord = '';
   background.receive("translation-response", function (data) {
-    //$("definition-div").textContent = "check spelling";
-    //$("definition-div").setAttribute('state', 'loading');
-    //wrongWord = obj.word;
     if (!data.wordIsCorrect && data.correctedWord) {
       wrongWord = data.word;
       background.send("translation-request", data.correctedWord);
@@ -201,23 +198,25 @@ function insert () {
         voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
         voice.setAttribute("isVoice", data.isVoice);
         var title_span = span("font-size: 130%; display: block; text-align: center;");
-        if (!wrongWord) title_span.textContent = '  ' + data.definition || "not found";
-        else title_span.textContent = (data.word + ': ' + data.definition) || "not found";
-        
+        title_span.textContent = (data.word + ': ' + data.definition) || "not found";
         if (data.detailDefinition) {
           var detailDefinition = data.detailDefinition; 
           if (detailDefinition.length > 0) {
             var hr = document.createElement('hr');
             hr.setAttribute('class', 'selection_bubble_line');
             body.appendChild(hr);
-            for (var i = 0; i < detailDefinition.length; i++) { // title
-              var title_text_1 = span("display: inline-block; text-align: left;", 'auto'); 
-              title_text_1.textContent = data.word + (detailDefinition[i].pos ? " -" : "");
-              var title_text_2 = span("display: inline-block; text-align: left; font-style:italic; padding: 10px 0 0 5px; color: #777", 'auto'); 
-              title_text_2.textContent = detailDefinition[i].pos;
-              var title_text = span("display: inline-block; text-align: left;"); // this is only in English
+            for (var i = 0; i < detailDefinition.length; i++) { // title            
+              var title_text, title_text_1, title_text_2, title_text_3; 
+              title_text_1 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px;", 'auto'); 
+              title_text_1.textContent = data.word;
+              title_text_2 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px;", 'auto'); 
+              title_text_2.textContent = detailDefinition[i].pos ? "-" : "";
+              title_text_3 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px; font-style:italic; padding: 10px 0 0 5px; color: #777", 'auto'); 
+              title_text_3.textContent = detailDefinition[i].pos;
+              title_text = span("display: inline-block; text-align: left;"); // this is only in English
               title_text.appendChild(title_text_1);
               title_text.appendChild(title_text_2);
+              title_text.appendChild(title_text_3);
               if (detailDefinition[i].entry) {  
                 for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
                   var score = Math.round(detailDefinition[i].entry[j].score * 100) + 10;

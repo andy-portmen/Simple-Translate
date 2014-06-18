@@ -133,9 +133,9 @@ background.receive("translation-response", function (obj) {
     if (style) {
       span.setAttribute("style", style);
     }
-    span.dir = "auto";
-    span.style.width = width + 'px' || "100%";
-    ($("definition-div")).appendChild(span);
+    span.dir = 'auto';
+    span.style.width = width ? (width == 'auto' ? 'auto' : width + 'px') : "100%";
+    $("definition-div").appendChild(span);
     return span;
   }
   $("definition-div").removeAttribute('state');  
@@ -152,7 +152,7 @@ background.receive("translation-response", function (obj) {
       wrongWord = '';
       $("question-input").select();
       $("definition-div").innerHTML = "";
-      span("display: inline-block; width: 100%; font-size: 16px;").textContent = obj.definition;
+      span("display: inline-block; width: 100%; font-size: 16px; padding: 5px 0 0 0;").textContent = obj.definition;
       $("definition-div").setAttribute("definition", obj.definition);
 
       var fs = $("from-select").children[$("from-select").selectedIndex];
@@ -173,14 +173,23 @@ background.receive("translation-response", function (obj) {
         if (detailDefinition.length > 0) {
           br();
           for (var i = 0; i < detailDefinition.length; i++) { // titles
-            span("display: inline-block;").textContent = obj.word + (detailDefinition[i].pos ? " -" : "");
-            span("display: inline-block; font-style:italic; padding: 10px 0 0 5px; color: #777").textContent = detailDefinition[i].pos;
+            var title_text, title_text_1, title_text_2, title_text_3; 
+            title_text_1 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px;", 'auto'); 
+            title_text_1.textContent = obj.word;
+            title_text_2 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px;", 'auto'); 
+            title_text_2.textContent = detailDefinition[i].pos ? "-" : "";
+            title_text_3 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px; font-style:italic; padding: 10px 0 0 5px; color: #777", 'auto'); 
+            title_text_3.textContent = detailDefinition[i].pos;
+            title_text = span("display: inline-block; text-align: left;"); // this is only in English
+            title_text.appendChild(title_text_1);
+            title_text.appendChild(title_text_2);
+            title_text.appendChild(title_text_3);
             br();
             if (detailDefinition[i].entry) {
               for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
-                var score = Math.round(detailDefinition[i].entry[j].score * 100);
+                var score = Math.round(detailDefinition[i].entry[j].score * 100) + 10;
                 var line_span = span("display: inline-block; height: 16px; width: 100%;");
-                var percent_span = span("display: inline-block; height: 9px; margin: 0 0 0 10px; background-color: rgba(76, 142, 251, 0.3); vertical-align: middle;", 40);
+                var percent_span = span("display: inline-block; height: 9px; margin: 0 10px 0 10px; background-color: rgba(76, 142, 251, 0.3); vertical-align: middle;", 44);
                 var percent = span("display: inline-block; height: 5px; margin: 0 0 9px 0; background-color: rgba(76, 142, 251, 1.0); vertical-align: middle;", 0.4 * score);
                 percent_span.appendChild(percent);
                 line_span.appendChild(percent_span);
