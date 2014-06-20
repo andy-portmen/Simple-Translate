@@ -9,6 +9,8 @@
   border-radius: 3px !important;
   z-index: 1000;
   max-width: 500px;
+  border-collapse: separate !important;
+  border-spacing: 2px !important;
 }
 .igtranslator-bubble:after, 
 .igtranslator-bubble:before {
@@ -49,6 +51,8 @@
   max-height: 200px;
   min-height: 80px;
   overflow-y: auto;
+  border-collapse: separate !important;
+  border-spacing: 2px !important;
 }
 .igtranslator-content td {
   padding: 0 5px !important;

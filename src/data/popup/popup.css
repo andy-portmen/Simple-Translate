@@ -1,5 +1,5 @@
 body {
-  width: 500px;
+  width: 450px;
   margin: 5px;
   padding: 0;
   color: #444;
@@ -101,7 +101,7 @@ table {
 #answer-td {
 }
 #definition-table {
-  height: 200px;
+  height: 170px; /* change answer-details max-height too */
   width: 100%;
 }
 #definition-table td {
@@ -123,7 +123,7 @@ table {
 }
 #answer-details {
   display: block;
-  max-height: 166px;
+  max-height: 136px;
   overflow-y: auto;
 }
 #answer-details td {

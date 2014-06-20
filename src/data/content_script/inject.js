@@ -64,6 +64,12 @@ function html (tag, attrs, parent) {
   return tag;
 }
 
+function dir (e) {
+  var text_direction = window.getComputedStyle(e, null).direction || '';
+  if (text_direction == 'rtl') e.style.textAlign = "right";
+  if (text_direction == 'ltr') e.style.textAlign = "left";
+}
+  
 function insert () {
   var word, definition, keyCode;
 
@@ -192,10 +198,10 @@ function insert () {
           html("div", {
             style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(222,184,135,1.0) " + score + "%, rgba(222,184,135,0.3) " + score + "%);"
           }, html("td", {}, tr));
-          html("td", {
-            dir: "auto"
-          }, tr).textContent = entry.word;
-          html("td", {}, tr).textContent = entry.reverse_translation.join(", ");
+          var direct_translation = html("td", {dir: "auto"}, tr);
+          direct_translation.textContent = entry.word; dir(direct_translation);
+          var reverse_translation = html("td", {dir: "auto"}, tr);
+          reverse_translation.textContent = entry.reverse_translation.join(", "); dir(reverse_translation);
         });
       });
     }

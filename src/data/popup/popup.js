@@ -168,13 +168,14 @@ background.receive("translation-response", function (obj) {
             var tr = html("tr", {}, $("answer-details"));
             var score = Math.round(entry.score * 90) + 10;
             html("div", {
-              style: "width: 48px; height: 7px; background: linear-gradient(90deg, rgba(76,142,251,1.0) " + score + "%, rgba(76,142,251,0.3) " + score + "%);"
-            }, html("td", {}, tr));
+              style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(76,142,251,1.0) " + score + "%, rgba(76,142,251,0.3) " + score + "%);"
+            }, html("td", {style: "vertical-align: middle;"}, tr));
             html("td", {
-              style: "",
               dir: "auto"
             }, tr).textContent = entry.word;
-            html("td", {}, tr).textContent = entry.reverse_translation.join(", ");
+            html("td", {
+              dir: "auto"
+            }, tr).textContent = entry.reverse_translation.join(", ");
           });
         });
       }
