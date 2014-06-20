@@ -54,22 +54,43 @@ else {  // Chrome
 /**** wrapper (end) ****/
 var word, definition;
 
-// Filter-out iFrame window
+function html (tag, attrs, parent) {
+  if (!attrs) attrs = {};
+  var tag = document.createElement(tag);
+  for (var i in attrs) {
+    tag.setAttribute(i, attrs[i]);
+  }
+  if (parent) parent.appendChild(tag);
+  return tag;
+}
+
 function insert () {
+  var word, definition, keyCode;
+
   // make a bubble at start-up
   var isTextSelection = false;
   var isDblclick = false;
-  var bubbleDOM = document.createElement('div');
-  bubbleDOM.setAttribute('class', 'selection_bubble');
-  bubbleDOM.setAttribute('id', 'bubble_container');
-  bubbleDOM.setAttribute('dir', 'auto');
   
-  var toolbarDiv = document.createElement('div');
-  toolbarDiv.setAttribute('class', 'header_bubble');
-  var bookmarks = document.createElement('img');
-  bookmarks.setAttribute("title", "Save to Phrasebook");
-  bookmarks.setAttribute("style", "width: 16px;");
-  bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
+  var bubble = html("table", {
+    "class": "igtranslator-bubble"
+  }, document.body);
+  /* Header */
+  var header = html("td", {
+    colspan: 4,
+    "class": "igtranslator-header"
+  }, html("tr", {}, bubble));
+  /* Content */
+  var content = html("table", {
+    "class": "igtranslator-content"
+  }, html("td", {colspan: 4}, html("tr", {}, bubble)));
+  /* Footer */
+  var footer = html("tr", {
+    "class": "igtranslator-footer",
+  }, bubble);
+  var bookmarks = html("td", {
+    style: "background-image: url(" + manifest.url + "data/content_script/bookmarks.png)",
+    title: "Save to Phrasebook"
+  }, footer);
   bookmarks.addEventListener("click", function () {
     if (!bookmarks.getAttribute("status")) {
       background.send("add-to-phrasebook", {
@@ -83,28 +104,12 @@ function insert () {
         answer: definition
       });
     }
-    bookmarks.src = manifest.url + "data/content_script/bookmarks-loading.gif";
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-loading.gif)";
   }, false);
-  
-  background.receive("saved-to-phrasebook", function () {
-    bookmarks.setAttribute("title", "Saved");
-    bookmarks.setAttribute("status", "saved");
-    bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
-  });
-  background.receive("removed-from-phrasebook", function () {
-    bookmarks.setAttribute("title", "Save to Phrasebook");
-    bookmarks.removeAttribute("status");
-    bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
-  });  
-  background.receive("failed-phrasebook", function (status) {
-    bookmarks.setAttribute("title", "Sign-in required");
-    bookmarks.setAttribute("status", status);
-    bookmarks.src = manifest.url + "data/content_script/bookmarks" + (status ? "-saved" : "") + ".png";
-  });
-  
-  var voice = document.createElement('img');
-  voice.setAttribute("title", "Listen");
-  voice.src = manifest.url + "data/content_script/voice.png";
+  var voice = html("td", {
+    style: "background-image: url(" + manifest.url + "data/content_script/voice.png)",
+    title: "Listen"
+  }, footer);
   voice.addEventListener("click", function () {
     var isVoice = voice.getAttribute("isVoice") == "true";
     if (!isVoice) return;
@@ -112,139 +117,87 @@ function insert () {
       word: word
     });
   }, false);
-  
-  var settings = document.createElement('img');
-  settings.setAttribute("title", "Open Settings");
-  settings.src = manifest.url + "data/content_script/settings.png";
-  settings.addEventListener("click", function () {
-    background.send("open-page", {
-     page: 'settings'
-   });
-  }, false);
-  
-  var home = document.createElement('img');
-  home.setAttribute("title", "Open Google Translate");
-  home.src = manifest.url + "data/content_script/home.png";
+  var home = html("td", {
+    style: "background-image: url(" + manifest.url + "data/content_script/home.png)",
+    title: "Open Google Translate"
+  }, footer);
   home.addEventListener("click", function (e) {
     background.send("open-page", {
       page: 'define', 
       word: word
     });
   });
-
-  var body = document.createElement('div');
-  body.setAttribute('dir', 'auto');
-  bubbleDOM.appendChild(body);
-  
-  toolbarDiv.appendChild(bookmarks);
-  toolbarDiv.appendChild(voice);
-  toolbarDiv.appendChild(home);
-  toolbarDiv.appendChild(settings);
-  bubbleDOM.appendChild(toolbarDiv);
-
-  document.body.appendChild(bubbleDOM); 
-  bubbleDOM.style.display = 'none';
-
-  // Get options at start-up
-  background.send("options-request", null);
-  background.receive("options-response", function (data) {
-    isTextSelection = data.isTextSelection;
-    isDblclick = data.isDblclick;
-  });
-  
-  function span (style, width) {
-    var span = document.createElement('span');
-    if (style) {
-      span.setAttribute("style", style);
-    }
-    span.dir = 'auto';
-    span.style.width = width ? (width == 'auto' ? 'auto' : width + 'px') : "100%";
-    body.appendChild(span);
-    return span;
-  }
+  var settings = html("td", {
+    style: "background-image: url(" + manifest.url + "data/content_script/settings.png)",
+    title: "Open Settings"
+  }, footer);
+  settings.addEventListener("click", function () {
+    background.send("open-page", {
+     page: 'settings'
+   });
+  }, false);
   
   function requestBubbleTranslation(mouseX, mouseY, selectedText) {
-    bubbleDOM.style.top = (mouseY + 16) + 'px';
-    bubbleDOM.style.left = mouseX + 'px';
-    bubbleDOM.style.display = 'block'; 
-    var img = document.createElement('img');
-    img.setAttribute("style", "margin: 0 !important; display: inline-block;");
-    img.src = manifest.url + "data/content_script/loading.gif";
-    var img_span = span("display: block; height: 18px; text-align:center;");
-    img_span.appendChild(img);
-    body.appendChild(img_span);
+    bubble.style.top = (mouseY + 16) + 'px';
+    bubble.style.left = mouseX + 'px';
+    bubble.style.display = 'table';
+    header.innerHTML = '';
+    header.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
+    content.innerHTML = '';
+    content.style.display = "none";
     background.send("translation-request", selectedText);
   }
-
-  var wrongWord = '';
   background.receive("translation-response", function (data) {
     if (!data.wordIsCorrect && data.correctedWord) {
-      wrongWord = data.word;
-      background.send("translation-request", data.correctedWord);
+      return background.send("translation-request", data.correctedWord);
+    }
+    word = data.word;
+    definition = data.definition;
+
+    header.style.backgroundImage = "none";
+    
+    if (data.error) {
+      header.textContent = "Cannot Access Google Translate!";
+      content.style.backgroundImage = "url(" + manifest.url + "data/content_script/error.png)";
+      content.style.display = "block";
+      voice.style.backgroundImage = "url(" + manifest.url + "data/content_script/novoice.png)";
+      voice.setAttribute("isVoice", "no");
     }
     else {
-      body.innerHTML = '';
-      definition = data.definition;
-      word = data.word;
-      if (!data.error) {
-        if (data.phrasebook) {
-          bookmarks.src = manifest.url + "data/content_script/bookmarks-saved.png";
-          bookmarks.setAttribute("status", "saved");
-        }
-        else {
-          bookmarks.src = manifest.url + "data/content_script/bookmarks.png";
-          bookmarks.removeAttribute("status");
-        }
-        voice.src = manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png";
-        voice.setAttribute("isVoice", data.isVoice);
-        var title_span = span("font-size: 130%; display: block; text-align: center;");
-        title_span.textContent = (data.word + ': ' + data.definition) || "not found";
-        if (data.detailDefinition) {
-          var detailDefinition = data.detailDefinition; 
-          if (detailDefinition.length > 0) {
-            var hr = document.createElement('hr');
-            hr.setAttribute('class', 'selection_bubble_line');
-            body.appendChild(hr);
-            for (var i = 0; i < detailDefinition.length; i++) { // title            
-              var title_text, title_text_1, title_text_2, title_text_3; 
-              title_text_1 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px;", 'auto'); 
-              title_text_1.textContent = data.word;
-              title_text_2 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px;", 'auto'); 
-              title_text_2.textContent = detailDefinition[i].pos ? "-" : "";
-              title_text_3 = span("display: inline-block; text-align: center; padding: 0 2px 0 2px; font-style:italic; padding: 10px 0 0 5px; color: #777", 'auto'); 
-              title_text_3.textContent = detailDefinition[i].pos;
-              title_text = span("display: inline-block; text-align: left;"); // this is only in English
-              title_text.appendChild(title_text_1);
-              title_text.appendChild(title_text_2);
-              title_text.appendChild(title_text_3);
-              if (detailDefinition[i].entry) {  
-                for (j = 0; j < detailDefinition[i].entry.length; j++) {  // entries
-                  var score = Math.round(detailDefinition[i].entry[j].score * 100) + 10;
-                  var line_span = span("display: block; height: 16px;");
-                  var percent_span = span("display: inline-block; height: 9px; margin: 0 5px 0 5px; background-color: rgba(222, 184, 135, 0.3); vertical-align: middle; text-align: left;", 33);  // this is only in LTR
-                  var percent = span("display: inline-block; height: 5px; margin: 0 0 10px 0; background-color: rgba(222, 184, 135, 1.0); vertical-align: middle; text-align: left;", 0.3 * score);  // this is only in LTR
-                  percent_span.appendChild(percent);
-                  line_span.appendChild(percent_span);
-                  line_span.appendChild(document.createTextNode(detailDefinition[i].entry[j].word));
-                  var text_direction = window.getComputedStyle(line_span, null).direction || '';
-                  if (text_direction == 'rtl') line_span.style.textAlign = "right";
-                  if (text_direction == 'ltr') line_span.style.textAlign = "left";
-                  if (text_direction == '')    line_span.style.textAlign = "left";
-                }
-              }
-            }
-          }
-        }
+      content.style.backgroundImage = "none";
+      if (data.phrasebook) {
+        bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-saved.png)";
+        bookmarks.setAttribute("status", "saved");
       }
       else {
-        voice.src = manifest.url + "data/content_script/novoice.png";
-        voice.setAttribute("isVoice", "no");
-        var img = document.createElement('img');
-        img.setAttribute("style", "margin-left: 70px !important;");
-        img.src = manifest.url + "data/content_script/error.png";
-        body.appendChild(img);
-        span("font-size: 100%; display: block; padding: 10px 0 10px 0;").textContent = "Can't Access Google Translate";
+        bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks.png)";
+        bookmarks.removeAttribute("status");
       }
+      voice.style.backgroundImage = "url(" + manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png)";
+      voice.setAttribute("isVoice", data.isVoice);
+      
+      var details = data.detailDefinition;
+      header.textContent = definition ? (details && details.length ? word + ': ' + definition : definition) : "Definition not found!";
+      if (!details || !details.length) {
+        return;
+      }
+      content.style.display = "block";
+      details.forEach (function (detail) {
+        var pos = html("td", {
+          style: "color: #777; font-style: italic;"
+        }, html("tr", {}, content)).textContent = detail.pos;
+        detail.entry.forEach(function (entry) {
+          var tr = html("tr", {}, content);
+          var score = Math.round(entry.score * 90) + 10;
+          html("div", {
+            style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(222,184,135,1.0) " + score + "%, rgba(222,184,135,0.3) " + score + "%);"
+          }, html("td", {}, tr));
+          html("td", {
+            dir: "auto"
+          }, tr).textContent = entry.word;
+          html("td", {}, tr).textContent = entry.reverse_translation.join(", ");
+        });
+      });
     }
   });
 
@@ -259,16 +212,14 @@ function insert () {
     // Do not hide the panel when user clicks inside the panel
     var target = e.target || e.originalTarget;
     while (target.parentNode && target.getAttribute) {
-      if (target == bubbleDOM) {
+      if (target == bubble) {
         return;
       }
       target = target.parentNode;
     }
-
-    bubbleDOM.style.display = 'none';
-    body.innerHTML = '';
+    bubble.style.display = 'none';
   }, false);
-  var keyCode;
+
   document.addEventListener('keydown', function (e) {
     keyCode = e.keyCode;
   }, false);
@@ -281,7 +232,6 @@ function insert () {
     if (selectedText.length > 2) {
       requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);
     }
-    
   }, false);
   document.addEventListener('dblclick', function (e) {
     if (!isDblclick) return;
@@ -292,6 +242,27 @@ function insert () {
       requestBubbleTranslation(e.clientX + window.scrollX, e.clientY + window.scrollY, selectedText);
     }
   }, false);
+  // Get options at start-up
+  background.send("options-request", null);
+  background.receive("options-response", function (data) {
+    isTextSelection = data.isTextSelection;
+    isDblclick = data.isDblclick;
+  });
+  background.receive("saved-to-phrasebook", function () {
+    bookmarks.setAttribute("title", "Saved");
+    bookmarks.setAttribute("status", "saved");
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-saved.png)";
+  });
+  background.receive("removed-from-phrasebook", function () {
+    bookmarks.setAttribute("title", "Save to Phrasebook");
+    bookmarks.removeAttribute("status");
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks.png)";
+  });  
+  background.receive("failed-phrasebook", function (status) {
+    bookmarks.setAttribute("title", "Sign-in required");
+    bookmarks.setAttribute("status", status);
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks" + (status ? "-saved" : "") + ".png)";
+  });
 }
 if (window.top === window) {
   window.addEventListener("DOMContentLoaded", insert);

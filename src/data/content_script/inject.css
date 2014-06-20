@@ -1,69 +1,71 @@
-.header_bubble {
-  height: 19px;
-  overflow: visible !important;
-  padding-top: 3px !important;
-  margin-top: 7px !important;
-  background: rgba(222, 184, 135, 0.3) !important;
-  border-radius: 3px;
-}
-.header_bubble img {
-  margin: 0 11px !important;
-  display: inline-block !important;
-  opacity: 0.6;
-  cursor: pointer;
-}
-.header_bubble img:hover {
-  opacity: 1.0;
-}
-.selection_bubble {
+.igtranslator-bubble {
   display: none;
   position: absolute;
-  padding: 5px !important;
+  padding: 2px 2px 0 2px !important;
   color: black !important;
   font: 13px Arial !important;
   background: #FAEBD7 !important;
   border: 1px solid #DEB887 !important;
-  border-radius: 3px;
-  white-space: pre-wrap;       /* CSS3     */
-  white-space: -moz-pre-wrap;  /* Firefox  */
-  white-space: -pre-wrap;      /* Opera <7 */
-  white-space: -o-pre-wrap;    /* Opera 7  */
-  word-wrap: break-word;       /* IE       */
+  border-radius: 3px !important;
   z-index: 1000;
-  min-width: 150px;
-  max-width: 350px;
+  max-width: 500px;
 }
-.selection_bubble div {
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 200px;
-}
-.selection_bubble:after, .selection_bubble:before {
+.igtranslator-bubble:after, 
+.igtranslator-bubble:before {
   content: "";
-  border: solid transparent;
+  border: solid transparent !important;
   height: 0;
   width: 0;
   position: absolute;
 }
-
-.selection_bubble:after {
-  border-width: 7px;
-  border-bottom-color: #FAEBD7;
+.igtranslator-bubble:after {
+  border-width: 7px !important;
+  border-bottom-color: #FAEBD7 !important;
   top: -13px;
   left: 4px;
 }
 
-.selection_bubble:before {
-  border-width: 8px;
-  border-bottom-color: #DEB887;
+.igtranslator-bubble:before {
+  border-width: 8px !important;
+  border-bottom-color: #DEB887 !important;
   top: -16px;
   left: 3px;
 }
 
-.selection_bubble_line {
-  background-color: #DEB887;
-  height: 1px;
-  margin: 4px 0;
-  padding: 0;
-  border: 0;
+.igtranslator-header {
+  height: 20px;
+  width: 40px;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  text-align: center !important;
+  font-size: 130% !important;
+  min-width: 100px;
+}
+.igtranslator-content {
+  display: none;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  border-top: solid 1px #DEB887 !important;
+  max-height: 200px;
+  min-height: 80px;
+  overflow-y: auto;
+}
+.igtranslator-content td {
+  padding: 0 5px !important;
+}
+.igtranslator-footer {
+  background-color: rgba(222, 184, 135, 0.3) !important;
+}
+.igtranslator-footer td {
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-size: 16px 16px !important;
+  border-radius: 3px !important;
+  height: 20px;
+  min-width: 32px;
+  opacity: 0.5;
+}
+.igtranslator-footer td:hover {
+  opacity: 1.0;
+  cursor: pointer;
 }

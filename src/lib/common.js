@@ -129,9 +129,6 @@ function getTranslation(word) {
       } 
       catch(e) {}
     }
-    
-    console.error(obj)
-    
     if (!obj.spell && (obj.dict || obj.sentences)) { // if the word is correct (obj.spell) does not exist
       wordIsCorrect = true;
       definition = obj.sentences.reduce(function(p,c) {return p + c.trans}, "");
@@ -141,7 +138,6 @@ function getTranslation(word) {
       });
     }
     else {
-      console.error("word is in-correct")
       correctedWord = obj.spell.spell_res;
     }
     if (obj.dict) detailDefinition = obj.dict;

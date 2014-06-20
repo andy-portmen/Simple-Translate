@@ -1,6 +1,5 @@
 body {
-  width: 400px;
-  height: 200px;
+  width: 500px;
   margin: 5px;
   padding: 0;
   color: #444;
@@ -29,7 +28,8 @@ table {
   border-collapse: separate;
   border-spacing: 0;
 }
-tr td {
+#language-table tr td,
+#question-table tr td {
   height: 26px;
   border-radius: 0px;
 }
@@ -89,40 +89,47 @@ tr td {
   text-indent: 20px;
   background: url('dropdown.png') no-repeat center center;
 }
-#answer-div {
-  border: solid 1px rgba(76, 142, 251, 1.0);
-}
 #search-td {
   width: 50px; 
   background: rgba(76, 142, 251, 1.0) url('search.png') no-repeat center center;
   cursor: pointer;
 }
 #answer-table {
+  width: 100%;
   border-radius: 0 0 2px 2px;
 }
-#definition-div {
-  padding: 0 10px;
-  height: 126px;
-  overflow-y: auto;
-  color: #000;
+#answer-td {
 }
-#definition-div[state='loading'] {
-  background-image: url('loading.gif');
-  background-repeat: no-repeat;
-  background-position: center center;
+#definition-table {
+  height: 200px;
+  width: 100%;
+}
+#definition-table td {
+  vertical-align: top;
+}
+#definition-table[state='loading'] {
+  background: url('loading.gif') no-repeat center center;
   background-size: auto 16px;
 }
-#definition-div[state='error'] {
-  background-image: url('error.png');
-  background-repeat: no-repeat;
-  background-position: center center;
+#definition-table[state='error'] {
+  background: url('error.png') no-repeat center center;
   background-size: auto 32px;
 }
-#phrasebook-td, 
-#voice-question-td, 
-#voice-answer-td, 
-#home-td, 
-#settings-td {
+#answer-title {
+  max-width: 22px;
+  height: 22px;
+  font-size: 130%;
+  padding: 5px 8px;
+}
+#answer-details {
+  display: block;
+  max-height: 166px;
+  overflow-y: auto;
+}
+#answer-details td {
+  padding: 0 5px !important;
+}
+#phrasebook-td, #voice-question-td, #voice-answer-td, #home-td, #settings-td {
   width: 22px;
   opacity: 0.6;
   cursor: pointer;
