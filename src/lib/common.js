@@ -115,21 +115,19 @@ function getTranslation(word) {
   var d = new Deferred();
   parallel([get(url_1), get(url_2)]).then(function (arr) {
     var obj = [];
-    try {
-      obj = JSON.parse(arr[0]);
-    }
-    catch(e) {}
+    try {obj = JSON.parse(arr[0]);} catch(e) {}
     if (obj.src) {
       sourceLang = obj.src; 
       autoDetectedLang = obj.src;
     }
     if (sourceLang == storage.read("to")) {
-      try {
-        obj = JSON.parse(arr[1]);
-      } 
-      catch(e) {}
+      try {obj = JSON.parse(arr[1]);} catch(e) {}
     }
-    if (!obj.spell && (obj.dict || obj.sentences)) { // if the word is correct (obj.spell) does not exist
+    // check to see if the word is correct with 3 conditions
+    var cnd1 = !obj.spell || (obj.spell && obj.spell.spell_res == word.toLowerCase());
+    var cnd2 = obj.spell && obj.spell.spell_res.replace(/[\-]/g,'') == word.toLowerCase();
+    var cnd3 = obj.dict || obj.sentences;
+    if ((cnd1 || cnd2) && cnd3) {
       wordIsCorrect = true;
       definition = obj.sentences.reduce(function(p,c) {return p + c.trans}, "");
       saveToHistory({
@@ -150,7 +148,7 @@ function getTranslation(word) {
       correctedWord: correctedWord,
       error: ''
     });
-  }, function (e) {
+  }, function (e) {    
     d.resolve({
       word: '',
       definition: '',

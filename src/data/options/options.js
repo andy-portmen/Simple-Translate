@@ -101,6 +101,7 @@ background.receive("load-readHistory-options", function (e) {
         if (i < parseInt(numberHistoryItems)) {
           var historyList = document.getElementById('historyList');
           var dateSpan = document.createElement('span');
+          if (o[2]) dateSpan.style.fontWeight = 'bold';
           var br = document.createElement('br');
           dateSpan.textContent = ' (' + (i + 1) + ') ' + o[0] + ': ' + o[1];
           historyList.appendChild(dateSpan);

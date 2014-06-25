@@ -146,7 +146,7 @@ function insert () {
   function requestBubbleTranslation(mouseX, mouseY, selectedText) {
     bubble.style.top = (mouseY + 16) + 'px';
     bubble.style.left = mouseX + 'px';
-    bubble.style.display = 'table';
+    bubble.style.display = 'block';
     header.innerHTML = '';
     header.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
     content.innerHTML = '';
