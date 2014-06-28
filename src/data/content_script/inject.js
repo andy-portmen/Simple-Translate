@@ -1,3 +1,9 @@
+/** Test websites
+ * http://stackoverflow.com/
+ * https://palant.de/
+ * http://davidwalsh.name/
+ * http://10minutemail.com/
+**/
 var background = {}, manifest = {};
 
 /**** wrapper (start) ****/
@@ -194,14 +200,16 @@ function insert () {
         }, html("tr", {}, content)).textContent = detail.pos;
         detail.entry.forEach(function (entry) {
           var tr = html("tr", {}, content);
-          var score = Math.round(entry.score * 90) + 10;
+          var score = Math.round((entry.score || 0) * 90) + 10;
           html("div", {
             style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(222,184,135,1.0) " + score + "%, rgba(222,184,135,0.3) " + score + "%);"
           }, html("td", {}, tr));
           var direct_translation = html("td", {dir: "auto"}, tr);
-          direct_translation.textContent = entry.word; dir(direct_translation);
+          direct_translation.textContent = entry.word; 
+          dir(direct_translation);
           var reverse_translation = html("td", {dir: "auto"}, tr);
-          reverse_translation.textContent = entry.reverse_translation.join(", "); dir(reverse_translation);
+          reverse_translation.textContent = entry.reverse_translation.join(", "); 
+          dir(reverse_translation);
         });
       });
     }

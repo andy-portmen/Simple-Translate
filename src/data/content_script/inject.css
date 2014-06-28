@@ -2,15 +2,22 @@
   display: none;
   position: absolute;
   padding: 2px 2px 0 2px !important;
+  margin: 0 !important;
   color: black !important;
   font: 13px Arial !important;
   background: #FAEBD7 !important;
-  border: 1px solid #DEB887 !important;
+  border: solid 1px #DEB887 !important;
   border-radius: 3px !important;
   z-index: 1000;
+  width: auto !important;
   max-width: 500px;
   border-collapse: separate !important;
   border-spacing: 2px !important;
+}
+.igtranslator-bubble td {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 .igtranslator-bubble:after, 
 .igtranslator-bubble:before {
@@ -26,28 +33,38 @@
   top: -13px;
   left: 4px;
 }
-
 .igtranslator-bubble:before {
   border-width: 8px !important;
   border-bottom-color: #DEB887 !important;
   top: -16px;
   left: 3px;
 }
-
 .igtranslator-header {
   height: 20px;
   width: 40px;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
   text-align: center !important;
   font-size: 130% !important;
   min-width: 100px;
 }
+.igtranslator-header td {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
 .igtranslator-content {
   display: none;
   background-position: center center !important;
-  background-repeat: no-repeat !important;
+  padding: 0 !important;
+  margin: 0 !important;
   border-top: solid 1px #DEB887 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
   max-height: 200px;
   min-height: 80px;
   overflow-y: auto;
@@ -55,17 +72,25 @@
   border-spacing: 2px !important;
 }
 .igtranslator-content td {
+  border: 0 !important;
+  margin: 0 !important;
   padding: 0 5px !important;
 }
 .igtranslator-footer {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   background-color: rgba(222, 184, 135, 0.3) !important;
 }
 .igtranslator-footer td {
   background-position: center center !important;
   background-repeat: no-repeat !important;
   background-size: 16px 16px !important;
+  border: solid 1px #DEB887 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   border-radius: 3px !important;
-  height: 20px;
+  height: 20px !important;
   min-width: 32px;
   opacity: 0.5;
 }
