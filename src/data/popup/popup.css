@@ -130,6 +130,7 @@ table {
   padding: 0 5px !important;
 }
 #phrasebook-td, #voice-question-td, #voice-answer-td, #home-td, #settings-td {
+  height: 40px;
   width: 22px;
   opacity: 0.6;
   cursor: pointer;
