@@ -42,19 +42,18 @@ else {  // Chrome
 }
 /**** wrapper (end) ****/
 
-// ------------------------------------------------------------------
-
 function $ (id) {
   return document.getElementById(id)
 };
 
-var from, to, alt, isTextSelection, isDblclick, enableHistory, numberHistoryItems;
+var from, to, alt, isTextSelection, isDblclick, isTranslateIcon, enableHistory, numberHistoryItems;
 
 background.send("load-storage-from-options", "");
 background.send("load-storage-to-options", "");
 background.send("load-storage-alt-options", "");
 background.send("load-storage-isTextSelection-options", "");
 background.send("load-storage-isDblclick-options", "");
+background.send("load-storage-isTranslateIcon-options", "");
 background.send("load-storage-enableHistory-options", "");
 background.send("load-storage-numberHistoryItems-options", "");
 background.send("load-readHistory-options", "");
@@ -64,6 +63,7 @@ background.receive("load-storage-to-options", function (e) {to = e;});
 background.receive("load-storage-alt-options", function (e) {alt = e;});
 background.receive("load-storage-isTextSelection-options", function (e) {isTextSelection = e;});
 background.receive("load-storage-isDblclick-options", function (e) {isDblclick = e;});
+background.receive("load-storage-isTranslateIcon-options", function (e) {isTranslateIcon = e;});
 background.receive("load-storage-enableHistory-options", function (e) {enableHistory = e;});
 background.receive("load-storage-numberHistoryItems-options", function (e) {numberHistoryItems = e;});
 background.receive("load-readHistory-options", function (e) {
@@ -92,6 +92,7 @@ background.receive("load-readHistory-options", function (e) {
     }
     document.getElementsByName('CheckBox1')[0].checked = isTextSelection == 'true';
     document.getElementsByName('CheckBox2')[0].checked = isDblclick == 'true';
+    document.getElementsByName('CheckBox2b')[0].checked = isTranslateIcon == 'true';
     document.getElementsByName('CheckBox3')[0].checked = enableHistory == 'true';
     document.getElementsByName('numberHistoryItems')[0].value = parseInt(numberHistoryItems);
     if (enableHistory == 'true') {
@@ -157,9 +158,23 @@ background.receive("load-readHistory-options", function (e) {
   }, false);
   document.getElementsByName('CheckBox1')[0].addEventListener('change', function (e) {
     background.send("save-isTextSelection-options", e.target.checked);
+	// disable isTranslateIcon options
+    document.getElementsByName('CheckBox2b')[0].checked = false;
+	background.send("save-isTranslateIcon-options", 'false');
   }, false);
   document.getElementsByName('CheckBox2')[0].addEventListener('change', function (e) {
     background.send("save-isDblclick-options", e.target.checked);
+	// disable isTranslateIcon options
+    document.getElementsByName('CheckBox2b')[0].checked = false;
+	background.send("save-isTranslateIcon-options", 'false');
+  }, false);
+  document.getElementsByName('CheckBox2b')[0].addEventListener('change', function (e) {
+    background.send("save-isTranslateIcon-options", e.target.checked);
+	// disable other options
+	document.getElementsByName('CheckBox1')[0].checked = false;
+    document.getElementsByName('CheckBox2')[0].checked = false;
+	background.send("save-isDblclick-options", 'false');
+	background.send("save-isTextSelection-options", 'false');
   }, false);
   document.getElementsByName('CheckBox3')[0].addEventListener('change', function (e) {
     background.send("save-enableHistory-options", e.target.checked);

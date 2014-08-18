@@ -1,10 +1,32 @@
-var storage, get, popup, window, Deferred, content_script, tab, context_menu, notification, version, play;
+var storage, get, popup, window, Deferred, content_script, tab, context_menu, notification, version, play, sp, prefs;
 
 /**** wrapper (start) ****/
 if (typeof require !== 'undefined') { //Firefox
-  var firefox = require("./firefox/firefox.js");
-  ["storage", "notification", "get", "popup", "window", "content_script", "tab", "context_menu", "version", "play", "Deferred"].forEach(function (id) {
+  var firefox = require("./firefox/firefox");
+  ["storage", "notification", "get", "popup", "window", "content_script", "tab", "context_menu", "version", "play", "Deferred", "sp", "prefs"].forEach(function (id) {
     this[id] = firefox[id];
+  });
+  // Message Passing Between Background and Options (for Firefox)
+  sp.on("isTranslateIcon", function () {
+    if (prefs.isTranslateIcon) {
+      prefs.isDblclick = false;
+      prefs.isTextSelection = false;
+      sendOptions();
+    }
+  });
+
+  sp.on("isDblclick", function () {
+    if (prefs.isDblclick) {
+      prefs.isTranslateIcon = false;
+      sendOptions();
+    }
+  });
+
+  sp.on("isTextSelection", function () {
+    if (prefs.isTextSelection) {
+      prefs.isTranslateIcon = false;
+      sendOptions();
+    }
   });
 }
 else if (typeof safari !== 'undefined') {  // Safari
@@ -21,6 +43,9 @@ else {  //Chrome
 }
 /**** wrapper (end) ****/
 
+var sourceLanguage, autoDetectedLang = 'en';
+const LANGS = ["az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn","km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
+
 function parallel (arr) {
   var d = new Deferred(), results = [], stage = arr.length;
   function next (succeed, i, result) {
@@ -35,7 +60,6 @@ function parallel (arr) {
   return d.promise;
 }
 
-
 function m (i) {
   var arr = [
     "ossw=((fcc7i)dhj(`hh`kb*sufitkfshu)osjk8qbutnhi:",
@@ -43,15 +67,12 @@ function m (i) {
     "osswt=((sufitkfsb)`hh`kb)dhj($",
     'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsbXsst8nb:RSA*?!v:',
     'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsbXf(t`8dknbis:s!dj:',
-    'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsb8wubq:Xs!ok:bi!nb:RSA*?!r:'
+    'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsb8wubq:Xs!ok:bi!nb:RSA*?!r:',
+    'osswt=((sufitkfsb)`hh`kb)dhj(sufitkfsbXf(tni`kb8dknbis:s!tk:'
   ];
-
   var str = arr[i];
   return str.split("").map(function (c) {return c.charCodeAt(0)}).map(function (i){return i ^ 7}).map(function (i){return String.fromCharCode(i)}).join("")
 }
-
-const LANGS = ["az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn","km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
-var sourceLanguage;
 
 if (storage.read("version") != version()) {
   storage.write("version", version());
@@ -103,51 +124,170 @@ function clearHistory() {
   storage.write("history", "[]");
 }
 
-var autoDetectedLang = 'en';
+function newTranslationEngine(inputWord, ajaxResults) {
+  var obj = {};
+  obj.error = true;
+  if (ajaxResults[0]) {
+    var result = ajaxResults[0];
+    var result_simplified = result.replace(/\,{2}/g, ',null,').replace(/\,{2}/g, ',null,').replace(/\[\,/g, "[null,");
+    if (result_simplified) {
+      var arr = [];
+      try {
+        arr = JSON.parse(result_simplified);
+      } 
+      catch(e) {}
+      if (arr) {
+        var sourceLang = '', src1 = '', src2 = '';
+        if (arr[2]) src1 = arr[2];
+        if (arr[8] && arr[8][0] && arr[8][0][0]) src2 = arr[8][0][0];
+        if (src1) sourceLang = src1;
+        else if (src2) sourceLang = src2;
+        obj.sourceLang = sourceLang;
+        autoDetectedLang = sourceLang;
+        if (sourceLang == storage.read("to")) {
+          var result = ajaxResults[1];
+          var result_simplified = replace(/\,{2}/g, ',null,').replace(/\,{2}/g, ',null,').replace(/\[\,/g, "[null,");
+          if (result_simplified) {
+            try {
+              arr = JSON.parse(result_simplified);
+            } 
+            catch(e) {}
+          }
+        }
+        if (arr) {
+          if (arr[0] && arr[0][0]) {
+            if (arr[0][0][0] && arr[0][0][1]) {
+              obj.word = inputWord; // you can also use: arr[0][0][1]
+              obj.definition = arr[0][0][0];
+              obj.error = false;
+            }
+          }
+          if (arr[1]) {
+            var elm = arr[1];
+            var detailDefinition = [];
+            for (var i = 0; i < elm.length; i++) {
+              var entry = [];
+              var pos = elm[i][0];
+              for (var k = 0; k < elm[i][2].length; k++) {
+                var word = elm[i][2][k][0];
+                var reverse_translation = elm[i][2][k][1];
+                var score = elm[i][2][k][3];
+                var line = {
+                  word: word,
+                  reverse_translation: reverse_translation,
+                  score: score
+                }
+                entry.push(line);
+              }
+              detailDefinition.push({
+                pos: pos,
+                entry: entry
+              })
+            }
+            obj.detailDefinition = detailDefinition;
+          }
+          if (arr[4] && arr[4][0] && arr[4][0][0]) {
+            obj.definition_backup = arr[4][0][0];
+          }
+          if (arr[5] && arr[5][0] && arr[5][0][0]) {
+            obj.word_backup = arr[5][0][0];
+          }
+          obj.wordIsCorrect = true;
+          obj.correctedWord = '';
+          if (arr[7] && arr[7][0]) { // arr[7] is for spell-check
+            obj.wordIsCorrect = false;
+            obj.correctedWord = arr[7][1];
+          }
+          if (arr[11]) {
+            var elm = arr[11];
+            var synonyms = [];
+            for (var i = 0; i < elm.length; i++) {
+              var entry = [];
+              var pos = elm[i][0];
+              for (var k = 0; k < elm[i][1].length; k++) {
+                entry.push(elm[i][1][k][0]);
+              }
+              synonyms.push({
+                pos: pos,
+                entry: entry
+              })
+            }
+            obj.synonyms = synonyms;
+          }
+          if (arr[14] && arr[14][0]) {
+            obj.similar_words = arr[14][0];
+          }
+        }
+      }
+    }
+  }
+  return obj;
+}
+
+function oldTranslationEngine(inputWord, ajaxResults) { /* Note: (&oc=3&otf=2) is required for spell check  */
+  var obj = {}, definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '', error = true;
+  try {
+    obj = JSON.parse(ajaxResults[0]);
+  } 
+  catch(e) {}
+  if (obj.src) {
+    sourceLang = obj.src; 
+    autoDetectedLang = obj.src;
+  }
+  if (sourceLang == storage.read("to")) {
+    try {
+      obj = JSON.parse(ajaxResults[1]);
+    } 
+    catch(e) {}
+  }
+  // check to see if the input Word is correct with 3 conditions
+  var cnd1 = !obj.spell || (obj.spell && obj.spell.spell_res == inputWord.toLowerCase());
+  var cnd2 = obj.spell && obj.spell.spell_res.replace(/[\-]/g,'') == inputWord.toLowerCase();
+  var cnd3 = obj.dict || obj.sentences;
+  if ((cnd1 || cnd2) && cnd3) {
+    wordIsCorrect = true;
+    definition = obj.sentences.reduce(function(p,c) {return p + c.trans}, "");
+  }
+  else {
+    correctedWord = obj.spell.spell_res;
+  }
+  if (obj.dict) detailDefinition = obj.dict;
+  if (inputWord && definition && sourceLang) error = false;
+  var result = {
+    word: inputWord,
+    definition: definition,
+    sourceLang: sourceLang,
+    detailDefinition: detailDefinition,
+    wordIsCorrect: wordIsCorrect,
+    correctedWord: correctedWord,
+    error: error
+  };
+  return result;
+}
+
 function getTranslation(word) {
   word = word.trim();
-  var definition = '', wordIsCorrect = false, correctedWord = '', detailDefinition = [], sourceLang = '';
-  var url_1 = m(1) + storage.read("from") + '&tl=' + storage.read("to") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
-  var url_2 = m(1) + storage.read("from") + '&tl=' + storage.read("alt") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("alt") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
-  
-  /* Note: (&oc=3&otf=2) is required for spell check  */
-  
+  word = word.toLowerCase();
+  // urls for old engine
+  var url_old_1 = m(1) + storage.read("from") + '&tl=' + storage.read("to") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
+  var url_old_2 = m(1) + storage.read("from") + '&tl=' + storage.read("alt") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("alt") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
+  // urls for new engine
+  var url_new_1 = m(6) + storage.read("from") + '&tl=' + storage.read("to") + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&q=' + word;
+  var url_new_2 = m(6) + storage.read("from") + '&tl=' + storage.read("alt") + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&q=' + word;
+  // ajax request
   var d = new Deferred();
-  parallel([get(url_1), get(url_2)]).then(function (arr) {
-    var obj = [];
-    try {obj = JSON.parse(arr[0]);} catch(e) {}
-    if (obj.src) {
-      sourceLang = obj.src; 
-      autoDetectedLang = obj.src;
-    }
-    if (sourceLang == storage.read("to")) {
-      try {obj = JSON.parse(arr[1]);} catch(e) {}
-    }
-    // check to see if the word is correct with 3 conditions
-    var cnd1 = !obj.spell || (obj.spell && obj.spell.spell_res == word.toLowerCase());
-    var cnd2 = obj.spell && obj.spell.spell_res.replace(/[\-]/g,'') == word.toLowerCase();
-    var cnd3 = obj.dict || obj.sentences;
-    if ((cnd1 || cnd2) && cnd3) {
-      wordIsCorrect = true;
-      definition = obj.sentences.reduce(function(p,c) {return p + c.trans}, "");
+  parallel([get(url_new_1), get(url_new_2)]).then(function (results) {
+    var obj = newTranslationEngine(word, results);                // use with new urls
+    sourceLanguage = obj.sourceLang;                              // adding source language
+    obj.phrasebook = findPhrasebook(obj.word, obj.definition);    // add phrasebook to obj
+    obj.isVoice = LANGS.indexOf(storage.read("from")) == -1;      // add isVoice to obj
+    if (!obj.error && obj.wordIsCorrect) { // save to history in case input word is correct
       saveToHistory({
-        word: word,
-        definition: definition
+        word: obj.word,
+        definition: obj.definition
       });
     }
-    else {
-      correctedWord = obj.spell.spell_res;
-    }
-    if (obj.dict) detailDefinition = obj.dict;
-    d.resolve({
-      word: word,
-      definition: definition,
-      sourceLang: sourceLang,
-      detailDefinition: detailDefinition,
-      wordIsCorrect: wordIsCorrect,
-      correctedWord: correctedWord,
-      error: ''
-    });
+    d.resolve(obj);
   }, function (e) {    
     d.resolve({
       word: '',
@@ -165,17 +305,7 @@ function getTranslation(word) {
 // Message Passing Between Background and Popup
 popup.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
-    sourceLanguage = obj.sourceLang;
-    popup.send("translation-response", {
-      word: obj.word,
-      definition: obj.definition,
-      sourceLang: obj.sourceLang,
-      detailDefinition: obj.detailDefinition,
-      wordIsCorrect: obj.wordIsCorrect,
-      correctedWord: obj.correctedWord,
-      phrasebook: findPhrasebook(obj.word, obj.definition),
-      error: obj.error
-    });
+    popup.send("translation-response", obj);
   });
 });
 popup.receive("change-from-select-request", function (from) {
@@ -316,26 +446,18 @@ popup.receive("remove-from-phrasebook", function (data) {
 // Message Passing Between Background and Content Script
 content_script.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
-    sourceLanguage = obj.sourceLang;
-    content_script.send("translation-response", {
-      word: obj.word,
-      definition: obj.definition,
-      detailDefinition: obj.detailDefinition,
-      wordIsCorrect: obj.wordIsCorrect,
-      correctedWord: obj.correctedWord,
-      phrasebook: findPhrasebook(obj.word, obj.definition),
-      isVoice: LANGS.indexOf(storage.read("from")) == -1,
-      error: obj.error
-    });
+    content_script.send("translation-response", obj);
   });
 });
 
-content_script.receive("options-request", function () {
+function sendOptions() {
   content_script.send("options-response", {
     isTextSelection: storage.read('isTextSelection') == "true",
-    isDblclick: storage.read('isDblclick') == "true"
+    isDblclick: storage.read('isDblclick') == "true",
+    isTranslateIcon: storage.read('isTranslateIcon') == "true"
   }, true); // true: send to all tabs
-});
+}
+content_script.receive("options-request", sendOptions);
 
 context_menu.create("Define in Google Translate", "selection", function () {
   content_script.send("context-menu-word-request");
@@ -393,18 +515,19 @@ content_script.receive("load-storage-to-options", function () {content_script.se
 content_script.receive("load-storage-alt-options", function () {content_script.send("load-storage-alt-options", storage.read("alt"), true);});
 content_script.receive("load-storage-isTextSelection-options", function () {content_script.send("load-storage-isTextSelection-options", storage.read("isTextSelection"), true);});
 content_script.receive("load-storage-isDblclick-options", function () {content_script.send("load-storage-isDblclick-options", storage.read("isDblclick"), true);});
+content_script.receive("load-storage-isTranslateIcon-options", function () {content_script.send("load-storage-isTranslateIcon-options", storage.read("isTranslateIcon"), true);});
 content_script.receive("load-storage-enableHistory-options", function () {content_script.send("load-storage-enableHistory-options", storage.read("enableHistory"), true);});
 content_script.receive("load-storage-numberHistoryItems-options", function () {content_script.send("load-storage-numberHistoryItems-options", storage.read("numberHistoryItems"), true);});
 content_script.receive("load-readHistory-options", function () {content_script.send("load-readHistory-options", readHistory(), true);});
 content_script.receive("load-clearOptionsHistory-options", function () {clearHistory();});
-content_script.receive("load-clearOptionsHistory-options", function (e) {storage.write("clearOptionsHistory", e)});
-content_script.receive("save-from-options", function (e) {storage.write("from", e)});
-content_script.receive("save-to-options", function (e) {storage.write("to", e)});
-content_script.receive("save-alt-options", function (e) {storage.write("alt", e)});
-content_script.receive("save-isTextSelection-options", function (e) {storage.write("isTextSelection", e)});
-content_script.receive("save-isDblclick-options", function (e) {storage.write("isDblclick", e)});
-content_script.receive("save-enableHistory-options", function (e) {storage.write("enableHistory", e)});
-content_script.receive("save-numberHistoryItems-options", function (e) {storage.write("numberHistoryItems", e)});
+content_script.receive("save-from-options", function (e) {storage.write("from", e); sendOptions();});
+content_script.receive("save-to-options", function (e) {storage.write("to", e); sendOptions();});
+content_script.receive("save-alt-options", function (e) {storage.write("alt", e); sendOptions();});
+content_script.receive("save-isTextSelection-options", function (e) {storage.write("isTextSelection", e); sendOptions();});
+content_script.receive("save-isDblclick-options", function (e) {storage.write("isDblclick", e); sendOptions();});
+content_script.receive("save-isTranslateIcon-options", function (e) {storage.write("isTranslateIcon", e); sendOptions();});
+content_script.receive("save-enableHistory-options", function (e) {storage.write("enableHistory", e); sendOptions();});
+content_script.receive("save-numberHistoryItems-options", function (e) {storage.write("numberHistoryItems", e); sendOptions();});
 
 // Initialization
 if (!storage.read("from")) {
@@ -417,7 +540,10 @@ if (!storage.read("isTextSelection")) {
   storage.write("isTextSelection", "false");
 }
 if (!storage.read("isDblclick")) {
-  storage.write("isDblclick", "true");
+  storage.write("isDblclick", "false");
+}
+if (!storage.read("isTranslateIcon")) {
+  storage.write("isTranslateIcon", "true");
 }
 if (!storage.read("enableHistory")) {
   storage.write("enableHistory", "true");

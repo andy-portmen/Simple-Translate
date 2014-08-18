@@ -1,6 +1,6 @@
 {
   "name": "igtranslator",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "title": "Google™ Translator",
   "id": "jid1-dgnIBwQga0SIBw",
   "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Firefox toolbar.",
@@ -12,17 +12,24 @@
   },
   "preferences": [{
     "name": "isTextSelection",
-    "title": "Do translation when text is selected by mouse while Alt or Insert key is hold:",
+    "title": "Display bubble pop-up when I select a word or phrase while Alt or Insert key is hold",
     "description": "",
     "type": "bool",
     "value": false
   },
   {
     "name": "isDblclick",
-    "title": "Do translation when selecting text by mouse double-clicking:",
+    "title": "Display bubble pop-up when I double-click a word",
     "description": "",
     "type": "bool",
-    "value": true
+    "value": false
+  },
+	{
+    "name": "isTranslateIcon",
+    "title": "Display a place-holder pop-up when I select a word or phrase, clicking on the place-holder will show the translation",
+    "description": "",
+    "type": "bool",
+    "value": false
   },
   {
     "name": "enableHistory",

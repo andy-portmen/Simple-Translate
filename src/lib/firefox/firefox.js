@@ -206,6 +206,8 @@ exports.play = function (url) {
 exports.window = windowUtils.getMostRecentBrowserWindow();
 exports.Promise = Promise;
 exports.Deferred = Promise.defer;
+exports.sp = sp;
+exports.prefs = prefs;
 
 sp.on("_alt", function () {
   switch (prefs._alt)

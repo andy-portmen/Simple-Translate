@@ -127,7 +127,7 @@ table {
   overflow-y: auto;
 }
 #answer-details td {
-  padding: 0 5px !important;
+  padding: 2px 5px !important;
 }
 #phrasebook-td, #voice-question-td, #voice-answer-td, #home-td, #settings-td {
   height: 40px;

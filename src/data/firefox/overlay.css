@@ -1,3 +1,8 @@
 #igtranslator {
   list-style-image: url('../icon16.png') !important;
 }
+
+#igtranslator[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #igtranslator {
+  list-style-image: url('../icon32.png') !important;
+}
