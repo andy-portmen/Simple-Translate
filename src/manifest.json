@@ -1,6 +1,6 @@
 {
   "name": "Google™ Translator",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "manifest_version": 2,
   "short_name": "igtranslator",
   "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate.",
@@ -15,7 +15,7 @@
   "browser_action": {
     "default_icon": "data/icon16.png",
     "default_popup": "data/popup/popup.html",
-    "default_title": "Simple Translate"
+    "default_title": "Google™ Translator"
   },
   "background": {
     "scripts": ["lib/chrome/task.js", "lib/chrome/chrome.js", "lib/common.js"]

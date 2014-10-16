@@ -1,5 +1,5 @@
 Mozilla clean up:
-	1. Remove src/data/options
+	1. Remove src/data/options/options.html -> script
 	2. remove src/data/popup/popup.html -> script
 	3. Clean src/lib & src/data before packaging
 

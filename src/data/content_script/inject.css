@@ -16,10 +16,10 @@
 }
 .igtranslator-iframe {
   display: none;
-	z-index: 1000 !important;
+  z-index: 1000 !important;
   position: absolute !important;
-	width: 0;
-	height: 0;
+  width: 0;
+  height: 0;
   border: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -41,6 +41,7 @@
   border-spacing: 2px;
 }
 .igtranslator-bubble tr {
+  width: 100%;
   height: auto;
 }
 .igtranslator-bubble td {
@@ -88,12 +89,12 @@
 }
 .igtranslator-content {
   display: none;
-	font: 13px Arial;
-	min-height: 80px;
-	max-height: 200px;
+  font: 13px Arial;
+  min-height: 80px;
+  max-height: 200px;
   overflow-y: auto;
   background-position: center center;
-	background-repeat: no-repeat;
+  background-repeat: no-repeat;
   border-top: solid 1px #DEB887;
   border-right: 0;
   border-bottom: 0;
@@ -123,11 +124,11 @@
   background-size: 16px 16px;
   background-repeat: no-repeat;
   background-position: center center;
-	background-color: rgba(222, 184, 135, 0.3);
-	cursor: pointer;
+  background-color: rgba(222, 184, 135, 0.3);
+  cursor: pointer;
   opacity: 0.5;
 }
 .igtranslator-footer td:hover {
-	background-color: rgba(222, 184, 135, 0.7);
+  background-color: rgba(222, 184, 135, 0.7);
   opacity: 1.0;
 }

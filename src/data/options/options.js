@@ -1,7 +1,15 @@
 var background = {};
 
 /**** wrapper (start) ****/
-if (typeof safari !== 'undefined') { // Safari
+if (typeof self !== 'undefined' && self.port) { //Firefox
+  background.send = function (id, data) {
+    self.port.emit(id, data);
+  }
+  background.receive = function (id, callback) {
+    self.port.on(id, callback);
+  }
+}
+else if (typeof safari !== 'undefined') { // Safari
   background.send = function (id, obj) {
     safari.self.tab.dispatchMessage("message", {
       id: id,
@@ -70,24 +78,30 @@ background.receive("load-readHistory-options", function (e) {
   readHistory = e;
   function loadOptions() {
     var fromSelect = document.getElementById('from-select');
-    for (var i = 0; i < fromSelect.children.length; i++) {
-      if (fromSelect.children[i].getAttribute('value') == from) {
-        fromSelect.children[i].selected = 'true';
-        break;
+    if (fromSelect) {
+      for (var i = 0; i < fromSelect.children.length; i++) {
+        if (fromSelect.children[i].getAttribute('value') == from) {
+          fromSelect.children[i].selected = 'true';
+          break;
+        }
       }
     }
     var toSelect = document.getElementById('to-select');
-    for (var i = 0; i < toSelect.children.length; i++) {
-      if (toSelect.children[i].getAttribute('value') == to) {
-        toSelect.children[i].selected = 'true';
-        break;
+    if (toSelect) {
+      for (var i = 0; i < toSelect.children.length; i++) {
+        if (toSelect.children[i].getAttribute('value') == to) {
+          toSelect.children[i].selected = 'true';
+          break;
+        }
       }
     }
     var altSelect = document.getElementById('alt-select');
-    for (var i = 0; i < altSelect.children.length; i++) {
-      if (altSelect.children[i].getAttribute('value') == alt) {
-        altSelect.children[i].selected = 'true';
-        break;
+    if (altSelect) {
+      for (var i = 0; i < altSelect.children.length; i++) {
+        if (altSelect.children[i].getAttribute('value') == alt) {
+          altSelect.children[i].selected = 'true';
+          break;
+        }
       }
     }
     document.getElementsByName('CheckBox1')[0].checked = isTextSelection == 'true';
@@ -151,34 +165,35 @@ background.receive("load-readHistory-options", function (e) {
     var link = document.createElement('a');
     link.setAttribute('href', 'data:text/csv;charset=utf-8,\uFEFF' + encodedUri);
     link.setAttribute('download', 'dictionary-history.csv');
+    document.body.appendChild(link); // append the link to body: required for Firefox
     link.click();
+    console.error(link, encodedUri);
   }, false);
   document.getElementById('clearHistory').addEventListener('click', function () {
     clearOptionsHistory();
   }, false);
   document.getElementsByName('CheckBox1')[0].addEventListener('change', function (e) {
     background.send("save-isTextSelection-options", e.target.checked);
-	// disable isTranslateIcon options
+    // disable isTranslateIcon options
     document.getElementsByName('CheckBox2b')[0].checked = false;
-	background.send("save-isTranslateIcon-options", 'false');
+    background.send("save-isTranslateIcon-options", 'false');
   }, false);
   document.getElementsByName('CheckBox2')[0].addEventListener('change', function (e) {
     background.send("save-isDblclick-options", e.target.checked);
-	// disable isTranslateIcon options
+    // disable isTranslateIcon options
     document.getElementsByName('CheckBox2b')[0].checked = false;
-	background.send("save-isTranslateIcon-options", 'false');
+    background.send("save-isTranslateIcon-options", 'false');
   }, false);
   document.getElementsByName('CheckBox2b')[0].addEventListener('change', function (e) {
     background.send("save-isTranslateIcon-options", e.target.checked);
-	// disable other options
-	document.getElementsByName('CheckBox1')[0].checked = false;
+    // disable other options
+    document.getElementsByName('CheckBox1')[0].checked = false;
     document.getElementsByName('CheckBox2')[0].checked = false;
-	background.send("save-isDblclick-options", 'false');
-	background.send("save-isTextSelection-options", 'false');
+    background.send("save-isDblclick-options", 'false');
+    background.send("save-isTextSelection-options", 'false');
   }, false);
   document.getElementsByName('CheckBox3')[0].addEventListener('change', function (e) {
     background.send("save-enableHistory-options", e.target.checked);
-    loadOptions();
   }, false);
   document.getElementsByName('numberHistoryItems')[0].addEventListener('change', function (e) {
     background.send("save-numberHistoryItems-options", e.target.value);

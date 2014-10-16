@@ -1,32 +1,10 @@
-var storage, get, popup, window, Deferred, content_script, tab, context_menu, notification, version, play, sp, prefs;
+var storage, get, popup, window, Deferred, content_script, tab, context_menu, notification, version, play;
 
 /**** wrapper (start) ****/
 if (typeof require !== 'undefined') { //Firefox
   var firefox = require("./firefox/firefox");
-  ["storage", "notification", "get", "popup", "window", "content_script", "tab", "context_menu", "version", "play", "Deferred", "sp", "prefs"].forEach(function (id) {
+  ["storage", "notification", "get", "popup", "window", "content_script", "tab", "context_menu", "version", "play", "Deferred"].forEach(function (id) {
     this[id] = firefox[id];
-  });
-  // Message Passing Between Background and Options (for Firefox)
-  sp.on("isTranslateIcon", function () {
-    if (prefs.isTranslateIcon) {
-      prefs.isDblclick = false;
-      prefs.isTextSelection = false;
-      sendOptions();
-    }
-  });
-
-  sp.on("isDblclick", function () {
-    if (prefs.isDblclick) {
-      prefs.isTranslateIcon = false;
-      sendOptions();
-    }
-  });
-
-  sp.on("isTextSelection", function () {
-    if (prefs.isTextSelection) {
-      prefs.isTranslateIcon = false;
-      sendOptions();
-    }
   });
 }
 else if (typeof safari !== 'undefined') {  // Safari
@@ -45,6 +23,16 @@ else {  //Chrome
 
 var sourceLanguage, autoDetectedLang = 'en';
 const LANGS = ["az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn","km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
+
+// Initialization
+if (!storage.read("from")) storage.write("from", "auto");
+if (!storage.read("to")) storage.write("to", "en");
+if (!storage.read("alt")) storage.write("alt", "en");
+if (!storage.read("isTextSelection")) storage.write("isTextSelection", "false");
+if (!storage.read("isDblclick")) storage.write("isDblclick", "false");
+if (!storage.read("isTranslateIcon")) storage.write("isTranslateIcon", "true");
+if (!storage.read("enableHistory")) storage.write("enableHistory", "true");
+if (!storage.read("numberHistoryItems")) storage.write("numberHistoryItems", "100");
 
 function parallel (arr) {
   var d = new Deferred(), results = [], stage = arr.length;
@@ -146,7 +134,7 @@ function newTranslationEngine(inputWord, ajaxResults) {
         autoDetectedLang = sourceLang;
         if (sourceLang == storage.read("to")) {
           var result = ajaxResults[1];
-          var result_simplified = replace(/\,{2}/g, ',null,').replace(/\,{2}/g, ',null,').replace(/\[\,/g, "[null,");
+          var result_simplified = result.replace(/\,{2}/g, ',null,').replace(/\,{2}/g, ',null,').replace(/\[\,/g, "[null,");
           if (result_simplified) {
             try {
               arr = JSON.parse(result_simplified);
@@ -155,11 +143,14 @@ function newTranslationEngine(inputWord, ajaxResults) {
           }
         }
         if (arr) {
-          if (arr[0] && arr[0][0]) {
-            if (arr[0][0][0] && arr[0][0][1]) {
-              obj.word = inputWord; // you can also use: arr[0][0][1]
-              obj.definition = arr[0][0][0];
-              obj.error = false;
+          if (arr[0]) {
+            obj.definition = '';
+            obj.word = decodeURIComponent(inputWord);
+            for (var i = 0; i < arr[0].length; i++) {
+              if (arr[0][i][0] && arr[0][i][1]) {
+                obj.definition += arr[0][i][0];
+                obj.error = false;
+              }
             }
           }
           if (arr[1]) {
@@ -241,6 +232,7 @@ function oldTranslationEngine(inputWord, ajaxResults) { /* Note: (&oc=3&otf=2) i
     catch(e) {}
   }
   // check to see if the input Word is correct with 3 conditions
+  inputWord = decodeURIComponent(inputWord);
   var cnd1 = !obj.spell || (obj.spell && obj.spell.spell_res == inputWord.toLowerCase());
   var cnd2 = obj.spell && obj.spell.spell_res.replace(/[\-]/g,'') == inputWord.toLowerCase();
   var cnd3 = obj.dict || obj.sentences;
@@ -268,6 +260,8 @@ function oldTranslationEngine(inputWord, ajaxResults) { /* Note: (&oc=3&otf=2) i
 function getTranslation(word) {
   word = word.trim();
   word = word.toLowerCase();
+  word = encodeURIComponent(word);
+
   // urls for old engine
   var url_old_1 = m(1) + storage.read("from") + '&tl=' + storage.read("to") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("to") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
   var url_old_2 = m(1) + storage.read("from") + '&tl=' + storage.read("alt") + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + storage.read("alt") + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
@@ -528,26 +522,3 @@ content_script.receive("save-isDblclick-options", function (e) {storage.write("i
 content_script.receive("save-isTranslateIcon-options", function (e) {storage.write("isTranslateIcon", e); sendOptions();});
 content_script.receive("save-enableHistory-options", function (e) {storage.write("enableHistory", e); sendOptions();});
 content_script.receive("save-numberHistoryItems-options", function (e) {storage.write("numberHistoryItems", e); sendOptions();});
-
-// Initialization
-if (!storage.read("from")) {
-  storage.write("from", "auto");
-}
-if (!storage.read("alt")) {
-  storage.write("alt", "en");
-}
-if (!storage.read("isTextSelection")) {
-  storage.write("isTextSelection", "false");
-}
-if (!storage.read("isDblclick")) {
-  storage.write("isDblclick", "false");
-}
-if (!storage.read("isTranslateIcon")) {
-  storage.write("isTranslateIcon", "true");
-}
-if (!storage.read("enableHistory")) {
-  storage.write("enableHistory", "true");
-}
-if (!storage.read("numberHistoryItems")) {
-  storage.write("numberHistoryItems", "100");
-}

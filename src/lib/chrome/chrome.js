@@ -70,7 +70,19 @@ var _chrome = {
       chrome.tabs.create({url: url});
     },
     openOptions: function () {
-      chrome.tabs.create({url: "./data/options/options.html"});
+      var optionsTab = false;
+      chrome.tabs.query({}, function (tabs) {
+        for (var i = 0; i < tabs.length; i++) {
+          var tab = tabs[i];
+          if (tab.url.indexOf("data/options/options.html") != -1) {
+            chrome.tabs.reload(tab.id, function () {});
+            chrome.tabs.update(tab.id, {active: true}, function () {});
+            optionsTab = true;
+            break;
+          }
+        }
+        if (!optionsTab) chrome.tabs.create({url: "./data/options/options.html"});
+      });
     }
   },
   context_menu: {

@@ -160,11 +160,11 @@ background.receive("translation-response", function (obj) {
       }
       $("answer-title").textContent = obj.definition;
       
-			var synonyms = obj.synonyms;
-			var similars = obj.similar_words;
-			var details = obj.detailDefinition;
-			if (details && details.length) {
-				details.forEach (function (detail) {
+      var synonyms = obj.synonyms;
+      var similars = obj.similar_words;
+      var details = obj.detailDefinition;
+      if (details && details.length) {
+        details.forEach (function (detail) {
           var pos = html("td", {
             style: "color: #777; font-style: italic; height: 22px;"
           }, html("tr", {}, $("answer-details"))).textContent = detail.pos;
@@ -183,38 +183,38 @@ background.receive("translation-response", function (obj) {
           });
         });
       }
-			if (synonyms && synonyms.length) {
-				synonyms.forEach(function (synonym) {
-					var pos = html("td", {
-						style: "color: #777; font-style: italic; height: 22px;"
-					}, html("tr", {}, $("answer-details"))).textContent = "synonyms";
-					synonym.entry.forEach(function (entry) {
-						var tr = html("tr", {}, $("answer-details"));
-						html("div", {
-							style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(76,142,251,1.0) " + 0 + "%, rgba(76,142,251,0.3) " + 0 + "%);"
-						}, html("td", {style: "vertical-align: middle;"}, tr));
-						html("td", {
-							dir: "auto",
-							style: "color: #777; font-style: italic;"
-						}, tr).textContent = synonym.pos; 
-						html("td", {
-							dir: "auto"
-						}, tr).textContent = entry.join(", "); 
-					});
-				});
-			}
-			if (similars && similars.length) {
-				var tr = html("tr", {}, $("answer-details"));
-				html("div", {
-					style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(76,142,251,1.0) " + 0 + "%, rgba(76,142,251,0.3) " + 0 + "%);"
-				}, html("td", {}, tr));
-				html("td", {
-					style: "color: #777; font-style: italic;"
-				}, tr).textContent = "see also";
-				html("td", {
-					dir: "auto"
-				}, tr).textContent = similars.join(", ");
-			}
+      if (synonyms && synonyms.length) {
+        synonyms.forEach(function (synonym) {
+          var pos = html("td", {
+            style: "color: #777; font-style: italic; height: 22px;"
+          }, html("tr", {}, $("answer-details"))).textContent = "synonyms";
+          synonym.entry.forEach(function (entry) {
+            var tr = html("tr", {}, $("answer-details"));
+            html("div", {
+              style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(76,142,251,1.0) " + 0 + "%, rgba(76,142,251,0.3) " + 0 + "%);"
+            }, html("td", {style: "vertical-align: middle;"}, tr));
+            html("td", {
+              dir: "auto",
+              style: "color: #777; font-style: italic;"
+            }, tr).textContent = synonym.pos; 
+            html("td", {
+              dir: "auto"
+            }, tr).textContent = entry.join(", "); 
+          });
+        });
+      }
+      if (similars && similars.length) {
+        var tr = html("tr", {}, $("answer-details"));
+        html("div", {
+          style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(76,142,251,1.0) " + 0 + "%, rgba(76,142,251,0.3) " + 0 + "%);"
+        }, html("td", {}, tr));
+        html("td", {
+          style: "color: #777; font-style: italic;"
+        }, tr).textContent = "see also";
+        html("td", {
+          dir: "auto"
+        }, tr).textContent = similars.join(", ");
+      }
     }
     else {
       background.send("translation-request", obj.correctedWord);

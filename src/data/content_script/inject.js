@@ -78,9 +78,27 @@ function init() {
   }
 
   function getSelectedRect(w) {
-    var range = w.getRangeAt(0).cloneRange();
-    var rect = range.getBoundingClientRect();
-    return rect;
+    var range = w.getRangeAt(0).cloneRange(); 
+    if (range.startOffset != range.endOffset) {
+      var rect = range.getBoundingClientRect();
+      return rect;
+    }
+    else {
+      var arr = range.startContainer.childNodes;   
+      for (var i = 0; i < arr.length; i++) {
+        var target = arr[i].nodeName.toLowerCase();
+        if (target == 'textarea' || target == 'input') {
+          var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd); 
+          if (rect.top && rect.left && rect.height && rect.width) return rect;
+        }
+      } 
+      range.collapse(false);
+      var dummy = document.createElement("span");
+      range.insertNode(dummy);
+      var rect = dummy.getBoundingClientRect();
+      dummy.parentNode.removeChild(dummy);
+      return rect;
+    }
   }
   
   function requestBubbleTranslation() {
@@ -260,8 +278,10 @@ function init() {
               direct_translation.textContent = entry.word; 
               dir(direct_translation);
               var reverse_translation = html("td", {dir: "auto"}, tr);
-              reverse_translation.textContent = entry.reverse_translation.join(", "); 
-              dir(reverse_translation);
+              if (entry.reverse_translation) {
+                reverse_translation.textContent = entry.reverse_translation.join(", "); 
+                dir(reverse_translation);
+              }
             });
           });
         }
@@ -306,6 +326,7 @@ function init() {
         if (!flag1 && !flag2 && !flag3) {
           content.style.display = "none";
           header.style.fontSize = "110%";
+          header.style.width = "450px";
         }
       }
     }
@@ -313,9 +334,32 @@ function init() {
     var H = window.getComputedStyle(bubble, null).getPropertyValue("height");
     iFrame.style.width = (parseInt(W) + 20) + "px";
     iFrame.style.height = (parseInt(H) + 20) + "px";
+    function smoothScrollTo(duration) {
+      var factor = 0, timer, start = Date.now();
+      if (timer) window.clearInterval(timer);
+      smoothScroll = {
+        scrollTo: true,
+        scrollX: window.scrollX,
+        scrollY: window.scrollY
+      };
+      function step() {
+        factor = (Date.now() - start) / duration;
+        var left = iFrame.offsetLeft;
+        var width = iFrame.offsetWidth;
+        window.scrollTo(window.scrollX + factor * parseInt(W), window.scrollY);
+        if (window.pageXOffset + window.innerWidth > left + width) {
+          window.clearInterval(timer);
+          factor = 1;
+          return;
+        }
+      }
+      timer = window.setInterval(step, 10);
+    }
+    if (iFrame.offsetLeft > window.innerWidth - parseInt(W)) smoothScrollTo(800);
   });
   
-  document.addEventListener('mousedown', function (e) {
+  var smoothScroll = {};
+  function hideBubble(e) {
     var target = e.target || e.originalTarget;
     while (target.parentNode && target.getAttribute) {
       if (target == bubble || target == translateIcon) {
@@ -327,7 +371,17 @@ function init() {
     iFrame.style.display = 'none';
     iFrame.style.width = (0) + "px";
     iFrame.style.height = (0) + "px";
-  }, false); 
+    if (smoothScroll.scrollTo) {
+      window.scrollTo(smoothScroll.scrollX, smoothScroll.scrollY);
+      smoothScroll = {
+        scrollTo: false,
+        windowScrollX: 0,
+        windowScrollY: 0
+      };
+    }
+  }
+  document.addEventListener('mousedown', hideBubble, false); 
+  document.addEventListener('keydown', hideBubble, false); 
   
   document.addEventListener('keydown', function (e) {
     keyCode = e.keyCode;
@@ -337,10 +391,25 @@ function init() {
     keyCode = null;
   }, false);
   
-  document.addEventListener('mouseup', function (e) {
+  function getSelectedText(target) {
+    function getTextSelection() {
+      var selectedText = '';
+      var value = target.value;
+      var startPos = target.selectionStart;
+      var endPos = target.selectionEnd;        
+      if (value && startPos && endPos) selectedText = value.substring(startPos, endPos);
+      return selectedText;
+    }
     var selectedText = window.getSelection().toString();
+    if (!selectedText) selectedText = getTextSelection();
+    return selectedText;
+  }
+  
+  document.addEventListener('mouseup', function (e) {
+    var target = e.target || e.originalTarget;
+    var selectedText = getSelectedText(target);
     if (selectedText.length > 2) {
-      requestBubbleTranslation.text = window.getSelection().toString();
+      requestBubbleTranslation.text = selectedText;
       requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
       if (isTranslateIcon && iFrame.style.display == 'none') {
         showTranslateIcon();
@@ -353,10 +422,12 @@ function init() {
   
   document.addEventListener('dblclick', function (e) {
     var target = e.target || e.originalTarget;
-    if (target.localName == 'input'  || target.getAttribute('contenteditable') == 'true' || target.className.indexOf("editable") != -1) return;
-    var selectedText = window.getSelection().toString();
+    /* this line is only for Firefox */
+    //if (target.localName == 'input'  || target.getAttribute('contenteditable') == 'true' || target.className.indexOf("editable") != -1) return;
+    /* */
+    var selectedText = getSelectedText(target);
     if (selectedText.length > 2) {
-      requestBubbleTranslation.text = window.getSelection().toString();
+      requestBubbleTranslation.text = selectedText;
       requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
       if (isTranslateIcon && iFrame.style.display == 'none') {
         showTranslateIcon();
@@ -397,4 +468,108 @@ function init() {
 
 if (window.top === window) {
   window.addEventListener("DOMContentLoaded", init);
+}
+
+// Get bounding rectangle for text/input area
+function getTextBoundingRect(input, selectionStart, selectionEnd, debug) {
+  // @author Rob W         http://stackoverflow.com/users/938089/rob-w
+  // @name                 getTextBoundingRect
+  // @param input          Required HTMLElement with `value` attribute
+  // @param selectionStart Optional number: Start offset. Default 0
+  // @param selectionEnd   Optional number: End offset. Default selectionStart
+  // @param debug          Optional boolean. If true, the created test layer will not be removed.
+
+  // Basic parameter validation
+  if (!input || !('value' in input)) return input;
+  if (typeof selectionStart == "string") selectionStart = parseFloat(selectionStart);
+  if (typeof selectionStart != "number" || isNaN(selectionStart)) {
+    selectionStart = 0;
+  }
+  if (selectionStart < 0) selectionStart = 0;
+  else selectionStart = Math.min(input.value.length, selectionStart);
+  if (typeof selectionEnd == "string") selectionEnd = parseFloat(selectionEnd);
+  if (typeof selectionEnd != "number" || isNaN(selectionEnd) || selectionEnd < selectionStart) {
+    selectionEnd = selectionStart;
+  }
+  if (selectionEnd < 0) selectionEnd = 0;
+  else selectionEnd = Math.min(input.value.length, selectionEnd);
+
+  // If available (thus IE), use the createTextRange method
+  if (typeof input.createTextRange == "function") {
+    var range = input.createTextRange();
+    range.collapse(true);
+    range.moveStart('character', selectionStart);
+    range.moveEnd('character', selectionEnd - selectionStart);
+    return range.getBoundingClientRect();
+  }
+  // createTextRange is not supported, create a fake text range
+  var offset = getInputOffset(),
+    topPos = offset.top,
+    leftPos = offset.left,
+    width = getInputCSS('width', true),
+    height = getInputCSS('height', true);
+
+  // Styles to simulate a node in an input field
+  var cssDefaultStyles = "white-space:pre;padding:0;margin:0;", listOfModifiers = ['direction', 'font-family', 'font-size', 'font-size-adjust', 'font-variant', 'font-weight', 'font-style', 'letter-spacing', 'line-height', 'text-align', 'text-indent', 'text-transform', 'word-wrap', 'word-spacing'];
+  topPos += getInputCSS('padding-top', true);
+  topPos += getInputCSS('border-top-width', true);
+  leftPos += getInputCSS('padding-left', true);
+  leftPos += getInputCSS('border-left-width', true);
+  leftPos += 1; //Seems to be necessary
+
+  for (var i=0; i<listOfModifiers.length; i++) {
+    var property = listOfModifiers[i];
+    cssDefaultStyles += property + ':' + getInputCSS(property) +';';
+  }
+  // End of CSS variable checks
+
+  var text = input.value, textLen = text.length, fakeClone = document.createElement("div");
+  if (selectionStart > 0) appendPart(0, selectionStart);
+  var fakeRange = appendPart(selectionStart, selectionEnd);
+  if (textLen > selectionEnd) appendPart(selectionEnd, textLen);
+
+  // Styles to inherit the font styles of the element
+  fakeClone.style.cssText = cssDefaultStyles;
+
+  // Styles to position the text node at the desired position
+  fakeClone.style.position = "absolute";
+  fakeClone.style.top = topPos + "px";
+  fakeClone.style.left = leftPos + "px";
+  fakeClone.style.width = width + "px";
+  fakeClone.style.height = height + "px";
+  document.body.appendChild(fakeClone);
+  var returnValue = fakeRange.getBoundingClientRect(); //Get rect
+
+  if (!debug) fakeClone.parentNode.removeChild(fakeClone); //Remove temp
+  return returnValue;
+
+  // Local functions for readability of the previous code
+  function appendPart(start, end){
+    var span = document.createElement("span");
+    span.style.cssText = cssDefaultStyles; //Force styles to prevent unexpected results
+    span.textContent = text.substring(start, end);
+    fakeClone.appendChild(span);
+    return span;
+  }
+  // Computing offset position
+  function getInputOffset(){
+    var body = document.body, win = document.defaultView, docElem = document.documentElement, box = document.createElement('div');
+    box.style.paddingLeft = box.style.width = "1px";
+    body.appendChild(box);
+    var isBoxModel = box.offsetWidth == 2;
+    body.removeChild(box);
+    box = input.getBoundingClientRect();
+    var clientTop  = docElem.clientTop  || body.clientTop  || 0,
+        clientLeft = docElem.clientLeft || body.clientLeft || 0,
+        scrollTop  = win.pageYOffset || isBoxModel && docElem.scrollTop  || body.scrollTop,
+        scrollLeft = win.pageXOffset || isBoxModel && docElem.scrollLeft || body.scrollLeft;
+    return {
+      top : box.top  + scrollTop  - clientTop,
+      left: box.left + scrollLeft - clientLeft
+    };
+  }
+  function getInputCSS(prop, isnumber){
+    var val = document.defaultView.getComputedStyle(input, null).getPropertyValue(prop);
+    return isnumber ? parseFloat(val) : val;
+  }
 }
