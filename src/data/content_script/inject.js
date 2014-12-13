@@ -1,7 +1,7 @@
 var background = {}, manifest = {};
 
 /**** wrapper (start) ****/
-if (typeof self !== 'undefined' && self.port) { //Firefox
+if (typeof self !== 'undefined' && self.port) { /* Firefox */
   background.send = function (id, data) {
     self.port.emit(id, data);
   }
@@ -10,7 +10,7 @@ if (typeof self !== 'undefined' && self.port) { //Firefox
   }
   manifest.url = "resource://jid1-dgnibwqga0sibw-at-jetpack/igtranslator/";
 }
-else if (typeof safari !== 'undefined') { // Safari
+else if (typeof safari !== 'undefined') { /* Safari */
   background.send = function (id, obj) {
     safari.self.tab.dispatchMessage("message", {
       id: id,
@@ -38,7 +38,7 @@ else if (typeof safari !== 'undefined') { // Safari
     } catch (e) {}
   }, false);
 }
-else {  // Chrome
+else {  /* Chrome */
   background.send = function (id, data) {
     chrome.extension.sendRequest({method: id, data: data});
   }
@@ -57,9 +57,14 @@ function init() {
   // Global Variables
   var word, definition, keyCode;
   var bubble, header, content, footer, bookmarks, voice, home, settings; 
-  var isTextSelection = false;
-  var isDblclick      = false;
-  var isTranslateIcon = false;
+  var isTextSelection   = false;
+  var isDblclick        = false;
+  var isTranslateIcon   = false;
+  var translateInputArea = true;
+  var isMouseOverTranslation = false;
+  var allowMouseOverTranslation = true;
+  var translateIconShow = 0;
+  var translateIconTime = 3;
   
   function html(tag, attrs, parent) {
     if (!attrs) attrs = {};
@@ -111,16 +116,26 @@ function init() {
     iFrame.style.width = (170) + "px";
     iFrame.style.height = (70) + "px";
     iFrame.style.display = 'block';
-    header.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
+    header.style.width = (150) + "px";
+    header.parentNode.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
     content.style.display = "none";
+    allowMouseOverTranslation = false; /* for mouseover translation */
     background.send("translation-request", requestBubbleTranslation.text);
   }
   
+  var timeoutIconShow, timeoutIconHide;
   function showTranslateIcon() {
     var rect = requestBubbleTranslation.rect;
     translateIcon.style.top = (rect.top + window.scrollY - 18) + 'px';
     translateIcon.style.left = (rect.left + window.scrollX + rect.width - 2) + 'px';
-    translateIcon.style.display = "block";
+    if (timeoutIconShow) window.clearTimeout(timeoutIconShow);
+    if (timeoutIconHide) window.clearTimeout(timeoutIconHide);
+    timeoutIconShow = window.setTimeout(function () {
+      translateIcon.style.display = "block";
+    }, translateIconShow * 1000); /* show TranslateIcon with delay */
+    timeoutIconHide = window.setTimeout(function () {
+      translateIcon.style.display = "none";
+    }, translateIconTime * 1000); /* hide TranslateIcon automatically */
   }
 
   /* iFrame */
@@ -142,10 +157,10 @@ function init() {
         "class": "igtranslator-bubble"
       }, iFrame.contentDocument.body);
       /* Header */
-      header = html("td", {
+      header = html("pre", {dir: "auto"}, html("td", {
         colspan: 4,
         "class": "igtranslator-header"
-      }, html("tr", {}, bubble));
+      }, html("tr", {}, bubble)));
       /* Content */
       content = html("tbody", {
         "class": "igtranslator-content"
@@ -222,21 +237,23 @@ function init() {
     var selectedText = window.getSelection().toString();
     background.send("context-menu-word-response", selectedText);
   });
-  
   background.receive("context-menu-url-request", function () {
     background.send("context-menu-url-response", document.location.href);
+  });   
+  background.receive("context-menu-reload-page", function (url) {
+    document.location.href = url;
   });  
   
   background.receive("translation-response", function (data) {
-    iFrame.style.width = (600) + "px";
-    iFrame.style.height = (300) + "px";
+    iFrame.style.width = "600px";
+    iFrame.style.height = "300px";
     if (!data.wordIsCorrect && data.correctedWord) {
       background.send("translation-request", data.correctedWord);
     }
     else {
       word = data.word;
       definition = data.definition;
-      header.style.backgroundImage = "none";
+      header.parentNode.style.backgroundImage = "none";
       content.style.display = "block";
       if (data.error) {
         header.textContent = "Cannot Access Google Translate!";
@@ -262,6 +279,8 @@ function init() {
         var details = data.detailDefinition;
         var flag1 = false, flag2 = false, flag3 = false;
         header.textContent = definition ? (details && details.length ? word + ': ' + definition : definition) : "Definition not found!";
+        header.style.textAlign = "center";
+        header.style.width = "auto";
         if (details && details.length) {
           flag1 = true;
           details.forEach(function (detail) {
@@ -322,11 +341,14 @@ function init() {
           translation_similars.textContent = similars.join(", "); 
           dir(translation_similars);
         }
-        // delete content if there is nothing to show
+        /* delete content section if there is nothing to show */
         if (!flag1 && !flag2 && !flag3) {
           content.style.display = "none";
-          header.style.fontSize = "110%";
+          header.style.fontSize = "100%";
           header.style.width = "450px";
+          if (header.textContent.length > 50) {
+            header.style.textAlign = "justify";
+          }
         }
       }
     }
@@ -355,7 +377,10 @@ function init() {
       }
       timer = window.setInterval(step, 10);
     }
-    if (iFrame.offsetLeft > window.innerWidth - parseInt(W)) smoothScrollTo(800);
+    if (!isMouseOverTranslation && iFrame.offsetLeft > window.innerWidth - parseInt(W)) {
+      smoothScrollTo(800);
+    }
+    allowMouseOverTranslation = true;
   });
   
   var smoothScroll = {};
@@ -363,7 +388,7 @@ function init() {
     var target = e.target || e.originalTarget;
     while (target.parentNode && target.getAttribute) {
       if (target == bubble || target == translateIcon) {
-        return; // Do not hide the panel when user clicks inside the panel
+        return; /* Do not hide the panel when user clicks inside the panel */
       }
       target = target.parentNode;
     }
@@ -381,11 +406,12 @@ function init() {
     }
   }
   document.addEventListener('mousedown', hideBubble, false); 
-  document.addEventListener('keydown', hideBubble, false); 
-  
   document.addEventListener('keydown', function (e) {
     keyCode = e.keyCode;
-  }, false);
+    if (!e.metaKey && !e.altKey && keyCode != 45 && keyCode != 84) {
+      hideBubble(e);
+    }
+  }, false); 
   
   document.addEventListener('keyup', function (e) {
     keyCode = null;
@@ -405,46 +431,108 @@ function init() {
     return selectedText;
   }
   
-  document.addEventListener('mouseup', function (e) {
-    var target = e.target || e.originalTarget;
-    var selectedText = getSelectedText(target);
-    if (selectedText.length > 2) {
-      requestBubbleTranslation.text = selectedText;
-      requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
-      if (isTranslateIcon && iFrame.style.display == 'none') {
-        showTranslateIcon();
+  function getWordAtPoint(elem, x, y) {
+    if (elem && elem.nodeType == elem.TEXT_NODE) {
+      var range = elem.ownerDocument.createRange();
+      range.selectNodeContents(elem);
+      var currentPos = 0;
+      var endPos = range.endOffset;
+      while(currentPos+1 < endPos) {
+        range.setStart(elem, currentPos);
+        range.setEnd(elem, currentPos+1);
+        if(range.getBoundingClientRect().left <= x && range.getBoundingClientRect().right  >= x &&
+           range.getBoundingClientRect().top  <= y && range.getBoundingClientRect().bottom >= y) {
+          range.expand("word");
+          var originalRange = range;
+          range.detach();
+          return (originalRange);
+        }
+        currentPos += 1;
       }
-      else if (isTextSelection && (e.metaKey || e.altKey || keyCode == 45)) {
-        requestBubbleTranslation();
+    } else {
+      for(var i = 0; i < elem.childNodes.length; i++) {
+        var range = elem.childNodes[i].ownerDocument.createRange();
+        range.selectNodeContents(elem.childNodes[i]);
+        if(range.getBoundingClientRect().left <= x && range.getBoundingClientRect().right  >= x &&
+           range.getBoundingClientRect().top  <= y && range.getBoundingClientRect().bottom >= y) {
+          range.detach();
+          return (getWordAtPoint(elem.childNodes[i], x, y));
+        } 
+        else {
+          range.detach();
+        }
       }
     }
-  }, false);
+    return (null);
+  }    
   
-  document.addEventListener('dblclick', function (e) {
+  function triggerTranslation(e) {
     var target = e.target || e.originalTarget;
-    /* this line is only for Firefox */
-    //if (target.localName == 'input'  || target.getAttribute('contenteditable') == 'true' || target.className.indexOf("editable") != -1) return;
-    /* */
-    var selectedText = getSelectedText(target);
-    if (selectedText.length > 2) {
-      requestBubbleTranslation.text = selectedText;
-      requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
-      if (isTranslateIcon && iFrame.style.display == 'none') {
-        showTranslateIcon();
-      }
-      else if (isDblclick) {
-        requestBubbleTranslation();
+    
+    /* detect input or editable areas */
+    var flag1 = (target.localName == "input" || target.localName == "textarea");
+    var flag2 = (target.getAttribute('contenteditable') == 'true');
+    var flag3 = (target.className.indexOf("editable") != -1);
+    var inputArea = flag1 || flag2 || flag3;
+    if (inputArea && !translateInputArea) return;
+    
+    var keyboard = e.metaKey || e.altKey || keyCode == 45 || keyCode == 84;
+    var dblclick = (e.type == 'dblclick') && isDblclick;
+    var mouseup = (e.type == 'mouseup') && isTextSelection && keyboard;
+    var mouseover = (e.type == 'mouseover') && isMouseOverTranslation;
+    
+    if (mouseover) { /* mouseover translation */
+      var range = getWordAtPoint(e.target, e.x, e.y);
+      if (range) {
+        var selectedText = range.toString();
+        requestBubbleTranslation.text = selectedText;
+        requestBubbleTranslation.rect = range.getBoundingClientRect();
+        if (allowMouseOverTranslation) {
+          if (selectedText && selectedText.length > 2) {
+            requestBubbleTranslation();
+          }
+        }
       }
     }
-  }, false);
+    else { /* dblclick or mouseup translations */
+      var selectedText = getSelectedText(target);
+      if (selectedText && selectedText.length > 2) {
+        requestBubbleTranslation.text = selectedText;
+        requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
+        if (isTranslateIcon && iFrame.style.display == 'none') {
+          showTranslateIcon();
+        }
+        else if (dblclick || mouseup) {
+          requestBubbleTranslation();
+        }
+      }
+    }
+  }
+
+  /* adding listeners for mouseup and dblclick */
+  document.addEventListener('mouseup', triggerTranslation, false);
+  document.addEventListener('dblclick', triggerTranslation, false);
   
-  // Get options at start-up
+  /* Get options at start-up */
   background.send("options-request", null);
-  
   background.receive("options-response", function (data) {
     isTextSelection = data.isTextSelection;
     isDblclick = data.isDblclick;
     isTranslateIcon = data.isTranslateIcon;
+    translateIconShow = data.translateIconShow;
+    translateIconTime = data.translateIconTime;
+    translateInputArea = data.translateInputArea;
+    isMouseOverTranslation = data.isMouseOverTranslation;
+    
+    /* mouseover translation: this is not active for now */
+    /*
+    if (isMouseOverTranslation) {
+      document.addEventListener('mouseover', triggerTranslation, false);
+    }
+    else {
+      document.removeEventListener('mouseover', triggerTranslation, false);
+    }
+    */
   });
   
   background.receive("saved-to-phrasebook", function () {
@@ -470,7 +558,7 @@ if (window.top === window) {
   window.addEventListener("DOMContentLoaded", init);
 }
 
-// Get bounding rectangle for text/input area
+/* Get bounding rectangle for text or input area */
 function getTextBoundingRect(input, selectionStart, selectionEnd, debug) {
   // @author Rob W         http://stackoverflow.com/users/938089/rob-w
   // @name                 getTextBoundingRect

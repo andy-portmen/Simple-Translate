@@ -1,4 +1,6 @@
-var _chrome = {
+var app = {
+  Promise: Promise,
+  timer: window,
   storage: {
     read: function (id) {
       return localStorage[id] || null;
@@ -9,7 +11,7 @@ var _chrome = {
   },
   get: function (url, headers, data) {
     var xhr = new XMLHttpRequest();
-    var deferred = new task.Deferred();
+    var deferred = Promise.defer();
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400 || xhr.status < 200) {
@@ -94,9 +96,11 @@ var _chrome = {
           callback();
         }
       });
+    },
+    remove: function () {
+      chrome.contextMenus.removeAll(function () {});
     }
   },
-  
   notification: function (title, text) {
     var notification = webkitNotifications.createNotification(
       chrome.extension.getURL("./") + 'data/icon48.png',  title,  text
@@ -106,26 +110,45 @@ var _chrome = {
       notification.cancel();
     }, 5000);
   },
-
-  play: (function () {
+  play: function (url, callback) {
+    function ended() {
+      audio.removeEventListener("ended", ended);
+      callback(true);
+    }
     var audio = new Audio();
+    audio.addEventListener("ended", ended);
     var canPlay = audio.canPlayType("audio/mpeg");
     if (!canPlay) {
       audio = document.createElement("iframe");
       document.body.appendChild(audio);
     }
-    return function (url) {
-      if (canPlay) {
-        audio.setAttribute("src", url);
-        audio.play();
-      }
-      else {
-        audio.removeAttribute('src');
-        audio.setAttribute('src', url); 
-      }
+    if (canPlay) {
+      audio.setAttribute('src', url);
+      audio.play();
     }
-  })(),
-  
+    else {
+      audio.removeAttribute('src');
+      audio.setAttribute('src', url); 
+    }
+  },
+  options: {
+    send: function (id, data) {
+      chrome.tabs.query({}, function(tabs) {
+        tabs.forEach(function (tab) {
+          if (tab.url.indexOf("options/options.html") !== -1) {
+            chrome.tabs.sendMessage(tab.id, {method: id, data: data}, function() {});
+          }
+        });
+      });
+    },
+    receive: function (id, callback) {
+      chrome.extension.onRequest.addListener(function(request, sender, c) {
+        if (request.method == id && sender.tab && sender.tab.url.indexOf("options/options.html") !== -1) {
+          callback(request.data);
+        }
+      });
+    }
+  },
   version: function () {
     return chrome[chrome.runtime && chrome.runtime.getManifest ? "runtime" : "extension"].getManifest().version;
   }

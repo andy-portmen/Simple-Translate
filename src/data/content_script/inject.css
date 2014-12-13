@@ -4,7 +4,7 @@
   height: 20px !important;
   border-radius: 9px !important;
   position: absolute !important;
-  z-index: 1000 !important;
+  z-index: 999999 !important;
   background-color: #DEB887 !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
@@ -16,7 +16,7 @@
 }
 .igtranslator-iframe {
   display: none;
-  z-index: 1000 !important;
+  z-index: 999999 !important;
   position: absolute !important;
   width: 0;
   height: 0;
@@ -34,7 +34,7 @@
   background-color: #FAEBD7;
   border: solid 1px #DEB887;
   border-radius: 2px;
-  z-index: 1000;
+  z-index: 999999;
   width: auto;
   max-width: 500px;
   border-collapse: separate;
@@ -44,14 +44,7 @@
   width: 100%;
   height: auto;
 }
-.igtranslator-bubble td {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  background-color: #FAEBD7;
-}
-.igtranslator-bubble:after, 
-.igtranslator-bubble:before {
+.igtranslator-bubble:after,.igtranslator-bubble:before {
   content: "";
   border: solid transparent;
   height: 0;
@@ -87,6 +80,14 @@
   padding: 0;
   margin: 0;
 }
+.igtranslator-header pre {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  font-family: arial;
+  white-space: pre-line;
+}
 .igtranslator-content {
   display: none;
   font: 13px Arial;
@@ -115,12 +116,12 @@
   margin: 0;
 }
 .igtranslator-footer td {
-  border: solid 1px #DEB887;
-  padding: 0;
   margin: 0;
-  border-radius: 1px;
+  padding: 0;
   height: 20px;
   min-width: 32px;
+  border: solid 1px #DEB887;
+  border-radius: 1px;
   background-size: 16px 16px;
   background-repeat: no-repeat;
   background-position: center center;

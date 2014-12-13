@@ -1,14 +1,13 @@
 {
   "name": "Google™ Translator",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "manifest_version": 2,
   "short_name": "igtranslator",
   "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate.",
-  "author": "Andy Portmen",
   "permissions": [
-    "contextMenus",
-    "storage",
     "tabs",
+    "storage",
+    "contextMenus",
     "notifications",
     "<all_urls>"
   ],
@@ -18,7 +17,7 @@
     "default_title": "Google™ Translator"
   },
   "background": {
-    "scripts": ["lib/chrome/task.js", "lib/chrome/chrome.js", "lib/common.js"]
+    "page": "lib/chrome/background.html"
   },
   "web_accessible_resources": ["data/content_script/*"],
   "content_scripts": [{

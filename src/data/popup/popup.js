@@ -1,6 +1,7 @@
 var background = {};
+
 /**** wrapper (start) ****/
-if (typeof chrome !== 'undefined') {  // Chrome
+if (typeof chrome !== 'undefined') { /* Chrome */
   background.send = function (id, data) {
     chrome.extension.sendRequest({method: id, data: data});
   }
@@ -16,12 +17,12 @@ if (typeof chrome !== 'undefined') {  // Chrome
     $("question-input").focus();
   }, 100);
 }
-else if (typeof safari !== 'undefined') { // Safari
+else if (typeof safari !== 'undefined') { /* Safari */
   background = (function () {
     var callbacks = {};
     return {
       send: function (id, data) {
-        safari.extension.globalPage.contentWindow.popup.dispatchMessage(id, data);
+        safari.extension.globalPage.contentWindow.app.popup.dispatchMessage(id, data);
       },
       receive: function (id, callback) {
         callbacks[id] = callback;
@@ -45,7 +46,7 @@ else if (typeof safari !== 'undefined') { // Safari
     }, 100);
   }, false);
 }
-else {  // Firefox
+else { /* Firefox */
   background.send = function (id, data) {
     self.port.emit(id, data);
   }
@@ -123,7 +124,7 @@ $("question-input").addEventListener("change", function (e) {
   onClick();
 }, false);
 
-// Message Passing Between Background and Popup
+/* Message Passing Between Background and Popup */
 var wrongWord = '';
 background.receive("translation-response", function (obj) {
   $("answer-title").textContent = "";
@@ -142,7 +143,7 @@ background.receive("translation-response", function (obj) {
       if (wrongWord) $("question-input").value = wrongWord + " >> " + obj.word;
       else $("question-input").value = obj.word;
       wrongWord = '';
-      
+
       $("question-input").select();
       $("definition-table").setAttribute("definition", obj.definition);
       var fs = $("from-select").children[$("from-select").selectedIndex];
@@ -159,7 +160,7 @@ background.receive("translation-response", function (obj) {
         $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
       }
       $("answer-title").textContent = obj.definition;
-      
+
       var synonyms = obj.synonyms;
       var similars = obj.similar_words;
       var details = obj.detailDefinition;
@@ -196,10 +197,10 @@ background.receive("translation-response", function (obj) {
             html("td", {
               dir: "auto",
               style: "color: #777; font-style: italic;"
-            }, tr).textContent = synonym.pos; 
+            }, tr).textContent = synonym.pos;
             html("td", {
               dir: "auto"
-            }, tr).textContent = entry.join(", "); 
+            }, tr).textContent = entry.join(", ");
           });
         });
       }
@@ -367,7 +368,8 @@ background.receive("initialization-response", function (obj) {
   checkVoice();
   onClick();
 });
-//This needs to be after background.receive("initialization-response")
+
+/* This needs to be after background.receive("initialization-response") */
 function init() {
   $("answer-title").textContent = "";
   $("answer-details").innerHTML = "";
