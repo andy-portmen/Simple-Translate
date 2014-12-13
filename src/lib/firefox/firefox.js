@@ -59,20 +59,6 @@ pageMod.PageMod({ /* page */
     });
   }
 });
-pageMod.PageMod({ /* options page */
-  include: [data.url("options/options.html")],
-  contentScriptWhen: "start",
-  contentScriptFile: [data.url("options/options.js")],
-  onAttach: function(worker) {
-    array.add(workers, worker);
-    worker.on('pageshow', function() { array.add(workers, this); });
-    worker.on('pagehide', function() { array.remove(workers, this); });
-    worker.on('detach', function() { array.remove(workers, this); });
-    content_script_arr.forEach(function (arr) {
-      worker.port.on(arr[0], arr[1]);
-    });
-  }
-});
 
 var popup = require("sdk/panel").Panel({
   width: 328,

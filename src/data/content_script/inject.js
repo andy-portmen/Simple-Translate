@@ -119,7 +119,7 @@ function init() {
     header.style.width = (150) + "px";
     header.parentNode.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
     content.style.display = "none";
-    allowMouseOverTranslation = false; /* for mouseover translation */
+    allowMouseOverTranslation = false;
     background.send("translation-request", requestBubbleTranslation.text);
   }
   
@@ -479,9 +479,8 @@ function init() {
     var keyboard = e.metaKey || e.altKey || keyCode == 45 || keyCode == 84;
     var dblclick = (e.type == 'dblclick') && isDblclick;
     var mouseup = (e.type == 'mouseup') && isTextSelection && keyboard;
-    var mouseover = (e.type == 'mouseover') && isMouseOverTranslation;
     
-    if (mouseover) { /* mouseover translation */
+    if (false) {
       var range = getWordAtPoint(e.target, e.x, e.y);
       if (range) {
         var selectedText = range.toString();
@@ -524,13 +523,12 @@ function init() {
     translateInputArea = data.translateInputArea;
     isMouseOverTranslation = data.isMouseOverTranslation;
     
-    /* mouseover translation: this is not active for now */
     /*
     if (isMouseOverTranslation) {
-      document.addEventListener('mouseover', triggerTranslation, false);
+      document.addEventListener('mouseOverTranslation', triggerTranslation, false);
     }
     else {
-      document.removeEventListener('mouseover', triggerTranslation, false);
+      document.removeEventListener('mouseOverTranslation', triggerTranslation, false);
     }
     */
   });
