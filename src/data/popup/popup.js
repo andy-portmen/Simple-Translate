@@ -124,6 +124,11 @@ $("question-input").addEventListener("change", function (e) {
   onClick();
 }, false);
 
+/* Toggle languages with hotkey [ ⌥⌘↑ (Alt+Meta+Up) ] */
+$("question-input").addEventListener('keydown', function (e) {
+  if (e.metaKey && e.altKey && e.keyCode == 38) background.send("toggle-request");
+}, false);
+
 /* Message Passing Between Background and Popup */
 var wrongWord = '';
 background.receive("translation-response", function (obj) {
