@@ -99,7 +99,6 @@ table {
 #answer-td {
 }
 #definition-table {
-  height: 170px; /* change answer-details max-height too */
   width: 100%;
 }
 #definition-table td {
@@ -121,7 +120,6 @@ table {
 }
 #answer-details {
   display: block;
-  max-height: 136px;
   overflow-y: auto;
 }
 #answer-details td {

@@ -31,6 +31,26 @@ config.translator = {
   },
   set useCache (val) {
     app.storage.write("useCache", val);
+  },
+  get width () {
+    return parseInt(app.storage.read("popupWidth") || "450");
+  },
+  set width (val) {
+    if (!val || isNaN(val)) val = 450;
+    val = parseInt(val);
+    if (val < 300) val = 300;
+    if (val > 700) val = 700;
+    app.storage.write("popupWidth", val);
+  },
+  get height () {
+    return parseInt(app.storage.read("popupHeight") || "170");
+  },
+  set height (val) {
+    if (!val || isNaN(val)) val = 170;
+    val = parseInt(val);
+    if (val < 100) val = 100;
+    if (val > 510) val = 510;
+    app.storage.write("popupHeight", val);
   }
 }
 
@@ -52,19 +72,19 @@ config.settings = {
   },
   set showIcon (val) {
     app.storage.write("isTranslateIcon", val);
-  },    
+  },
   get mouseOverTranslation () {
     return app.storage.read("isMouseOverTranslation") || "false";
   },
   set mouseOverTranslation (val) {
     app.storage.write("isMouseOverTranslation", val);
-  },  
+  },
   get translateInputArea () {
     return app.storage.read("translateInputArea") || "true";
   },
   set translateInputArea (val) {
     app.storage.write("translateInputArea", val);
-  },  
+  },
   get translateInNewTab () {
     return app.storage.read("translateInNewTab") || "true";
   },
@@ -92,6 +112,23 @@ config.settings = {
   },
   set contextMenu (val) {
     app.storage.write("showContextMenu", val);
+  },
+  get minimumNumberOfCharacters () {
+    return parseInt(app.storage.read("minimumNumberOfCharacters") || "3");
+  },
+  set minimumNumberOfCharacters (val) {
+    val = parseInt(val);
+    if (val < 1) val = 1;
+    app.storage.write("minimumNumberOfCharacters", val);
+  },
+  get bubbleRGB () {
+    return app.storage.read("bubbleRGB") || "rgb(222, 184, 135)";
+  },
+  set bubbleRGB (val) {
+    if (val.indexOf("rgb(") == -1 || val.indexOf(")") == -1) {
+      val = "rgb(222, 184, 135)";
+    }
+    app.storage.write("bubbleRGB", val);
   }
 }
 
@@ -109,7 +146,7 @@ config.history = {
     app.storage.write("enableHistory", val);
   },
   get number () {
-    return parseInt(app.storage.read("numberHistoryItems") || "300");
+    return parseInt(app.storage.read("numberHistoryItems") || "100");
   },
   set number (val) {
     val = parseInt(val);

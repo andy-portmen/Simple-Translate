@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>Author</key>
-	<string>Mike Avilov</string>
+	<string>Andy Portmen</string>
 	<key>Builder Version</key>
-	<string>10600.1.25.1</string>
+	<string>10600.7.12</string>
 	<key>CFBundleDisplayName</key>
 	<string>igTranslator for Google</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3.2</string>
+	<string>0.3.6</string>
 	<key>CFBundleVersion</key>
 	<string>2</string>
 	<key>Chrome</key>
@@ -68,7 +68,7 @@
 	<key>Description</key>
 	<string>a handy multi-language translator built on top of Google Translate</string>
 	<key>DeveloperIdentifier</key>
-	<string>2C3W8RZ8ND</string>
+	<string>2F69STTEPB</string>
 	<key>ExtensionInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>Permissions</key>

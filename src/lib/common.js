@@ -7,8 +7,13 @@ if (typeof require !== 'undefined') {
 
 var sourceLanguage, autoDetectedLang = 'en';
 const languagesNoVoice = [
-  "az","eu","be","bn","bg","ceb","et","tl","gl","ka","gu","ha","iw","hmn","ig","ga","jw","kn",
-  "km","lo","lt","ms","mt","mi","mr","mn","ne","fa","pa","sl","so","te","uk","ur","yi","yo","zu"];
+  "az","eu","be","bn","bg","ceb","et",
+  "tl","gl","ka","gu","ha","iw","hmn",
+  "ig","ga","jw","kn","km","lo","lt",
+  "ms","mt","mi","mr","mn","ne","fa",
+  "pa","sl","so","te","uk","ur","yi",
+  "yo","zu"
+  ];
 
 function m (i) {
   var arr = [
@@ -283,6 +288,15 @@ function getTranslation(word) {
 }
 
 /* Message Passing Between Background and Popup */
+function popupSendInits() {
+  app.popup.send("initialization-response", {
+    width: parseInt(config.translator.width),
+    height: parseInt(config.translator.height),
+    from: config.translator.from,
+    to: config.translator.to
+  });
+}
+
 app.popup.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
     app.popup.send("translation-response", obj);
@@ -301,16 +315,10 @@ app.popup.receive("toggle-request", function () {
   to = (to == 'auto' ? autoDetectedLang : to);
   config.translator.from = from;
   config.translator.to = to;
-  app.popup.send("initialization-response", {
-    from: config.translator.from,
-    to: config.translator.to
-  });
+  popupSendInits();
 });
 app.popup.receive("initialization-request", function () {
-  app.popup.send("initialization-response", {
-    from: config.translator.from,
-    to: config.translator.to
-  });
+  popupSendInits();
   app.popup.send("history-update", config.history.data);
 });
 
@@ -342,8 +350,8 @@ function playVoice(data) {
   /* Content script does not return lang */
   var lang = data.lang || config.translator.from;
   lang = (lang == 'auto' ? autoDetectedLang : lang);
-  var text = data.word, audioUrl = [];
-  
+  var text = data.word || '', audioUrl = [];
+
   /* split sentence into smaller pieces with n words */
   text = text.replace(/\'/g, '').replace(/\"/g, '').split(/\.|\,|\;|\u060c|\?|\!|\:/g);
   for (var i = 0; i < text.length; i++) {
@@ -354,11 +362,14 @@ function playVoice(data) {
   }
   var i = 0;
   function playRecursion() {
-    app.play(audioUrl[i], function (flag) {
-      if (flag) {
-        i++; if (i < audioUrl.length) playRecursion();
-      }
-    });
+    if (audioUrl[i]) {
+      app.play(audioUrl[i], function (flag) {
+        if (flag) {
+          i++; 
+          if (i < audioUrl.length) playRecursion();
+        }
+      });
+    }
   }
   playRecursion();
 }
@@ -380,22 +391,15 @@ var bookmark = {
       if (usage && usage.length) {
         usage = usage[1];
         var url = m(4) + action + "&sl=" + from + "&tl=" + to + "&ql=3&hl=en&xt=" + usage;
-        app.get(
-          url,
-          {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
-          action == "a" ? {q: question, utrans: answer} : {id: id}
-        ).then (
-          function (content) {
-            var key = /\"([^\"]*)\"\]/.exec(content);
-            if (key && key.length) {
-              d.resolve(key[1]);
-            }
-            else {
-              d.reject({message: "no-key"});
-            }
-          },
-          d.reject
-        );
+        app.get(url, {"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"}, action == "a" ? {q: question, utrans: answer} : {id: id}).then (function (content) {
+          var key = /\"([^\"]*)\"/.exec(content)[1]; /* bug: 4-28-2015 */
+          if (key && key.length) {
+            d.resolve(key[1]);
+          }
+          else {
+            d.reject({message: "no-key"});
+          }
+        }, d.reject);
       }
     });
     return d.promise;
@@ -409,15 +413,14 @@ var bookmark = {
     });
   },
   onReject: function (e) {
-    if (e.message == "Unauthorized") {
-      app.notification("Google Translator", "Please sign-in to your Google account first.");
+    if (e.message == "Unauthorized" || e.status == 401) {
+      app.notification("Google Translator", "To save to Favourites, please sign-in to your Google account first!");
     }
     if (e.message == "no-key") {
       app.notification("Google Translator", "Internal error. Are you logged-in to your Google account?");
     }
   }
 }
-
 app.popup.receive("add-to-phrasebook", function (data) {
   bookmark.server(data.question, data.answer, "a").then(
     function (key) {
@@ -447,6 +450,10 @@ app.popup.receive("remove-from-phrasebook", function (data) {
   );
 });
 
+app.popup.receive("copy-to-clipboard", function (text) {
+  app.copyToClipboard(text);
+});
+
 /* Message Passing Between Background and Content Script */
 app.content_script.receive("translation-request", function (word) {
   getTranslation(word).then(function (obj) {
@@ -456,13 +463,15 @@ app.content_script.receive("translation-request", function (word) {
 
 function sendOptionsToPage() {
   app.content_script.send("options-response", {
+    bubbleRGB: config.settings.bubbleRGB,
     isTextSelection: (config.settings.selection == "true"),
     isDblclick: (config.settings.dbClick == "true"),
     isTranslateIcon: (config.settings.showIcon == "true"),
     translateInputArea: (config.settings.translateInputArea == "true"),
     translateIconShow: config.settings.translateIconShow,
     translateIconTime: config.settings.translateIconTime,
-    isMouseOverTranslation: (config.settings.mouseOverTranslation == "true")
+    isMouseOverTranslation: (config.settings.mouseOverTranslation == "true"),
+    minimumNumberOfCharacters: config.settings.minimumNumberOfCharacters
   }, true); /* true: send to all tabs */
 }
 app.content_script.receive("options-request", sendOptionsToPage);
@@ -483,7 +492,9 @@ function createContextMenu() { /* create context menu (see options page) */
     app.content_script.send("context-menu-word-request");
   });
 }
-if (config.settings.contextMenu == 'true') createContextMenu();
+app.timer.setTimeout(function() {
+  if (config.settings.contextMenu == 'true') createContextMenu();
+}, 500); /* prevent sdk-messageManager error */
 
 app.content_script.receive("context-menu-url-response", function (url) {
   var from = config.translator.from;

@@ -25,8 +25,8 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 exports.timer = timers;
 exports.Promise = Promise;
-exports.window = windowUtils.getMostRecentBrowserWindow();
 exports.Deferred = Promise.defer;
+exports.window = windowUtils.getMostRecentBrowserWindow();
 
 var button = buttons.ActionButton({
   id: "igtranslator",
@@ -45,7 +45,7 @@ var button = buttons.ActionButton({
 
 var workers = [], content_script_arr = [];
 pageMod.PageMod({ /* page */
-  include: ["*"],
+  include: ["http://*", "https://*", "file://*"],
   contentScriptFile: [data.url("content_script/inject.js")],
   contentScriptWhen: "start",
   contentStyleFile : data.url("content_script/inject.css"),
@@ -60,9 +60,27 @@ pageMod.PageMod({ /* page */
   }
 });
 
+exports.storage = {
+  read: function (id) {
+    return (prefs[id] || prefs[id] + "" == "false") ? (prefs[id] + "") : null;
+  },
+  write: function (id, data) {
+    data = data + "";
+    if (data === "true" || data === "false") {
+      prefs[id] = data === "true" ? true : false;
+    }
+    else if (parseInt(data) + "" === data) {
+      prefs[id] = parseInt(data);
+    }
+    else {
+      prefs[id] = data + "";
+    }
+  }
+}
+
 var popup = require("sdk/panel").Panel({
   width: 328,
-  height: 172,
+  height: config.translator.height + 2,
   contentURL: data.url("./popup/popup.html"),
   contentScriptFile: [data.url("./popup/popup.js")]
 });
@@ -84,24 +102,6 @@ exports.popup = {
   }
 }
 
-exports.storage = {
-  read: function (id) {
-    return (prefs[id] || prefs[id] + "" == "false") ? (prefs[id] + "") : null;
-  },
-  write: function (id, data) {
-    data = data + "";
-    if (data === "true" || data === "false") {
-      prefs[id] = data === "true" ? true : false;
-    }
-    else if (parseInt(data) + "" === data) {
-      prefs[id] = parseInt(data);
-    }
-    else {
-      prefs[id] = data + "";
-    }
-  }
-}
-
 exports.get = function (url, headers, data) {
   var d = new Promise.defer();
   Request({
@@ -113,11 +113,11 @@ exports.get = function (url, headers, data) {
         var e = new Error(response.status);
         e.status = response.status;
         d.reject(e);
-      } 
+      }
       else {
         d.resolve(response.text);
       }
-    }  
+    }
   })[data ? "post" : "get"]();
   return d.promise;
 }
@@ -179,10 +179,9 @@ exports.options = (function () {
     },
     onAttach: function(worker) {
       array.add(workers, worker);
-      worker.on('pageshow', (w) => array.add(workers, w));
-      worker.on('pagehide', (w) => array.remove(workers, w));
-      worker.on('detach', (w) => array.remove(workers, w));
-
+      worker.on('pageshow', function() { array.add(workers, this); });
+      worker.on('pagehide', function() { array.remove(workers, this); });
+      worker.on('detach', function() { array.remove(workers, this); });
       options_arr.forEach(function (arr) {
         worker.port.on(arr[0], arr[1]);
       });
@@ -267,6 +266,12 @@ exports.notification = (function () {
     }
   }
 })();
+
+exports.copyToClipboard = function (text) {
+  const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+  gClipboardHelper.copyString(text);
+  exports.notification("Google™ Translator", "Selected text is copied to clipboard!");
+}
 
 exports.play = function (url, callback) {
   var worker = pageWorker.Page({

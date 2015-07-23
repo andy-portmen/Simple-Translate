@@ -3,19 +3,22 @@ var background = {};
 /**** wrapper (start) ****/
 if (typeof chrome !== 'undefined') { /* Chrome */
   background.send = function (id, data) {
-    chrome.extension.sendRequest({method: id, data: data});
+    chrome.runtime.sendMessage({path: 'popup-to-background', method: id, data: data});
   }
   background.receive = function (id, callback) {
-    chrome.extension.onRequest.addListener(function(request, sender, callback2) {
-      if (request.method == id) {
-        callback(request.data);
+    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+      if (request.path == 'background-to-popup') {
+        if (request.method == id) {
+          callback(request.data);
+        }
       }
     });
   }
   window.setTimeout(function () {
     init();
     $("question-input").focus();
-  }, 100);
+  }, 170);
+  var doResize = function () {};
 }
 else if (typeof safari !== 'undefined') { /* Safari */
   background = (function () {
@@ -64,6 +67,18 @@ else { /* Firefox */
     });
   }
   window.addEventListener("resize", doResize, false);
+  window.addEventListener("mousedown", function (e) {
+    if (e.button === 2) { /* copy text to clipboard on right-click */
+      var target = e.target || e.originalTarget;
+      var selectedText = target.ownerDocument.getSelection() + '';
+      var link = target.href || target.src;
+      if (target.localName != "a" && target.parentNode && target.parentNode.localName == "a") {
+        link = target.parentNode.href || link;
+      }
+      var text = selectedText || link;
+      background.send("copy-to-clipboard", text);
+    }
+  });
 }
 /**** wrapper (end) ****/
 
@@ -95,7 +110,7 @@ $('settings-td').addEventListener('click', function () {
 
 function onClick() {
   $("answer-title").textContent = '';
-  $("answer-details").innerHTML = '';
+  $("answer-details").textContent = '';
 
   var word = $("question-input").getAttribute("word");
   if (!word) return;
@@ -124,11 +139,18 @@ $("question-input").addEventListener("change", function (e) {
   onClick();
 }, false);
 
-/* Message Passing Between Background and Popup */
+/* Toggle languages with hotkey: ⌥⌘↑ (Alt + Meta + Up) or ⌥⇧↑ (Alt + Shift + Up) */
+window.addEventListener('keydown', function (e) {
+  if ((e.ctrlKey && e.shiftKey && e.keyCode == 38) || (e.metaKey && e.altKey && e.keyCode == 38)) {
+    $('fromto-td').click();
+  }
+}, false);
+
+/* Message Passing Between Background and Toolbar Popup */
 var wrongWord = '';
 background.receive("translation-response", function (obj) {
   $("answer-title").textContent = "";
-  $("answer-details").innerHTML = "";
+  $("answer-details").textContent = "";
   $("definition-table").removeAttribute('state');
   function html (tag, attrs, parent) {
     if (!attrs) attrs = {};
@@ -228,11 +250,11 @@ background.receive("translation-response", function (obj) {
     $("answer-title").textContent = "Can't Access Google Translate";
     $("definition-table").setAttribute('state', 'error');
   }
-})
-;
+});
+
 background.receive("history-update", function (obj) {
   var historySelect = $("history-select");
-  historySelect.innerHTML = "";
+  historySelect.textContent = "";
 
   function addNewItem(word, definition, index) {
     var option = document.createElement("option");
@@ -247,13 +269,13 @@ background.receive("history-update", function (obj) {
   addNewItem('', '', 0);
   var count = 0;
   obj.reverse().forEach(function (o, i) {
-    if (count > 9) {return;} // store 10 items in pop-up list
-    if ((o[0].length + o[1].length) < 50) { // do not include large sentences in short history list
+    if (count > 9) {return;}                /* store up to 10 items in pop-up list */
+    if ((o[0].length + o[1].length) < 50) { /* do not include large sentences in short history list */
       addNewItem(o[0], o[1], count + 1);
       count++;
     }
   });
-  if (!obj.length) { // If the list is empty
+  if (!obj.length) { /* if the list is empty */
     var option = document.createElement("option");
     option.textContent = "empty";
     option.setAttribute("disabled", true);
@@ -331,7 +353,6 @@ background.receive("check-voice-response", function (arr) {
     fromLang = $('from-select').getAttribute("detected-language") || "en";
   }
   var toLang = $('to-select').children[$('to-select').selectedIndex].value;
-
   $("voice-question-td").setAttribute("voice", arr.indexOf(fromLang) == -1);
   $("voice-answer-td").setAttribute("voice", arr.indexOf(toLang) == -1);
 });
@@ -349,8 +370,14 @@ background.receive("failed-phrasebook", function (status) {
   $("phrasebook-td").setAttribute("status", status);
 });
 
-// Initialization
+/* Initialization */
 background.receive("initialization-response", function (obj) {
+  /* set popup height */
+  document.body.style.width = obj.width + "px";
+  document.getElementById("definition-table").style.height = obj.height + "px";
+  document.getElementById("answer-details").style.maxHeight = obj.height - 34 + "px";
+  doResize();
+  /* fill "from" and "to" selects */
   var fromSelect = $("from-select");
   for (var i = 0; i < fromSelect.children.length; i++) {
     if (fromSelect.children[i].getAttribute("value") == obj.from) {
@@ -372,7 +399,7 @@ background.receive("initialization-response", function (obj) {
 /* This needs to be after background.receive("initialization-response") */
 function init() {
   $("answer-title").textContent = "";
-  $("answer-details").innerHTML = "";
+  $("answer-details").textContent = "";
   $("definition-table").removeAttribute('state');
   background.send("initialization-request");
 }

@@ -1,9 +1,9 @@
 {
   "name": "igtranslator",
-  "version": "0.3.2",
+  "version": "0.3.6",
   "title": "Google™ Translator",
   "id": "jid1-dgnIBwQga0SIBw",
-  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Firefox toolbar.",
+  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Browser toolbar.",
   "license": "MPL 2.0",
   "main": "common",
   "permissions": {

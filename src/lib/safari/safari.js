@@ -5,15 +5,17 @@ Qp.defer = Q.defer;
 
 var app = {
   Promise: Qp,
-  parser: new window.DOMParser(),
+  
   timer: window,
+
+  parser: new window.DOMParser(),
 
   storage: {
     read: function (id) {
-      return localStorage[id] || null;
+      return safari.extension.settings[id] || null;
     },
     write: function (id, data) {
-      localStorage[id] = data + "";
+      safari.extension.settings[id] = data + '';
     }
   },
 
@@ -48,7 +50,7 @@ var app = {
       var tabs = safari.application.activeBrowserWindow.tabs;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
-          if (tab.url && tab.url.indexOf("data/options/options.html") != -1) {
+          if (tab.url && tab.url.indexOf("data/options/options.html") !== -1) {
             tab.activate();
             optionsTab = true;
             break;
@@ -88,7 +90,7 @@ var app = {
       }
       data = arr.join("&");
     }
-    xhr.send(data ? data : "");
+    xhr.send(data ? data : '');
     return deferred.promise;
   },
 
@@ -169,21 +171,21 @@ var app = {
     }, false);
     safari.application.addEventListener("command", function (e) {
       var cmd = e.command;
-      if (cmd.indexOf("igtranslator.onPage:") != -1) {
+      if (cmd.indexOf("igtranslator.onPage:") !== -1) {
         var i = parseInt(cmd.substr(20));
         onPage[i][1]();
       }
-      if (cmd.indexOf("igtranslator.onSelection:") != -1) {
+      if (cmd.indexOf("igtranslator.onSelection:") !== -1) {
         var i = parseInt(cmd.substr(25));
         onSelection[i][1]();
       }
     }, false);
     return {
       create: function (title, type, callback) {
-        if (type == "page") {
+        if (type === "page") {
           onPage.push([title, callback]);
         }
-        if (type == "selection") {
+        if (type === "selection") {
           onSelection.push([title, callback]);
         }
       },
@@ -192,6 +194,8 @@ var app = {
       }
     }
   })(),
+
+  copyToClipboard: function () {},
 
   options: (function () {
     var callbacks = {};

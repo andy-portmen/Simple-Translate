@@ -17,16 +17,17 @@ input[type=number] {
   width: 45px;
 }
 input[type=text] {
-  width: 100%;
+  width: 130px;
 }
 input[type=checkbox] {
   cursor: pointer;
 }
 label>input {
   vertical-align: middle;
+  padding-left: 3px;
 }
 select {
-  padding: 0 0 0 5px;
+  padding: 0 0 0 0;
   width: 180px;
   height: 25px;
   color: #2b2b2b !important;
@@ -185,5 +186,5 @@ option {
   cursor: pointer;
 }
 #translator-history-list tr td[rule='delete']:hover {
-  background: #A4A5A6 url(./delete-red.png) center center no-repeat;
+  background: #C75050 url(./delete-white.png) center center no-repeat;
 }

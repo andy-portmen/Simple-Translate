@@ -24,13 +24,13 @@ else if (typeof safari !== 'undefined') { /* Safari */
         callbacks[e.name](e.message);
       }
     }, false);
-    
+
     return function (id, callback) {
       callbacks[id] = callback;
     }
   })();
   manifest.url = safari.extension.baseURI;
-  
+
   document.addEventListener('contextmenu', function () {
     var selectedText = window.getSelection().toString();
     try {
@@ -40,12 +40,14 @@ else if (typeof safari !== 'undefined') { /* Safari */
 }
 else {  /* Chrome */
   background.send = function (id, data) {
-    chrome.extension.sendRequest({method: id, data: data});
+    chrome.runtime.sendMessage({path: 'page-to-background', method: id, data: data});
   }
   background.receive = function (id, callback) {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request.method == id) {
-        callback(request.data);
+      if (request.path == 'background-to-page') {
+        if (request.method == id) {
+          callback(request.data);
+        }
       }
     });
   }
@@ -54,18 +56,20 @@ else {  /* Chrome */
 /**** wrapper (end) ****/
 
 function init() {
-  // Global Variables
+  /* Global Variables */
   var word, definition, keyCode;
-  var bubble, header, content, footer, bookmarks, voice, home, settings; 
+  var bubble, header, content, footer, bookmarks, voice, home, settings;
   var isTextSelection   = false;
   var isDblclick        = false;
   var isTranslateIcon   = false;
   var translateInputArea = true;
   var isMouseOverTranslation = false;
   var allowMouseOverTranslation = true;
+  var bubbleRGB = "rgb(222, 184, 135)";
+  var minimumNumberOfCharacters = 2;
   var translateIconShow = 0;
   var translateIconTime = 3;
-  
+
   function html(tag, attrs, parent) {
     if (!attrs) attrs = {};
     var elm = document.createElement(tag);
@@ -77,26 +81,29 @@ function init() {
   }
 
   function dir(e) {
-    var text_direction = window.getComputedStyle(e, null).direction || '';
-    if (text_direction == 'rtl') e.style.textAlign = "right";
-    if (text_direction == 'ltr') e.style.textAlign = "left";
+    var wGCS = window.getComputedStyle(e, null);
+    if (wGCS) {
+      var text_direction = wGCS.direction || '';
+      if (text_direction == 'rtl') e.style.textAlign = "right";
+      if (text_direction == 'ltr') e.style.textAlign = "left";
+    }
   }
 
   function getSelectedRect(w) {
-    var range = w.getRangeAt(0).cloneRange(); 
+    var range = w.getRangeAt(0).cloneRange();
     if (range.startOffset != range.endOffset) {
       var rect = range.getBoundingClientRect();
       return rect;
     }
     else {
-      var arr = range.startContainer.childNodes;   
+      var arr = range.startContainer.childNodes;
       for (var i = 0; i < arr.length; i++) {
         var target = arr[i].nodeName.toLowerCase();
         if (target == 'textarea' || target == 'input') {
-          var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd); 
+          var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd);
           if (rect.top && rect.left && rect.height && rect.width) return rect;
         }
-      } 
+      }
       range.collapse(false);
       var dummy = document.createElement("span");
       range.insertNode(dummy);
@@ -105,14 +112,14 @@ function init() {
       return rect;
     }
   }
-  
+
   function requestBubbleTranslation() {
-    header.innerHTML = '';
-    content.innerHTML = '';
+    header.textContent = '';
+    content.textContent = '';
     translateIcon.style.display = 'none';
     var rect = requestBubbleTranslation.rect;
     iFrame.style.top = (rect.top + window.scrollY + rect.height) + 'px';
-    iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';  
+    iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
     iFrame.style.width = (170) + "px";
     iFrame.style.height = (70) + "px";
     iFrame.style.display = 'block';
@@ -122,7 +129,7 @@ function init() {
     allowMouseOverTranslation = false;
     background.send("translation-request", requestBubbleTranslation.text);
   }
-  
+
   var timeoutIconShow, timeoutIconHide;
   function showTranslateIcon() {
     var rect = requestBubbleTranslation.rect;
@@ -145,7 +152,7 @@ function init() {
     scrolling: "no",
     frameborder: 0
   }, document.body);
-  window.setTimeout(function () { // wait to load iframe
+  window.setTimeout(function () { /* wait to load iframe */
     if (iFrame.contentDocument) {
       var cssLink = html("link", {
         href: manifest.url + "data/content_script/inject.css",
@@ -177,13 +184,13 @@ function init() {
       bookmarks.addEventListener("click", function () {
         if (!bookmarks.getAttribute("status")) {
           background.send("add-to-phrasebook", {
-            question: word, 
+            question: word,
             answer: definition
           });
         }
         else {
           background.send("remove-from-phrasebook", {
-            question: word, 
+            question: word,
             answer: definition
           });
         }
@@ -208,7 +215,7 @@ function init() {
       }, footer);
       home.addEventListener("click", function (e) {
         background.send("open-page", {
-          page: 'define', 
+          page: 'define',
           word: word
         });
       });
@@ -224,7 +231,49 @@ function init() {
       }, false);
     }
   }, 500);
-  
+
+  /* color setup */
+  var colorLevel0 = '', colorLevel1 = '', colorLevel2 = '';
+  function colorBubble() {
+    function shadeRGBColor(color, percent) {
+      var f = color.split(","), t=percent<0?0:255, p=percent<0?percent*-1:percent, R=parseInt(f[0].slice(4)), G=parseInt(f[1]), B=parseInt(f[2]);
+      return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
+    }
+    /* percent 0 is for dark and 100 is for light */
+    colorLevel0 = shadeRGBColor(bubbleRGB, 0.00);
+    colorLevel1 = shadeRGBColor(bubbleRGB, 0.30);
+    colorLevel2 = shadeRGBColor(bubbleRGB, 0.60);
+
+    /* color inside iframe */
+    var doc = iFrame.contentDocument;
+    if (doc) {
+      var id = "igtranslator-color";
+      var style = doc.getElementById(id);
+      if (style) style.parentNode.removeChild(style);
+      var style = doc.createElement("style");
+      style.setAttribute("type", "text/css");
+      style.setAttribute("id", id);
+      var head = doc.querySelector("head") || doc.head || doc.documentElement;
+      if (head) head.appendChild(style);
+      style.sheet.insertRule(".igtranslator-bubble {background-color: " + colorLevel2 + "; border: solid 1px " + colorLevel0 + ";}", 0);
+      style.sheet.insertRule(".igtranslator-bubble:before {border-bottom-color: " + colorLevel0 + " !important;}", 1);
+      style.sheet.insertRule(".igtranslator-bubble:after {border-bottom-color: " + colorLevel2 + " !important;}", 2);
+      style.sheet.insertRule(".igtranslator-content {border-top: solid 1px " + colorLevel0 + ";}", 3);
+      style.sheet.insertRule(".igtranslator-footer td {background-color: " + colorLevel1 + "; border: solid 1px " + colorLevel0 + ";}", 4);
+      style.sheet.insertRule(".igtranslator-footer td:hover {background-color: " + colorLevel0 + ";}", 5);
+    }
+    /* color inside document */
+    var style = document.getElementById(id);
+    if (style) style.parentNode.removeChild(style);
+    var style = document.createElement("style");
+    style.setAttribute("type", "text/css");
+    style.setAttribute("id", id);
+    var head = document.querySelector("head") || document.head || document.documentElement;
+    if (head) head.appendChild(style);
+    style.sheet.insertRule(".igtranslator-activator-icon {background-color: " + colorLevel0 + " !important;}", 0);
+  }
+  colorBubble();
+
   /* Translate Icon */
   var translateIcon = html("div", {
     "class": "igtranslator-activator-icon",
@@ -239,20 +288,22 @@ function init() {
   });
   background.receive("context-menu-url-request", function () {
     background.send("context-menu-url-response", document.location.href);
-  });   
+  });
   background.receive("context-menu-reload-page", function (url) {
     document.location.href = url;
-  });  
-  
+  });
+
   background.receive("translation-response", function (data) {
     iFrame.style.width = "600px";
     iFrame.style.height = "300px";
+
     if (!data.wordIsCorrect && data.correctedWord) {
       background.send("translation-request", data.correctedWord);
     }
     else {
       word = data.word;
       definition = data.definition;
+      if (typeof header === 'undefined') return
       header.parentNode.style.backgroundImage = "none";
       content.style.display = "block";
       if (data.error) {
@@ -273,7 +324,7 @@ function init() {
         }
         voice.style.backgroundImage = "url(" + manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png)";
         voice.setAttribute("isVoice", data.isVoice);
-        
+
         var synonyms = data.synonyms;
         var similars = data.similar_words;
         var details = data.detailDefinition;
@@ -291,14 +342,14 @@ function init() {
               var tr = html("tr", {style: ""}, content);
               var score = Math.round((entry.score || 0) * 90) + 10;
               html("div", {
-                style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(222,184,135,1.0) " + score + "%, rgba(222,184,135,0.3) " + score + "%);"
+                style: "width: 32px; height: 7px; background: linear-gradient(90deg, " + colorLevel0 + " " + score + "%, " + colorLevel1 + " " + score + "%);"
               }, html("td", {}, tr));
               var direct_translation = html("td", {dir: "auto"}, tr);
-              direct_translation.textContent = entry.word; 
+              direct_translation.textContent = entry.word;
               dir(direct_translation);
               var reverse_translation = html("td", {dir: "auto"}, tr);
               if (entry.reverse_translation) {
-                reverse_translation.textContent = entry.reverse_translation.join(", "); 
+                reverse_translation.textContent = entry.reverse_translation.join(", ");
                 dir(reverse_translation);
               }
             });
@@ -313,16 +364,16 @@ function init() {
             synonym.entry.forEach(function (entry) {
               var tr = html("tr", {style: ""}, content);
               html("div", {
-                style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(222,184,135,1.0) " + 0 + "%, rgba(222,184,135,0.3) " + 0 + "%);"
+                style: "width: 32px; height: 7px; background: linear-gradient(90deg, " + colorLevel0 + " " + 0 + "%, " + colorLevel1 + " " + 0 + "%);"
               }, html("td", {}, tr));
               var pos = html("td", {
-                dir: "auto", 
+                dir: "auto",
                 style: "color: #777; font-style: italic;"
               }, tr);
-              pos.textContent = synonym.pos; 
+              pos.textContent = synonym.pos;
               dir(pos);
               var translation_synonyms = html("td", {dir: "auto"}, tr);
-              translation_synonyms.textContent = entry.join(", "); 
+              translation_synonyms.textContent = entry.join(", ");
               dir(translation_synonyms);
             });
           });
@@ -331,14 +382,14 @@ function init() {
           flag3 = true;
           var tr = html("tr", {}, content);
           html("div", {
-            style: "width: 32px; height: 7px; background: linear-gradient(90deg, rgba(222,184,135,1.0) " + 0 + "%, rgba(222,184,135,0.3) " + 0 + "%);"
+            style: "width: 32px; height: 7px; background: linear-gradient(90deg, " + colorLevel0 + " " + 0 + "%, " + colorLevel1 + " " + 0 + "%);"
           }, html("td", {}, tr));
           var pos = html("td", {
             style: "color: #777; font-style: italic;"
           }, tr);
           pos.textContent = "see also";
           var translation_similars = html("td", {dir: "auto"}, tr);
-          translation_similars.textContent = similars.join(", "); 
+          translation_similars.textContent = similars.join(", ");
           dir(translation_similars);
         }
         /* delete content section if there is nothing to show */
@@ -352,37 +403,46 @@ function init() {
         }
       }
     }
-    var W = window.getComputedStyle(bubble, null).getPropertyValue("width");
-    var H = window.getComputedStyle(bubble, null).getPropertyValue("height");
-    iFrame.style.width = (parseInt(W) + 20) + "px";
-    iFrame.style.height = (parseInt(H) + 20) + "px";
-    function smoothScrollTo(duration) {
-      var factor = 0, timer, start = Date.now();
-      if (timer) window.clearInterval(timer);
-      smoothScroll = {
-        scrollTo: true,
-        scrollX: window.scrollX,
-        scrollY: window.scrollY
-      };
-      function step() {
-        factor = (Date.now() - start) / duration;
-        var left = iFrame.offsetLeft;
-        var width = iFrame.offsetWidth;
-        window.scrollTo(window.scrollX + factor * parseInt(W), window.scrollY);
-        if (window.pageXOffset + window.innerWidth > left + width) {
-          window.clearInterval(timer);
-          factor = 1;
-          return;
-        }
+    var wGCSB = window.getComputedStyle(bubble, null);
+    if (wGCSB) {
+      var W = wGCSB.getPropertyValue("width");
+      var H = wGCSB.getPropertyValue("height");
+      if (W == 'auto' || H == 'auto') {
+        iFrame.style.width = 'auto';
+        iFrame.style.height = 'auto';
       }
-      timer = window.setInterval(step, 10);
+      else {
+        iFrame.style.width = (parseInt(W) + 20) + "px";
+        iFrame.style.height = (parseInt(H) + 20) + "px";
+      }
+      function smoothScrollTo(duration) {
+        var factor = 0, timer, start = Date.now();
+        if (timer) window.clearInterval(timer);
+        smoothScroll = {
+          scrollTo: true,
+          scrollX: window.scrollX,
+          scrollY: window.scrollY
+        };
+        function step() {
+          factor = (Date.now() - start) / duration;
+          var left = iFrame.offsetLeft;
+          var width = iFrame.offsetWidth;
+          window.scrollTo(window.scrollX + factor * parseInt(W), window.scrollY);
+          if (window.pageXOffset + window.innerWidth > left + width) {
+            window.clearInterval(timer);
+            factor = 1;
+            return;
+          }
+        }
+        timer = window.setInterval(step, 10);
+      }
+      if (!isMouseOverTranslation && iFrame.offsetLeft > window.innerWidth - parseInt(W)) {
+        smoothScrollTo(800);
+      }
+      allowMouseOverTranslation = true;
     }
-    if (!isMouseOverTranslation && iFrame.offsetLeft > window.innerWidth - parseInt(W)) {
-      smoothScrollTo(800);
-    }
-    allowMouseOverTranslation = true;
   });
-  
+
   var smoothScroll = {};
   function hideBubble(e) {
     var target = e.target || e.originalTarget;
@@ -405,39 +465,47 @@ function init() {
       };
     }
   }
-  document.addEventListener('mousedown', hideBubble, false); 
+  document.addEventListener('mousedown', hideBubble, false);
   document.addEventListener('keydown', function (e) {
     keyCode = e.keyCode;
     if (!e.metaKey && !e.altKey && keyCode != 45 && keyCode != 84) {
       hideBubble(e);
     }
-  }, false); 
-  
+  }, false);
+
   document.addEventListener('keyup', function (e) {
     keyCode = null;
   }, false);
-  
+
   function getSelectedText(target) {
     function getTextSelection() {
       var selectedText = '';
+      if (target.getAttribute("type")) {
+        if (target.getAttribute("type").toLowerCase() == "checkbox") {
+          return '';
+        }
+      }
       var value = target.value;
-      var startPos = target.selectionStart;
-      var endPos = target.selectionEnd;        
-      if (value && startPos && endPos) selectedText = value.substring(startPos, endPos);
-      return selectedText;
+      if (value) {
+        var startPos = target.selectionStart;
+        var endPos = target.selectionEnd;
+        if (startPos && endPos) selectedText = value.substring(startPos, endPos);
+        return selectedText;
+      }
+      else return '';
     }
     var selectedText = window.getSelection().toString();
     if (!selectedText) selectedText = getTextSelection();
     return selectedText;
   }
-  
+
   function getWordAtPoint(elem, x, y) {
     if (elem && elem.nodeType == elem.TEXT_NODE) {
       var range = elem.ownerDocument.createRange();
       range.selectNodeContents(elem);
       var currentPos = 0;
       var endPos = range.endOffset;
-      while(currentPos+1 < endPos) {
+      while(currentPos + 1 < endPos) {
         range.setStart(elem, currentPos);
         range.setEnd(elem, currentPos+1);
         if(range.getBoundingClientRect().left <= x && range.getBoundingClientRect().right  >= x &&
@@ -457,29 +525,29 @@ function init() {
            range.getBoundingClientRect().top  <= y && range.getBoundingClientRect().bottom >= y) {
           range.detach();
           return (getWordAtPoint(elem.childNodes[i], x, y));
-        } 
+        }
         else {
           range.detach();
         }
       }
     }
     return (null);
-  }    
-  
+  }
+
   function triggerTranslation(e) {
     var target = e.target || e.originalTarget;
-    
+
     /* detect input or editable areas */
     var flag1 = (target.localName == "input" || target.localName == "textarea");
     var flag2 = (target.getAttribute('contenteditable') == 'true');
     var flag3 = (target.className.indexOf("editable") != -1);
     var inputArea = flag1 || flag2 || flag3;
     if (inputArea && !translateInputArea) return;
-    
+
     var keyboard = e.metaKey || e.altKey || keyCode == 45 || keyCode == 84;
     var dblclick = (e.type == 'dblclick') && isDblclick;
     var mouseup = (e.type == 'mouseup') && isTextSelection && keyboard;
-    
+
     if (false) {
       var range = getWordAtPoint(e.target, e.x, e.y);
       if (range) {
@@ -487,7 +555,7 @@ function init() {
         requestBubbleTranslation.text = selectedText;
         requestBubbleTranslation.rect = range.getBoundingClientRect();
         if (allowMouseOverTranslation) {
-          if (selectedText && selectedText.length > 2) {
+          if (selectedText && selectedText.length >= minimumNumberOfCharacters) {
             requestBubbleTranslation();
           }
         }
@@ -495,7 +563,7 @@ function init() {
     }
     else { /* dblclick or mouseup translations */
       var selectedText = getSelectedText(target);
-      if (selectedText && selectedText.length > 2) {
+      if (selectedText && selectedText.length >= minimumNumberOfCharacters) {
         requestBubbleTranslation.text = selectedText;
         requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
         if (isTranslateIcon && iFrame.style.display == 'none') {
@@ -511,18 +579,19 @@ function init() {
   /* adding listeners for mouseup and dblclick */
   document.addEventListener('mouseup', triggerTranslation, false);
   document.addEventListener('dblclick', triggerTranslation, false);
-  
+
   /* Get options at start-up */
   background.send("options-request", null);
   background.receive("options-response", function (data) {
-    isTextSelection = data.isTextSelection;
+    bubbleRGB = data.bubbleRGB; colorBubble();
     isDblclick = data.isDblclick;
     isTranslateIcon = data.isTranslateIcon;
+    isTextSelection = data.isTextSelection;
     translateIconShow = data.translateIconShow;
     translateIconTime = data.translateIconTime;
     translateInputArea = data.translateInputArea;
     isMouseOverTranslation = data.isMouseOverTranslation;
-    
+    minimumNumberOfCharacters = data.minimumNumberOfCharacters;
     /*
     if (isMouseOverTranslation) {
       document.addEventListener('mouseOverTranslation', triggerTranslation, false);
@@ -532,29 +601,41 @@ function init() {
     }
     */
   });
-  
+
   background.receive("saved-to-phrasebook", function () {
     bookmarks.setAttribute("title", "Saved");
     bookmarks.setAttribute("status", "saved");
     bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-saved.png)";
   });
-  
+
   background.receive("removed-from-phrasebook", function () {
     bookmarks.setAttribute("title", "Save to Phrasebook");
     bookmarks.removeAttribute("status");
     bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks.png)";
-  });  
-  
+  });
+
   background.receive("failed-phrasebook", function (status) {
     bookmarks.setAttribute("title", "Sign-in required");
     bookmarks.setAttribute("status", status);
     bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks" + (status ? "-saved" : "") + ".png)";
   });
+  /* removing EventListener */
+  window.removeEventListener("DOMContentLoaded", init, false);
 }
 
 if (window.top === window) {
-  window.addEventListener("DOMContentLoaded", init);
+  window.addEventListener("DOMContentLoaded", init, false);
 }
+
+/*
+  // Not active for now (imposing bugs)
+  function initTimeout() {
+    window.setTimeout(init, 3000);
+    window.removeEventListener("load", initTimeout, false);
+  }
+  window.addEventListener("DOMContentLoaded", init, false);
+  window.addEventListener("load", initTimeout, false);
+*/
 
 /* Get bounding rectangle for text or input area */
 function getTextBoundingRect(input, selectionStart, selectionEnd, debug) {
@@ -603,7 +684,7 @@ function getTextBoundingRect(input, selectionStart, selectionEnd, debug) {
   leftPos += getInputCSS('border-left-width', true);
   leftPos += 1; //Seems to be necessary
 
-  for (var i=0; i<listOfModifiers.length; i++) {
+  for (var i=0; i < listOfModifiers.length; i++) {
     var property = listOfModifiers[i];
     cssDefaultStyles += property + ':' + getInputCSS(property) +';';
   }
@@ -654,8 +735,15 @@ function getTextBoundingRect(input, selectionStart, selectionEnd, debug) {
       left: box.left + scrollLeft - clientLeft
     };
   }
-  function getInputCSS(prop, isnumber){
-    var val = document.defaultView.getComputedStyle(input, null).getPropertyValue(prop);
-    return isnumber ? parseFloat(val) : val;
+  function getInputCSS(prop, isnumber) {
+    var defaultView = document.defaultView;
+    if (defaultView) {
+      var dDGCS = defaultView.getComputedStyle(input, null);
+      if (dDGCS) {
+        var val = dDGCS.getPropertyValue(prop);
+        return isnumber ? parseFloat(val) : val;
+      }
+    }
+    return '';
   }
 }

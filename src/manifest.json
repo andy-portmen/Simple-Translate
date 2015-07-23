@@ -1,15 +1,15 @@
 {
   "name": "Google™ Translator",
-  "version": "0.3.2",
+  "version": "0.3.6",
   "manifest_version": 2,
   "short_name": "igtranslator",
   "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate.",
   "permissions": [
     "tabs",
     "storage",
+    "<all_urls>",
     "contextMenus",
-    "notifications",
-    "<all_urls>"
+    "notifications"
   ],
   "browser_action": {
     "default_icon": "data/icon16.png",

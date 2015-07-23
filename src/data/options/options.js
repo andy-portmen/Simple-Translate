@@ -36,12 +36,14 @@ else if (typeof safari !== 'undefined') { /* Safari */
 }
 else {  /* Chrome */
   background.send = function (id, data) {
-    chrome.extension.sendRequest({method: id, data: data});
+    chrome.runtime.sendMessage({path: 'options-to-background', method: id, data: data});
   }
   background.receive = function (id, callback) {
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request.method == id) {
-        callback(request.data);
+      if (request.path == 'background-to-options') {
+        if (request.method == id) {
+          callback(request.data);
+        }
       }
     });
   }
@@ -95,7 +97,7 @@ function clearOptionsHistory() {
   clearOptionsHistoryTable();
 }
 
-window.addEventListener("load", function () {
+function init() {
   /* get DOM elements */
   var selection = document.querySelector("input[data-pref='settings.selection']");
   var dbClick = document.querySelector("input[data-pref='settings.dbClick']");
@@ -119,7 +121,7 @@ window.addEventListener("load", function () {
       value: value
     });
   }
-  /* add add event listener */
+  /* add event listener */
   selection.addEventListener('change', function (e) {
     var flag = e.target.checked;
     set(selection, 'settings.selection', flag);
@@ -241,4 +243,6 @@ window.addEventListener("load", function () {
     document.body.appendChild(link);
     link.click();
   }, false);
-}, false);
+  window.removeEventListener("load", init, false);
+};
+window.addEventListener("load", init, false);
