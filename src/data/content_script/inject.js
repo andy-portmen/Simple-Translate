@@ -113,13 +113,15 @@ function init() {
     }
   }
 
-  function requestBubbleTranslation() {
+  function requestBubbleTranslation(e) {
     header.textContent = '';
     content.textContent = '';
     translateIcon.style.display = 'none';
     var rect = requestBubbleTranslation.rect;
-    iFrame.style.top = (rect.top + window.scrollY + rect.height) + 'px';
-    iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
+    //iFrame.style.top = (rect.top + window.scrollY + rect.height) + 'px';
+    iFrame.style.top = (e.clientY + window.scrollY + 40) + 'px';
+    //iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
+    iFrame.style.left = (e.clientX + window.scrollX - 40)  + 'px';
     iFrame.style.width = (170) + "px";
     iFrame.style.height = (70) + "px";
     iFrame.style.display = 'block';
@@ -131,10 +133,12 @@ function init() {
   }
 
   var timeoutIconShow, timeoutIconHide;
-  function showTranslateIcon() {
+  function showTranslateIcon(e) {
     var rect = requestBubbleTranslation.rect;
-    translateIcon.style.top = (rect.top + window.scrollY - 18) + 'px';
-    translateIcon.style.left = (rect.left + window.scrollX + rect.width - 2) + 'px';
+    //translateIcon.style.top = (rect.top + window.scrollY - 18) + 'px';
+    translateIcon.style.top = (e.clientY + window.scrollY - 35) + 'px';
+    //translateIcon.style.left = (rect.left + window.scrollX + rect.width - 2) + 'px';
+    translateIcon.style.left = (e.clientX + window.scrollX + 10)  + 'px';
     if (timeoutIconShow) window.clearTimeout(timeoutIconShow);
     if (timeoutIconHide) window.clearTimeout(timeoutIconHide);
     timeoutIconShow = window.setTimeout(function () {
@@ -489,7 +493,7 @@ function init() {
       if (value) {
         var startPos = target.selectionStart;
         var endPos = target.selectionEnd;
-        if (startPos && endPos) selectedText = value.substring(startPos, endPos);
+        if (!isNaN(startPos) && !isNaN(endPos)) selectedText = value.substring(startPos, endPos);
         return selectedText;
       }
       else return '';
@@ -556,7 +560,7 @@ function init() {
         requestBubbleTranslation.rect = range.getBoundingClientRect();
         if (allowMouseOverTranslation) {
           if (selectedText && selectedText.length >= minimumNumberOfCharacters) {
-            requestBubbleTranslation();
+            requestBubbleTranslation(e);
           }
         }
       }
@@ -567,10 +571,10 @@ function init() {
         requestBubbleTranslation.text = selectedText;
         requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
         if (isTranslateIcon && iFrame.style.display == 'none') {
-          showTranslateIcon();
+          showTranslateIcon(e);
         }
         else if (dblclick || mouseup) {
-          requestBubbleTranslation();
+          requestBubbleTranslation(e);
         }
       }
     }
