@@ -90,26 +90,31 @@ function init() {
   }
 
   function getSelectedRect(w) {
-    var range = w.getRangeAt(0).cloneRange();
-    if (range.startOffset != range.endOffset) {
-      var rect = range.getBoundingClientRect();
-      return rect;
-    }
-    else {
-      var arr = range.startContainer.childNodes;
-      for (var i = 0; i < arr.length; i++) {
-        var target = arr[i].nodeName.toLowerCase();
-        if (target == 'textarea' || target == 'input') {
-          var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd);
-          if (rect.top && rect.left && rect.height && rect.width) return rect;
-        }
+    try {
+      var range = w.getRangeAt(0).cloneRange();
+      if (range.startOffset != range.endOffset) {
+        var rect = range.getBoundingClientRect();
+        return rect;
       }
-      range.collapse(false);
-      var dummy = document.createElement("span");
-      range.insertNode(dummy);
-      var rect = dummy.getBoundingClientRect();
-      dummy.parentNode.removeChild(dummy);
-      return rect;
+      else {
+        var arr = range.startContainer.childNodes;
+        for (var i = 0; i < arr.length; i++) {
+          var target = arr[i].nodeName.toLowerCase();
+          if (target == 'textarea' || target == 'input') {
+            var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd);
+            if (rect.top && rect.left && rect.height && rect.width) return rect;
+          }
+        }
+        range.collapse(false);
+        var dummy = document.createElement("span");
+        range.insertNode(dummy);
+        var rect = dummy.getBoundingClientRect();
+        dummy.parentNode.removeChild(dummy);
+        return rect;
+      }
+    }
+    catch (e) {
+      return null;
     }
   }
 
@@ -567,6 +572,7 @@ function init() {
     }
     else { /* dblclick or mouseup translations */
       var selectedText = getSelectedText(target);
+      console.error(selectedText)
       if (selectedText && selectedText.length >= minimumNumberOfCharacters) {
         requestBubbleTranslation.text = selectedText;
         requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
