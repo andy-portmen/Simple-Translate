@@ -56,7 +56,7 @@ config.translator = {
 
 config.settings = {
   get exclude () {
-    return app.storage.read("exclude") || 'https://translate.google.com/m/*, http://translate.google.com/m/*, .xml';
+    return app.storage.read("exclude") || 'https://translate.google.com/m/*, http://translate.google.com/m/*, *.xml';
   },
   set exclude (val) {
     val = val.split(/\s*\,\s*/)
