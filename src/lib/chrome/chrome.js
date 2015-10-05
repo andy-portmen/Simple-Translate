@@ -3,6 +3,8 @@ var app = {
   
   timer: window,
   
+  loadReason: "install",
+  
   storage: (function () {
     var objs = {};
     chrome.storage.local.get(null, function (o) {

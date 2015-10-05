@@ -88,45 +88,58 @@ function init() {
       if (text_direction == 'ltr') e.style.textAlign = "left";
     }
   }
-
+  
   function getSelectedRect(w) {
     try {
-      var range = w.getRangeAt(0).cloneRange();
-      if (range.startOffset != range.endOffset) {
-        var rect = range.getBoundingClientRect();
-        return rect;
+      if (w.rangeCount) {
+        var range = w.getRangeAt(0).cloneRange();
+        if (range.startOffset !== range.endOffset) {
+          var rect = range.getBoundingClientRect();
+          return rect;
+        }
+        else if (range.startOffset == 0 && range.endOffset == 0) {
+          return null;
+        }
+        else {
+          var arr = range.startContainer.childNodes;
+          for (var i = 0; i < arr.length; i++) {
+            var target = arr[i].nodeName.toLowerCase();
+            if (target.indexOf('text') !== -1 || target.indexOf('input') !== -1) {
+              var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd);
+              if (rect.top && rect.left && rect.height && rect.width) {
+                return rect;
+              }
+              else {
+                return null;
+              }
+            }
+          }
+          range.collapse(false);
+          var dummy = document.createElement("span");
+          range.insertNode(dummy);
+          var rect = dummy.getBoundingClientRect();
+          dummy.parentNode.removeChild(dummy);
+          return rect;
+        }
       }
       else {
-        var arr = range.startContainer.childNodes;
-        for (var i = 0; i < arr.length; i++) {
-          var target = arr[i].nodeName.toLowerCase();
-          if (target == 'textarea' || target == 'input') {
-            var rect = getTextBoundingRect(arr[i], arr[i].selectionStart, arr[i].selectionEnd);
-            if (rect.top && rect.left && rect.height && rect.width) return rect;
-          }
-        }
-        range.collapse(false);
-        var dummy = document.createElement("span");
-        range.insertNode(dummy);
-        var rect = dummy.getBoundingClientRect();
-        dummy.parentNode.removeChild(dummy);
-        return rect;
+        return null;
       }
     }
     catch (e) {
       return null;
     }
   }
-
+  
   function requestBubbleTranslation(e) {
     header.textContent = '';
     content.textContent = '';
     translateIcon.style.display = 'none';
     var rect = requestBubbleTranslation.rect;
-    //iFrame.style.top = (rect.top + window.scrollY + rect.height) + 'px';
-    iFrame.style.top = (e.clientY + window.scrollY + 40) + 'px';
-    //iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
-    iFrame.style.left = (e.clientX + window.scrollX - 40)  + 'px';
+    if (rect && rect.top) iFrame.style.top = (rect.top + window.scrollY + rect.height) + 'px';
+    else iFrame.style.top = (e.clientY + window.scrollY + 40) + 'px';
+    if (rect && rect.left) iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
+    else iFrame.style.left = (e.clientX + window.scrollX - 40)  + 'px';
     iFrame.style.width = (170) + "px";
     iFrame.style.height = (70) + "px";
     iFrame.style.display = 'block';
@@ -136,14 +149,14 @@ function init() {
     allowMouseOverTranslation = false;
     background.send("translation-request", requestBubbleTranslation.text);
   }
-
+  
   var timeoutIconShow, timeoutIconHide;
   function showTranslateIcon(e) {
     var rect = requestBubbleTranslation.rect;
-    //translateIcon.style.top = (rect.top + window.scrollY - 18) + 'px';
-    translateIcon.style.top = (e.clientY + window.scrollY - 35) + 'px';
-    //translateIcon.style.left = (rect.left + window.scrollX + rect.width - 2) + 'px';
-    translateIcon.style.left = (e.clientX + window.scrollX + 10)  + 'px';
+    if (rect && rect.top) translateIcon.style.top = (rect.top + window.scrollY - 18) + 'px';
+    else translateIcon.style.top = (e.clientY + window.scrollY - 30) + 'px';
+    if (rect && rect.left) translateIcon.style.left = (rect.left + window.scrollX + rect.width - 2) + 'px';
+    else translateIcon.style.left = (e.clientX + window.scrollX + 10)  + 'px';
     if (timeoutIconShow) window.clearTimeout(timeoutIconShow);
     if (timeoutIconHide) window.clearTimeout(timeoutIconHide);
     timeoutIconShow = window.setTimeout(function () {
@@ -153,7 +166,7 @@ function init() {
       translateIcon.style.display = "none";
     }, translateIconTime * 1000); /* hide TranslateIcon automatically */
   }
-
+  
   /* iFrame */
   var iFrame = html("iframe", {
     src: "about:blank",
@@ -572,7 +585,6 @@ function init() {
     }
     else { /* dblclick or mouseup translations */
       var selectedText = getSelectedText(target);
-      console.error(selectedText)
       if (selectedText && selectedText.length >= minimumNumberOfCharacters) {
         requestBubbleTranslation.text = selectedText;
         requestBubbleTranslation.rect = getSelectedRect(window.getSelection());

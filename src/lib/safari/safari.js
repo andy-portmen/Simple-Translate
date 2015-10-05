@@ -8,6 +8,8 @@ var app = {
   
   timer: window,
 
+  loadReason: "install",
+  
   parser: new window.DOMParser(),
 
   storage: {

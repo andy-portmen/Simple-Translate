@@ -5,7 +5,7 @@
 	<key>Author</key>
 	<string>Andy Portmen</string>
 	<key>Builder Version</key>
-	<string>10600.7.12</string>
+	<string>11601.1.56</string>
 	<key>CFBundleDisplayName</key>
 	<string>igTranslator for Google</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3.6</string>
+	<string>0.3.9</string>
 	<key>CFBundleVersion</key>
 	<string>2</string>
 	<key>Chrome</key>

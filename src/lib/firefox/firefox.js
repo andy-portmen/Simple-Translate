@@ -1,4 +1,5 @@
 'use strict';
+
 var self           = require('sdk/self'),
     data           = self.data,
     sp             = require('sdk/simple-prefs'),
@@ -9,20 +10,19 @@ var self           = require('sdk/self'),
     tabs           = require('sdk/tabs'),
     timers         = require('sdk/timers'),
     loader         = require('@loader/options'),
-    windowUtils    = require('sdk/window/utils'),
     contextMenu    = require('sdk/context-menu'),
     array          = require('sdk/util/array'),
+    clipboard      = require('sdk/clipboard'),
     unload         = require('sdk/system/unload'),
     notifications  = require('sdk/notifications'),
+    {defer, all}   = require('sdk/core/promise'),
     {ToggleButton} = require('sdk/ui/button/toggle'),
-    {Cc, Ci, Cu}   = require('chrome'),
     config         = require('../config');
-Cu.import('resource://gre/modules/Promise.jsm');
 
 exports.timer = timers;
-exports.Promise = Promise;
-exports.Deferred = Promise.defer;
-exports.window = windowUtils.getMostRecentBrowserWindow();
+exports.Promise = {defer, all};
+exports.loadReason = self.loadReason;
+exports.version = function () {return self.version;};
 
 var button = new ToggleButton({
   id: 'igtranslator',
@@ -62,10 +62,10 @@ exports.storage = {
 var workers = [], content_script_arr = [];
 pageMod.PageMod({ /* page */
   include: ['http://*', 'https://*', 'file:///*', 'about:reader?*'],
-  exclude: config.settings.exclude.split(', '),
   contentScriptFile: data.url('content_script/inject.js'),
-  contentScriptWhen: 'start',
   contentStyleFile: data.url('content_script/inject.css'),
+  exclude: config.settings.exclude.split(', '),
+  contentScriptWhen: 'start',
   onAttach: function(worker) {
     array.add(workers, worker);
     worker.on('pageshow', function() { array.add(workers, this); });
@@ -78,7 +78,7 @@ pageMod.PageMod({ /* page */
 });
 
 var popup = require('sdk/panel').Panel({
-  width: 328,
+  width: config.translator.width,
   height: config.translator.height + 2,
   contentURL: data.url('./popup/popup.html'),
   contentScriptFile: [data.url('./popup/popup.js')],
@@ -107,7 +107,7 @@ exports.popup = {
 };
 
 exports.get = function (url, headers, data) {
-  var d = new Promise.defer();
+  var d = defer();
   new Request({
     url: url,
     headers: headers || {},
@@ -174,7 +174,9 @@ exports.tab = {
     for each (var tab in tabs) {
       temp.push(tab);
     }
-    return Promise.resolve(temp);
+    var {promise, resolve} = defer();
+    resolve(temp);
+    return promise;
   }
 };
 
@@ -213,6 +215,7 @@ exports.options = (function () {
 sp.on('openOptions', function() {
   exports.tab.open(data.url('options/options.html'));
 });
+
 unload.when(function () {
   exports.tab.list().then(function (tabs) {
     tabs.forEach(function (tab) {
@@ -264,15 +267,11 @@ exports.context_menu = (function () {
   };
 })();
 
-exports.version = function () {
-  return self.version;
-};
-
 exports.notification = (function () {
   return function (title, text) {
     notifications.notify({
-      title: title,
       text: text,
+      title: title,
       iconURL: data.url('icon32.png'),
       onClick: function () {
       }
@@ -281,8 +280,7 @@ exports.notification = (function () {
 })();
 
 exports.copyToClipboard = function (text) {
-  const gClipboardHelper = Cc['@mozilla.org/widget/clipboardhelper;1'].getService(Ci.nsIClipboardHelper);
-  gClipboardHelper.copyString(text);
+  clipboard.set(text, 'text');
   exports.notification('Google™ Translator', 'Selected text is copied to clipboard!');
 };
 

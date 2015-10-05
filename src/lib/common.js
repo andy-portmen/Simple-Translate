@@ -1,7 +1,7 @@
 /**** wrapper (start) ****/
 if (typeof require !== 'undefined') {
-  app = require('./firefox/firefox');
-  config = require('./config');
+  var app = require('./firefox/firefox');
+  var config = require('./config');
 }
 /**** wrapper (end) ****/
 
@@ -12,7 +12,7 @@ const languagesNoVoice = [
   "ig","ga","jw","kn","km","lo","lt",
   "ms","mt","mi","mr","mn","ne","fa",
   "pa","sl","so","te","uk","ur","yi",
-  "yo","zu"
+  "yo","zu", "si", "st"
   ];
 
 function m (i) {
@@ -32,8 +32,10 @@ function m (i) {
 var version = config.welcome.version;
 if (app.version() !== version) {
   app.timer.setTimeout(function () {
-    app.tab.open(m(0) + app.version() + (version ? "&p=" + version + "&type=upgrade" : "&type=install"));
-    config.welcome.version = app.version();
+    if (app.loadReason === "install" || app.loadReason === "startup") {
+      app.tab.open(m(0) + app.version() + (version ? "&p=" + version + "&type=upgrade" : "&type=install"));
+      config.welcome.version = app.version();
+    }
   }, config.welcome.timeout);
 }
 
@@ -234,12 +236,16 @@ function getTranslation(word) {
   word = word.toLowerCase();
   word = encodeURIComponent(word);
 
+  var gRand = function () {
+    return Math.floor(Math.random() * 1000000) + '|' + Math.floor(Math.random() * 1000000)
+  };
+  
   /* urls for old engine */
   var url_old_1 = m(1) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.to + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
   var url_old_2 = m(1) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.alt + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
   /* urls for new engine */
-  var url_new_1 = m(6) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&q=' + word;
-  var url_new_2 = m(6) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&q=' + word;
+  var url_new_1 = m(6) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&tk=' + gRand() + '&q=' + word;
+  var url_new_2 = m(6) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&tk=' + gRand() + '&q=' + word;
 
   var d = app.Promise.defer();
   /* using cache */
@@ -535,7 +541,6 @@ app.content_script.receive("remove-from-phrasebook", function (data) {
 
 app.content_script.receive("play-voice", playVoice);
 
-/* options page */
 app.options.receive("changed", function (o) {
   config.set(o.pref, o.value);
   app.options.send("set", {
@@ -552,10 +557,13 @@ app.options.receive("get", function (pref) {
     value: config.get(pref)
   });
 });
+
 app.options.receive("get-history-update", function () {
   app.options.send("history-update", config.history.data);
 });
+
 app.options.receive("set-history-update", function (data) {
   config.history.data = data;
 });
+
 app.options.receive("clearOptionsHistory", clearHistory);
