@@ -32,7 +32,7 @@ function m (i) {
 var version = config.welcome.version;
 if (app.version() !== version) {
   app.timer.setTimeout(function () {
-    if (app.loadReason === "install" || app.loadReason === "startup") {
+    if (app.load.reason() === "install" || app.load.reason() === "startup") {
       app.tab.open(m(0) + app.version() + (version ? "&p=" + version + "&type=upgrade" : "&type=install"));
       config.welcome.version = app.version();
     }
@@ -235,11 +235,8 @@ function getTranslation(word) {
   word = word.trim();
   word = word.toLowerCase();
   word = encodeURIComponent(word);
+  var gRand = function () {return Math.floor(Math.random() * 1000000) + '|' + Math.floor(Math.random() * 1000000)};
 
-  var gRand = function () {
-    return Math.floor(Math.random() * 1000000) + '|' + Math.floor(Math.random() * 1000000)
-  };
-  
   /* urls for old engine */
   var url_old_1 = m(1) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.to + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
   var url_old_2 = m(1) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.alt + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
@@ -363,7 +360,8 @@ function playVoice(data) {
   for (var i = 0; i < text.length; i++) {
     var subtext = splitString(text[i], 13); /* 13 words max */
     for (var j = 0; j < subtext.length; j++) {
-      if (subtext[j].length) audioUrl.push(m(3) + subtext[j] + "&tl=" + lang + "&total=1&textlen=" + subtext[j].length + "&client=t");
+      var gRand = function () {return Math.floor(Math.random() * 1000000) + '|' + Math.floor(Math.random() * 1000000)};
+      if (subtext[j].length) audioUrl.push(m(3) + subtext[j] + "&tl=" + lang + "&total=1&textlen=" + subtext[j].length + "&tk=" + gRand() + "&client=t");
     }
   }
   var i = 0;

@@ -66,7 +66,7 @@ var connect = function (elem, pref) {
     });
   }
   return {
-    get value () {
+    get value () {      
       return elem[att];
     },
     set value (val) {

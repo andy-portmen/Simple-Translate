@@ -5,11 +5,17 @@ Qp.defer = Q.defer;
 
 var app = {
   Promise: Qp,
-  
+
   timer: window,
 
-  loadReason: "install",
-  
+  load: (function () {
+    return {
+      reason: function () {
+        return "install";
+      }
+    }
+  })(),
+
   parser: new window.DOMParser(),
 
   storage: {

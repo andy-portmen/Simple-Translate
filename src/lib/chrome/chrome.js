@@ -3,7 +3,22 @@ var app = {
   
   timer: window,
   
-  loadReason: "install",
+  load: (function () {
+    var loadReason = '';
+    chrome.runtime.onInstalled.addListener(function(details) {
+      if (details.reason === "install") {
+        loadReason = "install";
+      }
+    });
+    chrome.runtime.onStartup.addListener(function() {
+      loadReason = "startup";
+    });
+    return {
+      reason: function () {
+        return loadReason;
+      }
+    }
+  })(),
   
   storage: (function () {
     var objs = {};
@@ -17,6 +32,7 @@ var app = {
         return objs[id];
       },
       write : function (id, data) {
+        data = data + '';
         objs[id] = data;
         var tmp = {};
         tmp[id] = data;

@@ -20,6 +20,8 @@ input[type=text] {
   width: 130px;
 }
 input[type=checkbox] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
 }
 label>input {

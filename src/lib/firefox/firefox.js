@@ -21,8 +21,13 @@ var self           = require('sdk/self'),
 
 exports.timer = timers;
 exports.Promise = {defer, all};
-exports.loadReason = self.loadReason;
 exports.version = function () {return self.version;};
+
+exports.load = {
+  reason: function () {
+    return self.loadReason
+  }
+};
 
 var button = new ToggleButton({
   id: 'igtranslator',

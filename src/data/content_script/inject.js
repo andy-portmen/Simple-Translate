@@ -57,18 +57,18 @@ else {  /* Chrome */
 
 function init() {
   /* Global Variables */
+  var translateIconShow = 0;
+  var translateIconTime = 3;
   var word, definition, keyCode;
-  var bubble, header, content, footer, bookmarks, voice, home, settings;
-  var isTextSelection   = false;
-  var isDblclick        = false;
-  var isTranslateIcon   = false;
   var translateInputArea = true;
+  var isTextSelection    = false;
+  var isDblclick         = false;
+  var isTranslateIcon    = false;
+  var minimumNumberOfCharacters = 2;
   var isMouseOverTranslation = false;
   var allowMouseOverTranslation = true;
   var bubbleRGB = "rgb(222, 184, 135)";
-  var minimumNumberOfCharacters = 2;
-  var translateIconShow = 0;
-  var translateIconTime = 3;
+  var bubble, header, content, footer, bookmarks, voice, home, settings;
 
   function html(tag, attrs, parent) {
     if (!attrs) attrs = {};
@@ -136,14 +136,14 @@ function init() {
     content.textContent = '';
     translateIcon.style.display = 'none';
     var rect = requestBubbleTranslation.rect;
-    if (rect && rect.top) iFrame.style.top = (rect.top + window.scrollY + rect.height) + 'px';
-    else iFrame.style.top = (e.clientY + window.scrollY + 40) + 'px';
-    if (rect && rect.left) iFrame.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
-    else iFrame.style.left = (e.clientX + window.scrollX - 40)  + 'px';
-    iFrame.style.width = (170) + "px";
-    iFrame.style.height = (70) + "px";
-    iFrame.style.display = 'block';
-    header.style.width = (150) + "px";
+    if (rect && rect.top) mainDIV.style.top = (rect.top + window.scrollY + rect.height) + 'px';
+    else mainDIV.style.top = (e.clientY + window.scrollY + 40) + 'px';
+    if (rect && rect.left) mainDIV.style.left = (rect.left + window.scrollX - 23 + rect.width / 2) + 'px';
+    else mainDIV.style.left = (e.clientX + window.scrollX - 40)  + 'px';
+    mainDIV.style.width = (274) + "px";
+    mainDIV.style.height = (80) + "px";
+    mainDIV.style.display = 'block';
+    header.style.width = (264) + "px";
     header.parentNode.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
     content.style.display = "none";
     allowMouseOverTranslation = false;
@@ -167,13 +167,15 @@ function init() {
     }, translateIconTime * 1000); /* hide TranslateIcon automatically */
   }
   
-  /* iFrame */
+  /* mainDIV is to make the bubble draggable */
+  var mainDIV = html("div", {"class": "igtranslator-main-div"}, document.body);
   var iFrame = html("iframe", {
     src: "about:blank",
     "class": "igtranslator-iframe",
     scrolling: "no",
     frameborder: 0
-  }, document.body);
+  }, mainDIV);
+  
   window.setTimeout(function () { /* wait to load iframe */
     if (iFrame.contentDocument) {
       var cssLink = html("link", {
@@ -193,7 +195,7 @@ function init() {
       /* Content */
       content = html("tbody", {
         "class": "igtranslator-content"
-      }, html("table", {style: "width: 100%;"}, html("td", {colspan: 4}, html("tr", {}, bubble))));
+      }, html("table", {}, html("td", {colspan: 4}, html("tr", {}, bubble))));
       /* Footer */
       footer = html("tr", {
         "class": "igtranslator-footer",
@@ -252,14 +254,26 @@ function init() {
        });
       }, false);
     }
+    /* addEventListener for resize */
+    if (iFrame.contentWindow) {
+      iFrame.contentWindow.addEventListener("resize", function (e) {
+        var mainDIVStyle = window.getComputedStyle(mainDIV, null);
+        if (mainDIVStyle) {
+          var mainDIVH = mainDIVStyle.getPropertyValue("height");
+          if (mainDIVH && mainDIVH !== "auto") {
+            content.style.height = parseInt(mainDIVH) - 80 + "px";
+          }
+        }
+      });
+    }
   }, 500);
 
   /* color setup */
   var colorLevel0 = '', colorLevel1 = '', colorLevel2 = '';
   function colorBubble() {
     function shadeRGBColor(color, percent) {
-      var f = color.split(","), t=percent<0?0:255, p=percent<0?percent*-1:percent, R=parseInt(f[0].slice(4)), G=parseInt(f[1]), B=parseInt(f[2]);
-      return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
+      var f = color.split(","), t = percent < 0 ? 0 : 255, p = percent < 0 ? percent * -1 : percent, R = parseInt(f[0].slice(4)), G = parseInt(f[1]), B = parseInt(f[2]);
+      return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + ","+(Math.round((t - B) * p) + B) + ")";
     }
     /* percent 0 is for dark and 100 is for light */
     colorLevel0 = shadeRGBColor(bubbleRGB, 0.00);
@@ -298,8 +312,8 @@ function init() {
 
   /* Translate Icon */
   var translateIcon = html("div", {
-    "class": "igtranslator-activator-icon",
-    style: "background-image: url(" + manifest.url + "data/content_script/icon.png)",
+    "class": "igtranslator-activator-icon bounceIn",
+    style: "background-image: url(" + manifest.url + "data/content_script/home.png)",
     title: "Click to Show Translation"
   }, document.body);
   translateIcon.addEventListener("click", requestBubbleTranslation, false);
@@ -316,8 +330,8 @@ function init() {
   });
 
   background.receive("translation-response", function (data) {
-    iFrame.style.width = "600px";
-    iFrame.style.height = "300px";
+    mainDIV.style.width = "450px";
+    mainDIV.style.height = "300px";
 
     if (!data.wordIsCorrect && data.correctedWord) {
       background.send("translation-request", data.correctedWord);
@@ -330,6 +344,8 @@ function init() {
       content.style.display = "block";
       if (data.error) {
         header.textContent = "Cannot Access Google Translate!";
+        header.style.width = "388px";
+        header.style.textAlign = "center";
         content.style.backgroundImage = "url(" + manifest.url + "data/content_script/error.png)";
         voice.style.backgroundImage = "url(" + manifest.url + "data/content_script/novoice.png)";
         voice.setAttribute("isVoice", "no");
@@ -350,7 +366,7 @@ function init() {
         var synonyms = data.synonyms;
         var similars = data.similar_words;
         var details = data.detailDefinition;
-        var flag1 = false, flag2 = false, flag3 = false;
+        var flag1 = false, flag2 = false, flag3 = false, onlyHeader = false, extraHeight = 25, extraWidth = 0;
         header.textContent = definition ? (details && details.length ? word + ': ' + definition : definition) : "Definition not found!";
         header.style.textAlign = "center";
         header.style.width = "auto";
@@ -416,27 +432,64 @@ function init() {
         }
         /* delete content section if there is nothing to show */
         if (!flag1 && !flag2 && !flag3) {
+          onlyHeader = true;
           content.style.display = "none";
           header.style.fontSize = "100%";
-          header.style.width = "450px";
+          header.style.width = "388px";
           if (header.textContent.length > 50) {
             header.style.textAlign = "justify";
           }
         }
       }
     }
+    /* 
+      smart-select width and height for the floating bubble;
+      it is based on bubble and content width anf height;
+      note: may still have some bugs.
+    */
     var wGCSB = window.getComputedStyle(bubble, null);
-    if (wGCSB) {
-      var W = wGCSB.getPropertyValue("width");
-      var H = wGCSB.getPropertyValue("height");
-      if (W == 'auto' || H == 'auto') {
-        iFrame.style.width = 'auto';
-        iFrame.style.height = 'auto';
+    var wGCSC = window.getComputedStyle(content, null);
+    if (wGCSB && wGCSC) {
+      var mdWidth, mdHeight;
+      var Wb = wGCSB.getPropertyValue("width");
+      var Hb = wGCSB.getPropertyValue("height");
+      var Wc = wGCSC.getPropertyValue("width");
+      var Hc = wGCSC.getPropertyValue("height");
+      if (Wb.indexOf("px") === -1 || !parseInt(Wb)) {
+        if (Wc.indexOf("px") === -1 || !parseInt(Wc)) mdWidth = "auto";
+        else mdWidth = parseInt(Wc) + 40 + "px";
+      }
+      else mdWidth = Wb;
+      if (Hb.indexOf("px") === -1 || !parseInt(Hb)) {
+        if (Hc.indexOf("px") === -1 || !parseInt(Hc)) mdHeight = "auto";
+        else mdHeight = parseInt(Hc) + 80 + "px";
+      }
+      else mdHeight = Hb;
+      if (Wb.indexOf("px") !== -1 && Wc.indexOf("px") !== -1) {
+        if (parseInt(Wb) && parseInt(Wc)) {
+          if (parseInt(Wb) > (parseInt(Wc) + 50) && !onlyHeader) mdWidth = parseInt(Wc) + 40 + "px";
+        }
+      }
+      if (Hb.indexOf("px") !== -1 && Hc.indexOf("px") !== -1) {
+        if (parseInt(Hb) && parseInt(Hc)) {
+          if (parseInt(Hb) > (parseInt(Hc) + 90) && !onlyHeader) mdHeight = parseInt(Hc) + 80 + "px";
+        }
+      }
+      if (!onlyHeader) {
+        extraWidth = 0;
+        extraHeight = 100;
+        if (parseInt(mdWidth) > 450) mdWidth = "450px";
+        if (parseInt(mdWidth) < 300) mdWidth = "300px";
+        if (parseInt(mdHeight) > 300) mdHeight = "300px";
+        if (parseInt(mdHeight) < 80) mdHeight = "80px";
       }
       else {
-        iFrame.style.width = (parseInt(W) + 20) + "px";
-        iFrame.style.height = (parseInt(H) + 20) + "px";
+        header.style.width = (parseInt(mdWidth) + extraWidth - 35) + "px";
       }
+      mainDIV.style.width = parseInt(mdWidth) + extraWidth + "px";
+      mainDIV.style.height = parseInt(mdHeight) + extraHeight + "px";
+      content.style.height = parseInt(mdHeight) - 80 + "px";
+      
       function smoothScrollTo(duration) {
         var factor = 0, timer, start = Date.now();
         if (timer) window.clearInterval(timer);
@@ -447,9 +500,9 @@ function init() {
         };
         function step() {
           factor = (Date.now() - start) / duration;
-          var left = iFrame.offsetLeft;
-          var width = iFrame.offsetWidth;
-          window.scrollTo(window.scrollX + factor * parseInt(W), window.scrollY);
+          var left = mainDIV.offsetLeft;
+          var width = mainDIV.offsetWidth;
+          window.scrollTo(window.scrollX + factor * parseInt(mdWidth), window.scrollY);
           if (window.pageXOffset + window.innerWidth > left + width) {
             window.clearInterval(timer);
             factor = 1;
@@ -458,7 +511,7 @@ function init() {
         }
         timer = window.setInterval(step, 10);
       }
-      if (!isMouseOverTranslation && iFrame.offsetLeft > window.innerWidth - parseInt(W)) {
+      if (!isMouseOverTranslation && mainDIV.offsetLeft > window.innerWidth - parseInt(mdWidth)) {
         smoothScrollTo(800);
       }
       allowMouseOverTranslation = true;
@@ -469,15 +522,15 @@ function init() {
   function hideBubble(e) {
     var target = e.target || e.originalTarget;
     while (target.parentNode && target.getAttribute) {
-      if (target == bubble || target == translateIcon) {
+      if (target == bubble || target == translateIcon || target == iFrame || target == mainDIV) {
         return; /* Do not hide the panel when user clicks inside the panel */
       }
       target = target.parentNode;
     }
     translateIcon.style.display = 'none';
-    iFrame.style.display = 'none';
-    iFrame.style.width = (0) + "px";
-    iFrame.style.height = (0) + "px";
+    mainDIV.style.display = 'none';
+    mainDIV.style.width = (0) + "px";
+    mainDIV.style.height = (0) + "px";
     if (smoothScroll.scrollTo) {
       window.scrollTo(smoothScroll.scrollX, smoothScroll.scrollY);
       smoothScroll = {
@@ -588,7 +641,7 @@ function init() {
       if (selectedText && selectedText.length >= minimumNumberOfCharacters) {
         requestBubbleTranslation.text = selectedText;
         requestBubbleTranslation.rect = getSelectedRect(window.getSelection());
-        if (isTranslateIcon && iFrame.style.display == 'none') {
+        if (isTranslateIcon && mainDIV.style.display == 'none') {
           showTranslateIcon(e);
         }
         else if (dblclick || mouseup) {

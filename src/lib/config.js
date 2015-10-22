@@ -1,9 +1,11 @@
+var config;
+
 if (typeof require !== 'undefined') {
   var app = require('./firefox/firefox');
-  var config = exports;
+  config = exports;
 }
 else {
-  var config = {};
+  config = {};
 }
 
 config.welcome = {

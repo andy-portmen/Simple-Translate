@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3.9</string>
+	<string>0.4.0</string>
 	<key>CFBundleVersion</key>
 	<string>2</string>
 	<key>Chrome</key>
@@ -82,7 +82,7 @@
 		</dict>
 	</dict>
 	<key>Update Manifest URL</key>
-	<string>https://raw.githubusercontent.com/andy-portmen/Simple-Translate/master/src/update.plist</string>
+	<string>https://cdn.rawgit.com/andy-portmen/Simple-Translate/0.4.0/src/update.plist</string>
 	<key>Website</key>
 	<string>http://add0n.com/google-translator.html</string>
 </dict>
