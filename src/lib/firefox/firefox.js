@@ -21,30 +21,13 @@ var self           = require('sdk/self'),
 
 exports.timer = timers;
 exports.Promise = {defer, all};
-exports.version = function () {return self.version;};
+exports.version = function () {return self.version};
 
 exports.load = {
   reason: function () {
     return self.loadReason
   }
 };
-
-var button = new ToggleButton({
-  id: 'igtranslator',
-  label: 'Google™ Translator',
-  icon: {
-    '16': './icon16.png',
-    '32': './icon32.png',
-    '64': './icon64.png'
-  },
-  onChange: function (state) {
-    if (state.checked) {
-      popup.show({
-        position: button
-      });
-    }
-  }
-});
 
 exports.storage = {
   read: function (id) {
@@ -58,35 +41,54 @@ exports.storage = {
     else if (parseInt(data) + '' === data) {
       prefs[id] = parseInt(data);
     }
-    else {
-      prefs[id] = data + '';
-    }
+    else prefs[id] = data + '';
   }
 };
 
-var workers = [], content_script_arr = [];
-pageMod.PageMod({ /* page */
-  include: ['http://*', 'https://*', 'file:///*', 'about:reader?*'],
-  contentScriptFile: data.url('content_script/inject.js'),
-  contentStyleFile: data.url('content_script/inject.css'),
-  exclude: config.settings.exclude.split(', '),
-  contentScriptWhen: 'start',
-  onAttach: function(worker) {
-    array.add(workers, worker);
-    worker.on('pageshow', function() { array.add(workers, this); });
-    worker.on('pagehide', function() { array.remove(workers, this); });
-    worker.on('detach', function() { array.remove(workers, this); });
-    content_script_arr.forEach(function (arr) {
-      worker.port.on(arr[0], arr[1]);
-    });
+exports.content_script = (function () {
+  var workers = [], content_script_arr = [];
+  pageMod.PageMod({
+    include: ['http://*', 'https://*', 'file:///*', 'about:reader?*'],
+    contentScriptFile: [
+      data.url('content_script/firefox/firefox.js'), 
+      data.url('content_script/inject.js')
+    ],
+    contentStyleFile: data.url('content_script/inject.css'),
+    exclude: config.settings.exclude.split(', '),
+    contentScriptWhen: 'start',
+    contentScriptOptions: {base: loader.prefixURI},
+    onAttach: function(worker) {
+      array.add(workers, worker);
+      worker.on('pageshow', function() {array.add(workers, this)});
+      worker.on('pagehide', function() {array.remove(workers, this)});
+      worker.on('detach', function() {array.remove(workers, this)});
+      content_script_arr.forEach(function (arr) {
+        worker.port.on(arr[0], arr[1]);
+      });
+    }
+  });
+  return {
+    send: function (id, data, global) {
+      workers.forEach(function (worker) {
+        if (!global && worker.tab !== tabs.activeTab) {return}
+        if (!worker) {return}
+        worker.port.emit(id, data);
+      });
+    },
+    receive: function (id, callback) {
+      content_script_arr.push([id, callback]);
+    }
   }
-});
+})();
 
 var popup = require('sdk/panel').Panel({
   width: config.translator.width,
   height: config.translator.height + 2,
   contentURL: data.url('./popup/popup.html'),
-  contentScriptFile: [data.url('./popup/popup.js')],
+  contentScriptFile: [
+    data.url('./popup/firefox/firefox.js'),
+    data.url('./popup/popup.js')
+  ],
   onHide: function () {
     button.state('window', {
       checked: false
@@ -111,6 +113,23 @@ exports.popup = {
   }
 };
 
+var button = new ToggleButton({
+  id: 'igtranslator',
+  label: 'Google™ Translator',
+  icon: {
+    '16': './icon16.png',
+    '32': './icon32.png',
+    '64': './icon64.png'
+  },
+  onChange: function (state) {
+    if (state.checked) {
+      popup.show({
+        position: button
+      });
+    }
+  }
+});
+
 exports.get = function (url, headers, data) {
   var d = defer();
   new Request({
@@ -131,23 +150,6 @@ exports.get = function (url, headers, data) {
   return d.promise;
 };
 
-exports.content_script = {
-  send: function (id, data, global) {
-    workers.forEach(function (worker) {
-      if (!global && worker.tab !== tabs.activeTab) {
-        return;
-      }
-      if (!worker) {
-        return;
-      }
-      worker.port.emit(id, data);
-    });
-  },
-  receive: function (id, callback) {
-    content_script_arr.push([id, callback]);
-  }
-};
-
 exports.tab = {
   open: function (url, inBackground, inCurrent) {
     if (inCurrent) {
@@ -163,7 +165,7 @@ exports.tab = {
   openOptions: function () {
     var optionsTab = false;
     for each (var tab in tabs) {
-      if (tab.url.indexOf('dgnibwqga0sibw-at-jetpack/igtranslator') !== -1) {
+      if (tab.url.indexOf('dgnibwqga0sibw-at-jetpack/') !== -1) {
         tab.reload();            // reload the options tab
         tab.activate();          // activate the options tab
         tab.window.activate();   // activate the options tab window
@@ -189,16 +191,17 @@ exports.options = (function () {
   var workers = [], options_arr = [];
   pageMod.PageMod({
     include: data.url('options/options.html'),
-    contentScriptFile: data.url('options/options.js'),
+    contentScriptFile: [
+      data.url('options/firefox/firefox.js'),
+      data.url('options/options.js')
+    ],
     contentScriptWhen: 'start',
-    contentScriptOptions: {
-      base: loader.prefixURI + loader.name + '/'
-    },
+    contentScriptOptions: {base: loader.prefixURI},
     onAttach: function(worker) {
       array.add(workers, worker);
-      worker.on('pageshow', function() { array.add(workers, this); });
-      worker.on('pagehide', function() { array.remove(workers, this); });
-      worker.on('detach', function() { array.remove(workers, this); });
+      worker.on('pageshow', function() {array.add(workers, this)});
+      worker.on('pagehide', function() {array.remove(workers, this)});
+      worker.on('detach', function() {array.remove(workers, this)});
       options_arr.forEach(function (arr) {
         worker.port.on(arr[0], arr[1]);
       });
@@ -207,28 +210,18 @@ exports.options = (function () {
   return {
     send: function (id, data) {
       workers.forEach(function (worker) {
-        if (!worker || !worker.url) {
-          return;
-        }
+        if (!worker || !worker.url) {return}
         worker.port.emit(id, data);
       });
     },
-    receive: (id, callback) => options_arr.push([id, callback])
+    receive: function (id, callback) {
+      options_arr.push([id, callback]);
+    }
   };
 })();
 
 sp.on('openOptions', function() {
   exports.tab.open(data.url('options/options.html'));
-});
-
-unload.when(function () {
-  exports.tab.list().then(function (tabs) {
-    tabs.forEach(function (tab) {
-      if (tab.url === data.url('options/options.html')) {
-        tab.close();
-      }
-    });
-  });
 });
 
 exports.context_menu = (function () {
@@ -243,7 +236,7 @@ exports.context_menu = (function () {
           label: title,
           image: data.url('./icon16.png'),
           context: contextMenu.SelectionContext(),
-          contentScript: 'self.on("click", function () {self.postMessage();});',
+          contentScript: 'self.on("click", function () {self.postMessage()});',
           onMessage: function () {callback();}
         });
       }
@@ -255,7 +248,7 @@ exports.context_menu = (function () {
           label: title,
           image: data.url('./icon16.png'),
           context: contextMenu.PageContext(),
-          contentScript: 'self.on("click", function () {self.postMessage();});',
+          contentScript: 'self.on("click", function () {self.postMessage()});',
           onMessage: function () {callback();}
         });
       }
@@ -277,7 +270,7 @@ exports.notification = (function () {
     notifications.notify({
       text: text,
       title: title,
-      iconURL: data.url('icon32.png'),
+      iconURL: data.url('icon128.png'),
       onClick: function () {
       }
     });
@@ -291,13 +284,86 @@ exports.copyToClipboard = function (text) {
 
 exports.play = function (url, callback) {
   var worker = pageWorker.Page({
-    contentScript: "var audio = new Audio('" + url + "'); function ended() {self.postMessage(); audio.removeEventListener('ended', ended);}; audio.addEventListener('ended', ended); audio.volume = 1; audio.play();",
+    contentScriptOptions: {
+      url: url
+    },
+    contentScriptFile: data.url('firefox/sound.js'),
     contentURL: data.url('firefox/sound.html'),
-    onMessage: function() {
+    onMessage: function(msg) {
       worker.destroy();
-      callback(true);
+      callback(msg);
     }
   });
 };
 
 sp.on('settings', exports.tab.openOptions);
+
+unload.when(function () {
+  exports.tab.list().then(function (tabs) {
+    tabs.forEach(function (tab) {
+      if (tab.url === data.url('options/options.html')) {
+        tab.close();
+      }
+    });
+  });
+});
+
+/* for backup method
+var {Cc, Ci} = require('chrome');
+exports.worker = (function () {
+  var d = {}, id;
+  var worker = pageWorker.Page({
+    contentURL: "about:blank"
+  });
+  return {
+    set: function (word, url) {
+      if (d.reject) d.reject(new Error("Token Detection Failed!"));
+      var {promise, resolve, reject} = defer();
+      worker.contentURL = url;
+      timers.clearTimeout(id);
+      id = timers.setTimeout(function () {
+        if (d.reject) d.reject(new Error("Timeout"));
+      }, 10000);
+      d.resolve = resolve;
+      d.reject = reject;
+      return promise;
+    },
+    url: function (url) {
+      if (!d.resolve || !d.reject) return;
+      var token = /tk\=([^\&]*)/.exec(url);
+      if (token && token.length) d.resolve({url: url, token: token[1]});
+      else d.reject();
+      d = {}; // clear d
+    }
+  };
+})();
+
+var httpRequestObserver = {
+  observe: function (subject, topic, data) {
+    var httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (httpChannel.URI) {
+      if (/translate\.google\..+\/translate\_a\/single/.test(httpChannel.URI.spec)) {
+        exports.worker.url(httpChannel.URI.spec);
+      }
+    }
+  },
+  get observerService() {
+    return Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  },
+  register: function() {
+    this.observerService.addObserver(this, "http-on-modify-request", false);
+  },
+  unregister: function() {
+    try {
+      this.observerService.removeObserver(this, "http-on-modify-request");
+    }
+    catch (e) {}
+  }
+};
+
+httpRequestObserver.register();
+
+unload.when(function () {
+  httpRequestObserver.unregister();
+});
+*/

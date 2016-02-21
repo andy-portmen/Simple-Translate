@@ -1,18 +1,20 @@
 {
-  "name": "igtranslator",
-  "version": "0.4.0",
-  "title": "Google™ Translator",
-  "id": "jid1-dgnIBwQga0SIBw",
-  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Browser toolbar.",
+  "lib": "lib",
+  "version": "0.4.3",
   "license": "MPL 2.0",
-  "main": "common",
+  "name": "igtranslator",
+  "main": "lib/common.js",
+  "title": "Google™ Translator",
+  "id": "jid1-dgnIBwQga0SIBw@jetpack",
+  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate. It gives you Google Translate UI feel right on your Browser toolbar.",
+  "icon": "resource://jid1-dgnIBwQga0SIBw-at-jetpack/data/icon32.png",
   "permissions": {
     "private-browsing": true
   },
   "preferences": [{
     "type": "control",
-    "label": "Settings",
     "name": "settings",
+    "label": "Settings",
     "title": "Google™ Translator Settings",
     "description": "Click the button to view Google™ Translator settings"
   }]

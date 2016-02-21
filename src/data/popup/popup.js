@@ -1,87 +1,3 @@
-var background = {};
-
-/**** wrapper (start) ****/
-if (typeof chrome !== 'undefined') { /* Chrome */
-  background.send = function (id, data) {
-    chrome.runtime.sendMessage({path: 'popup-to-background', method: id, data: data});
-  }
-  background.receive = function (id, callback) {
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request.path == 'background-to-popup') {
-        if (request.method == id) {
-          callback(request.data);
-        }
-      }
-    });
-  }
-  window.setTimeout(function () {
-    init();
-    $("question-input").focus();
-  }, 170);
-  var doResize = function () {};
-}
-else if (typeof safari !== 'undefined') { /* Safari */
-  background = (function () {
-    var callbacks = {};
-    return {
-      send: function (id, data) {
-        safari.extension.globalPage.contentWindow.app.popup.dispatchMessage(id, data);
-      },
-      receive: function (id, callback) {
-        callbacks[id] = callback;
-      },
-      dispatchMessage: function (id, data) {
-        if (callbacks[id]) {
-          callbacks[id](data);
-        }
-      }
-    }
-  })();
-  var doResize = function () {
-    safari.self.width = document.body.getBoundingClientRect().width + 10;
-    safari.self.height = document.body.getBoundingClientRect().height + 10;
-  }
-  window.addEventListener("resize", doResize, false);
-  safari.application.addEventListener("popover", function (){
-    window.setTimeout(function () {
-      init();
-      $("question-input").focus();
-    }, 100);
-  }, false);
-}
-else { /* Firefox */
-  background.send = function (id, data) {
-    self.port.emit(id, data);
-  }
-  background.receive = function (id, callback) {
-    self.port.on(id, callback);
-  }
-  self.port.on("show", function () {
-    init();
-    $("question-input").focus();
-  });
-  var doResize = function () {
-    self.port.emit("resize", {
-      w: document.body.getBoundingClientRect().width,
-      h: document.body.getBoundingClientRect().height
-    });
-  }
-  window.addEventListener("resize", doResize, false);
-  window.addEventListener("mousedown", function (e) {
-    if (e.button === 2) { /* copy text to clipboard on right-click */
-      var target = e.target || e.originalTarget;
-      var selectedText = target.ownerDocument.getSelection() + '';
-      var link = target.href || target.src;
-      if (target.localName != "a" && target.parentNode && target.parentNode.localName == "a") {
-        link = target.parentNode.href || link;
-      }
-      var text = selectedText || link;
-      background.send("copy-to-clipboard", text);
-    }
-  });
-}
-/**** wrapper (end) ****/
-
 function $ (id) {
   return document.getElementById(id);
 }
@@ -108,6 +24,12 @@ $('settings-td').addEventListener('click', function () {
    });
 }, false);
 
+$('faq-td').addEventListener('click', function () {
+    background.send("open-page", {
+     page: 'faq'
+   });
+}, false);
+
 function onClick() {
   $("answer-title").textContent = '';
   $("answer-details").textContent = '';
@@ -129,6 +51,7 @@ function onClick() {
 $("history-select").addEventListener("change", function (e) {
   var target = e.target || e.originalTarget;
   var word = target.children[target.selectedIndex].getAttribute("value");
+  /*  */
   $('question-input').value = word;
   $('question-input').setAttribute("word", word);
   onClick();
@@ -165,7 +88,7 @@ background.receive("translation-response", function (obj) {
       if (wrongWord) $("question-input").value = wrongWord + " >> " + obj.word;
       else $("question-input").value = obj.word;
       wrongWord = '';
-
+      /*  */
       $("question-input").select();
       $("definition-table").setAttribute("definition", obj.definition);
       var fs = $("from-select").children[$("from-select").selectedIndex];
@@ -182,7 +105,7 @@ background.receive("translation-response", function (obj) {
         $("phrasebook-td").setAttribute("title", "Save to Phrasebook");
       }
       $("answer-title").textContent = obj.definition;
-
+      /*  */
       var synonyms = obj.synonyms;
       var similars = obj.similar_words;
       var details = obj.detailDefinition;
@@ -254,8 +177,8 @@ background.receive("translation-response", function (obj) {
 
 background.receive("history-update", function (obj) {
   var historySelect = $("history-select");
-  historySelect.textContent = "";
-
+  historySelect.textContent = '';
+  /*  */
   function addNewItem(word, definition, index) {
     var option = document.createElement("option");
     option.textContent = word + ": " + definition;
@@ -290,6 +213,7 @@ $('from-select').addEventListener("change", function (e) {
   checkVoice();
   onClick();
 }, false);
+
 $('to-select').addEventListener("change", function (e) {
   var target = e.target || e.originalTarget;
   var to = target.children[target.selectedIndex].value;
@@ -297,6 +221,7 @@ $('to-select').addEventListener("change", function (e) {
   checkVoice();
   onClick();
 }, false);
+
 $('voice-question-td').addEventListener("click", function(e) {
   var target = e.target || e.originalTarget;
   if (target.getAttribute("voice") == "false") return;
@@ -308,6 +233,7 @@ $('voice-question-td').addEventListener("click", function(e) {
   }
   playVoice(word, lang);
 }, false);
+
 $('voice-answer-td').addEventListener("click", function(e) {
   var target = e.target || e.originalTarget;
   if (target.getAttribute("voice") == "false") return;
@@ -372,7 +298,7 @@ background.receive("failed-phrasebook", function (status) {
 
 /* Initialization */
 background.receive("initialization-response", function (obj) {
-  /* set popup height */
+  /* set popup width and height */
   document.body.style.width = obj.width + "px";
   document.getElementById("definition-table").style.height = obj.height + "px";
   document.getElementById("answer-details").style.maxHeight = obj.height - 34 + "px";
@@ -397,9 +323,14 @@ background.receive("initialization-response", function (obj) {
 });
 
 /* This needs to be after background.receive("initialization-response") */
+
 function init() {
   $("answer-title").textContent = "";
   $("answer-details").textContent = "";
   $("definition-table").removeAttribute('state');
   background.send("initialization-request");
 }
+
+window.addEventListener('message', function (e) {
+  if (e.data.path === "google-translator-popup-init") init();
+});

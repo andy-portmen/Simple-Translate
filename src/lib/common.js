@@ -5,7 +5,8 @@ if (typeof require !== 'undefined') {
 }
 /**** wrapper (end) ****/
 
-var sourceLanguage, autoDetectedLang = 'en';
+var globalToken, sourceLanguage, autoDetectedLang = 'en';
+
 const languagesNoVoice = [
   "az","eu","be","bn","bg","ceb","et",
   "tl","gl","ka","gu","ha","iw","hmn",
@@ -13,7 +14,41 @@ const languagesNoVoice = [
   "ms","mt","mi","mr","mn","ne","fa",
   "pa","sl","so","te","uk","ur","yi",
   "yo","zu", "si", "st"
-  ];
+];
+
+function calcToken(a) { /* hashing algorithm to generate token, input is any string */
+  function reducedLevel(a, b) {
+    for (var c = 0; c < b.length - 2; c += 3) {
+      var d = b.charAt(c + 2);
+      d = d >= 'a' ? d.charCodeAt(0) - 87 : Number(d);
+      d = b.charAt(c + 1) == '+' ? a >>> d : a << d;
+      a = b.charAt(c) == '+' ? a + d & 4294967295 : a ^ d;
+    }
+    return a;
+  }
+  /*  */
+  var b = parseInt((new Date()).getTime() / 1000 / 3600);
+  for (var d = [], e = 0, f = 0; f < a.length; f++) {
+    var g = a.charCodeAt(f);
+    /* if-then */
+    128 > g ? 
+      d[e++] = g : 
+        (2048 > g ? 
+          d[e++] = g >> 6 | 192 : 
+            (55296 == (g & 64512) && f + 1 < a.length && 56320 == (a.charCodeAt(f + 1) & 64512) ? 
+              (g = 65536 + ((g & 1023) << 10) + (a.charCodeAt(++f) & 1023), d[e++] = g >> 18 | 240, d[e++] = g >> 12 & 63 | 128) : 
+                d[e++] = g >> 12 | 224, d[e++] = g >> 6 & 63 | 128), d[e++] = g & 63 | 128
+        );
+  }
+  /*  */
+  a = b;
+  d.forEach(function(di) {a = reducedLevel(a + di, '+-a^+6')});
+  a = reducedLevel(a, "+-3^+b+-f");
+  a = a >= 0 ? a : ((a & 2147483647) + 2147483648);
+  a %= Math.pow(10, 6);
+  var token = a.toString() + '.' + (a ^ b);
+  return token;
+}
 
 function m (i) {
   var arr = [
@@ -68,9 +103,7 @@ function saveToHistory(obj) {
   });
   /* history items format: arr[word, definition, phrasebook, obj] */
   arr.push([obj.word, obj.definition, "phrasebook" in obj ? obj.phrasebook : tmpPhrasebook || "", obj.data]);
-  if (arr.length > numberHistoryItems) { /* Store up-to the numberHistoryItems */
-      arr.shift();
-  }
+  arr = arr.splice(-1 * numberHistoryItems); /* Store up-to the numberHistoryItems */
   config.history.data = arr;
   /* update toolbar-popup and options-page */
   app.popup.send("history-update", arr);
@@ -116,7 +149,7 @@ function newTranslationEngine(inputWord, ajaxResults) {
         if (arr) {
           if (arr[0]) {
             obj.definition = '';
-            obj.word = decodeURIComponent(inputWord);
+            obj.word = decodeURIComponent(decodeURIComponent(inputWord));
             for (var i = 0; i < arr[0].length; i++) {
               if (arr[0][i][0] && arr[0][i][1]) {
                 var sentence = arr[0][i][0];
@@ -234,17 +267,6 @@ function oldTranslationEngine(inputWord, ajaxResults) { /* Note: (&oc=3&otf=2) i
 function getTranslation(word) {
   word = word.trim();
   word = word.toLowerCase();
-  word = encodeURIComponent(word);
-  var gRand = function () {return Math.floor(Math.random() * 1000000) + '|' + Math.floor(Math.random() * 1000000)};
-
-  /* urls for old engine */
-  var url_old_1 = m(1) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.to + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
-  var url_old_2 = m(1) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.alt + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
-  /* urls for new engine */
-  var url_new_1 = m(6) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&tk=' + gRand() + '&q=' + word;
-  var url_new_2 = m(6) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qc&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&tk=' + gRand() + '&q=' + word;
-
-  var d = app.Promise.defer();
   /* using cache */
   if (config.translator.useCache == 'true') {
     var arr = config.history.data;
@@ -253,38 +275,104 @@ function getTranslation(word) {
       if (obj) {
         var flag1 = (obj.sourceLang == config.translator.from || 'auto' == config.translator.from);
         var flag2 = (obj.targetLang == config.translator.to);
-        var flag3 = (obj.word == word);
+        var flag3 = obj.word == word;
         if (flag1 && flag2 && flag3) {
+          var d = app.Promise.defer();
+          if (obj.token) { /* set the global token */
+            globalToken = obj.token;
+          }
           d.resolve(obj);
           return d.promise;
         }
       }
     }
   }
-  /* using ajax */
-  app.Promise.all([app.get(url_new_1), app.get(url_new_2)]).then(function (results) {
-    var obj = newTranslationEngine(word, results);                            // use with new urls
-    sourceLanguage = obj.sourceLang;                                          // adding source language
-    obj.phrasebook = findPhrasebook(obj.word, obj.definition);                // add phrasebook to obj
-    obj.isVoice = languagesNoVoice.indexOf(config.translator.from) == -1;     // add isVoice to obj
-    if (!obj.error && obj.wordIsCorrect) { /* save to history in case input word is correct */
-      saveToHistory({
-        word: obj.word,
-        definition: obj.definition,
-        data: obj
+  /* using net */
+  return _getTranslation(word, null);
+  
+  /* backup method
+  var url1 = "https://translate.google.com/#" + config.translator.from + "/" + config.translator.to + "/" + word;
+  var url2 = "https://translate.google.com/#" + config.translator.from + "/" + config.translator.alt + "/" + word;
+  return app.worker.set(word, url1).then(function (obj1) {
+    if (url1 == url2) return _getTranslation(word, [obj1, obj1]);
+    else {
+      return app.worker.set(word, url2).then(function (obj2) {
+        return _getTranslation(word, [obj1, obj2]);
       });
     }
-    d.resolve(obj);
   }, function (e) {
-    var obj = {
+    return {
+      error: e,
       word: '',
       definition: '',
       sourceLang: '',
-      detailDefinition: '',
       wordIsCorrect: '',
       correctedWord: '',
-      error: e
+      detailDefinition: ''
     }
+  });
+  */
+}
+/*  */
+function _getTranslation(word, arr) {
+  word = encodeURIComponent(word);
+  /*  */
+  var appGet, d = app.Promise.defer();
+  if (arr) {
+    globalToken = arr[0].token;
+    appGet = app.Promise.all([app.get(arr[0].url), app.get(arr[1].url)]).then(function (results) {
+      return results;
+    });
+  }
+  else {
+    var token = function () {
+      return calcToken(decodeURIComponent(word));
+    };
+    /* urls for the old engine
+    var url_old_1 = m(1) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.to + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
+    var url_old_2 = m(1) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&sc=2&ie=UTF-8&oe=UTF-8&uptl=' + config.translator.alt + '&alttl=en&oc=3&otf=2&ssel=0&tsel=0&q=' + word;
+    /* urls for new engine */
+    
+    var url_new_1 = m(6) + config.translator.from + '&tl=' + config.translator.to + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&tk=' + token() + '&q=' + word;
+    var url_new_2 = m(6) + config.translator.from + '&tl=' + config.translator.alt + '&hl=en&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t&dt=at&dt=sw&ie=UTF-8&oe=UTF-8&ssel=0&tsel=0&tk=' + token() + '&q=' + word;
+    
+    /* using ajax */
+    if (url_new_1 == url_new_2) {
+      appGet = app.get(url_new_1).then(function (result) {
+        return [result, result];
+      });
+    }
+    else {
+      appGet = app.Promise.all([app.get(url_new_1), app.get(url_new_2)]).then(function (results) {
+        return results;
+      });
+    }
+  }
+  /*  */
+  appGet.then(function (results) {
+    var obj = newTranslationEngine(word, results);                        // use with new urls
+    sourceLanguage = obj.sourceLang;                                      // adding source language
+    obj.phrasebook = findPhrasebook(obj.word, obj.definition);            // add phrasebook to obj
+    obj.isVoice = languagesNoVoice.indexOf(config.translator.from) == -1; // add isVoice to obj
+    if (!obj.error && obj.wordIsCorrect) { /* save to history in case input word is correct */
+      obj.token = globalToken; /* add token */
+      saveToHistory({
+        data: obj,
+        word: obj.word,
+        definition: obj.definition
+      });
+    }
+    d.resolve(obj);
+  }, function (e) { /* handle error */
+    var obj = {
+      error: e,
+      word: '',
+      definition: '',
+      sourceLang: '',
+      wordIsCorrect: '',
+      correctedWord: '',
+      detailDefinition: ''
+    };
     d.resolve(obj);
   });
   return d.promise;
@@ -327,12 +415,12 @@ app.popup.receive("initialization-request", function () {
 
 function openPage(obj) {
   switch (obj.page) {
-  case 'settings':
-    app.tab.openOptions();
-    break;
-  case 'define':
-    app.tab.open(m(2) + config.translator.from + "/" + config.translator.to + "/" + obj.word);
-    break;
+    case 'settings': app.tab.openOptions();
+      break;
+    case 'define': app.tab.open(m(2) + config.translator.from + "/" + config.translator.to + "/" + obj.word);
+      break;
+    case 'faq': app.tab.open(m(0) + 'fromApp');
+      break;
   }
 }
 app.popup.receive("open-page", openPage);
@@ -350,32 +438,43 @@ function playVoice(data) {
     }
     return result;
   }
+  function token(str) {
+    return calcToken(decodeURIComponent(str));
+  };
   /* Content script does not return lang */
   var lang = data.lang || config.translator.from;
   lang = (lang == 'auto' ? autoDetectedLang : lang);
   var text = data.word || '', audioUrl = [];
-
-  /* split sentence into smaller pieces with n words */
-  text = text.replace(/\'/g, '').replace(/\"/g, '').split(/\.|\,|\;|\u060c|\?|\!|\:/g);
-  for (var i = 0; i < text.length; i++) {
-    var subtext = splitString(text[i], 13); /* 13 words max */
-    for (var j = 0; j < subtext.length; j++) {
-      var gRand = function () {return Math.floor(Math.random() * 1000000) + '|' + Math.floor(Math.random() * 1000000)};
-      if (subtext[j].length) audioUrl.push(m(3) + subtext[j] + "&tl=" + lang + "&total=1&textlen=" + subtext[j].length + "&tk=" + gRand() + "&client=t");
-    }
+  /*  */
+  if (false) { //if (globalToken) {
+    var url = m(3) + text + "&tl=" + lang + "&total=1&textlen=" + text.length + "&tk=" + globalToken + "&client=t";
+    app.play(url, function (msg) {
+      if (msg === 'error') {
+        app.notification("Google Translator", "Text-to-Speech Error: The sentence is Too long, or there was a Text-to-Speech internal API bug.");
+      }
+    });
   }
-  var i = 0;
-  function playRecursion() {
-    if (audioUrl[i]) {
-      app.play(audioUrl[i], function (flag) {
-        if (flag) {
-          i++; 
-          if (i < audioUrl.length) playRecursion();
-        }
-      });
+  else {
+    /* split sentence into smaller pieces with n words */
+    text = text.replace(/\'/g, '').replace(/\"/g, '').split(/\.|\,|\;|\u060c|\?|\!|\:/g);
+    for (var i = 0; i < text.length; i++) {
+      var subtext = splitString(text[i], 13); /* 13 words max */
+      for (var j = 0; j < subtext.length; j++) {
+        if (subtext[j].length) audioUrl.push(m(3) + subtext[j] + "&tl=" + lang + "&total=1&textlen=" + subtext[j].length + "&tk=" + (globalToken || token(subtext[j])) + "&client=t");
+      }
     }
+    var k = 0;
+    function playRecursion() {
+      if (audioUrl[k]) {
+        app.play(audioUrl[k], function (flag) {
+          if (flag !== 'error') {
+            k++; if (k < audioUrl.length) playRecursion();
+          }
+        });
+      }
+    }
+    playRecursion();    
   }
-  playRecursion();
 }
 app.popup.receive("play-voice", playVoice);
 app.popup.receive("check-voice-request", function () {
@@ -418,7 +517,7 @@ var bookmark = {
   },
   onReject: function (e) {
     if (e.message == "Unauthorized" || e.status == 401) {
-      app.notification("Google Translator", "To save to Favourites, please sign-in to your Google account first!");
+      app.notification("Google Translator", "In order to save to Favourites, please sign-in to your Google account first!");
     }
     if (e.message == "no-key") {
       app.notification("Google Translator", "Internal error. Are you logged-in to your Google account?");
@@ -441,7 +540,7 @@ app.popup.receive("add-to-phrasebook", function (data) {
 app.popup.receive("remove-from-phrasebook", function (data) {
   var id = findPhrasebook(data.question, data.answer);
   if (!id) return;
-
+  /*  */
   bookmark.server(data.question, data.answer, "d", id).then(
     function () {
       app.popup.send("removed-from-phrasebook");

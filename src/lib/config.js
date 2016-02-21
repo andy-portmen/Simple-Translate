@@ -1,12 +1,11 @@
-var config;
+var config = {};
 
+/**** wrapper (start) ****/
 if (typeof require !== 'undefined') {
   var app = require('./firefox/firefox');
   config = exports;
 }
-else {
-  config = {};
-}
+/**** wrapper (end) ****/
 
 config.welcome = {
   get version () {
@@ -173,7 +172,7 @@ config.history = {
     app.storage.write("enableHistory", val);
   },
   get number () {
-    return parseInt(app.storage.read("numberHistoryItems") || "100");
+    return parseInt(app.storage.read("numberHistoryItems") || "20");
   },
   set number (val) {
     val = parseInt(val);

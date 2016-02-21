@@ -173,6 +173,7 @@ option {
 #translator-history-list tr td[rule='definition'] {
   max-width: 350px;
   padding: 0px 10px 0 10px;
+  overflow: hidden;
 }
 #translator-history-list tr td[rule='delete'] {
   width: 65px;

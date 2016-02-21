@@ -1,0 +1,418 @@
+<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html>
+  <head>
+    <title>Options - Google™ Translator</title>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="../icon16.png">
+    <link rel="stylesheet" type="text/css" href="options.css">
+  </head>
+  <body class="flex">
+    <div id="header" class="flex">
+      <table>
+        <tr>
+          <td style="padding: 0 0 0 100px; width: 297px;">
+            <span>
+              <a target="_blank" style="color: white;" href="http://add0n.com/google-translator.html">Google™ Translator</a>
+            </span><br/>
+            <span class="description">a handy multi-language translator</span>
+          </td>
+          <!-- donation begin -->
+          <td style="padding: 20px 0 0 0;">
+            <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+              <input type="hidden" name="cmd" value="_s-xclick">
+              <input type="hidden" name="custom" value="igtranslator">
+              <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----">
+              <div data-role="button" title="Make a Donation with PayPal">
+                <button class="flat-button" style="background-color: #FDB401;">Make a Donation</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+      </table>
+      <!-- donation end -->
+    </div>
+    <div id="content" class="flex">
+      <table width="100%">
+        <tr>
+          <td>Source and Target Languages</td>
+          <td style="white-space:nowrap;">
+            <span>Source Language: </span>
+            <select data-pref="translator.from">
+              <option value="auto">Detect Language</option>
+              <option value="af">Afrikaans</option>
+              <option value="sq">Albanian</option>
+              <option value="ar">Arabic</option>
+              <option value="hy">Armenian</option>
+              <option value="az">Azerbaijani</option>
+              <option value="eu">Basque</option>
+              <option value="be">Belarusian</option>
+              <option value="bn">Bengali</option>
+              <option value="bg">Bulgarian</option>
+              <option value="ca">Catalan</option>
+              <option value="ceb">Cebuano</option>
+              <option value="zh-CN">Ch (Simplified)</option>
+              <option value="zh-TW">Ch (Traditional)</option>
+              <option value="hr">Croatian</option>
+              <option value="cs">Czech</option>
+              <option value="da">Danish</option>
+              <option value="nl">Dutch</option>
+              <option value="en">English</option>
+              <option value="eo">Esperanto</option>
+              <option value="et">Estonian</option>
+              <option value="tl">Filipino</option>
+              <option value="fi">Finnish</option>
+              <option value="fr">French</option>
+              <option value="gl">Galician</option>
+              <option value="ka">Georgian</option>
+              <option value="de">German</option>
+              <option value="el">Greek</option>
+              <option value="gu">Gujarati</option>
+              <option value="ht">Haitian Creole</option>
+              <option value="ha">Hausa</option>
+              <option value="iw">Hebrew</option>
+              <option value="hi">Hindi</option>
+              <option value="hmn">Hmong</option>
+              <option value="hu">Hungarian</option>
+              <option value="is">Icelandic</option>
+              <option value="ig">Igbo</option>
+              <option value="id">Indonesian</option>
+              <option value="ga">Irish</option>
+              <option value="it">Italian</option>
+              <option value="ja">Japanese</option>
+              <option value="jw">Javanese</option>
+              <option value="kn">Kannada</option>
+              <option value="km">Khmer</option>
+              <option value="ko">Korean</option>
+              <option value="lo">Lao</option>
+              <option value="la">Latin</option>
+              <option value="lv">Latvian</option>
+              <option value="lt">Lithuanian</option>
+              <option value="mk">Macedonian</option>
+              <option value="ms">Malay</option>
+              <option value="mt">Maltese</option>
+              <option value="mi">Maori</option>
+              <option value="mr">Marathi</option>
+              <option value="mn">Mongolian</option>
+              <option value="ne">Nepali</option>
+              <option value="no">Norwegian</option>
+              <option value="fa">Persian</option>
+              <option value="pl">Polish</option>
+              <option value="pt">Portuguese</option>
+              <option value="pa">Punjabi</option>
+              <option value="ro">Romanian</option>
+              <option value="ru">Russian</option>
+              <option value="sr">Serbian</option>
+              <option value="sk">Slovak</option>
+              <option value="sl">Slovenian</option>
+              <option value="so">Somali</option>
+              <option value="es">Spanish</option>
+              <option value="sw">Swahili</option>
+              <option value="sv">Swedish</option>
+              <option value="ta">Tamil</option>
+              <option value="te">Telugu</option>
+              <option value="th">Thai</option>
+              <option value="tr">Turkish</option>
+              <option value="uk">Ukrainian</option>
+              <option value="ur">Urdu</option>
+              <option value="vi">Vietnamese</option>
+              <option value="cy">Welsh</option>
+              <option value="yi">Yiddish</option>
+              <option value="yo">Yoruba</option>
+              <option value="zu">Zulu</option>
+            </select>
+            <span>Target Language: </span>
+            <select data-pref="translator.to">
+              <option value=''>Select Your Language</option>
+              <option value="af">Afrikaans</option>
+              <option value="sq">Albanian</option>
+              <option value="ar">Arabic</option>
+              <option value="hy">Armenian</option>
+              <option value="az">Azerbaijani</option>
+              <option value="eu">Basque</option>
+              <option value="be">Belarusian</option>
+              <option value="bn">Bengali</option>
+              <option value="bg">Bulgarian</option>
+              <option value="ca">Catalan</option>
+              <option value="ceb">Cebuano</option>
+              <option value="zh-CN">Ch (Simplified)</option>
+              <option value="zh-TW">Ch (Traditional)</option>
+              <option value="hr">Croatian</option>
+              <option value="cs">Czech</option>
+              <option value="da">Danish</option>
+              <option value="nl">Dutch</option>
+              <option value="en">English</option>
+              <option value="eo">Esperanto</option>
+              <option value="et">Estonian</option>
+              <option value="tl">Filipino</option>
+              <option value="fi">Finnish</option>
+              <option value="fr">French</option>
+              <option value="gl">Galician</option>
+              <option value="ka">Georgian</option>
+              <option value="de">German</option>
+              <option value="el">Greek</option>
+              <option value="gu">Gujarati</option>
+              <option value="ht">Haitian Creole</option>
+              <option value="ha">Hausa</option>
+              <option value="iw">Hebrew</option>
+              <option value="hi">Hindi</option>
+              <option value="hmn">Hmong</option>
+              <option value="hu">Hungarian</option>
+              <option value="is">Icelandic</option>
+              <option value="ig">Igbo</option>
+              <option value="id">Indonesian</option>
+              <option value="ga">Irish</option>
+              <option value="it">Italian</option>
+              <option value="ja">Japanese</option>
+              <option value="jw">Javanese</option>
+              <option value="kn">Kannada</option>
+              <option value="km">Khmer</option>
+              <option value="ko">Korean</option>
+              <option value="lo">Lao</option>
+              <option value="la">Latin</option>
+              <option value="lv">Latvian</option>
+              <option value="lt">Lithuanian</option>
+              <option value="mk">Macedonian</option>
+              <option value="ms">Malay</option>
+              <option value="mt">Maltese</option>
+              <option value="mi">Maori</option>
+              <option value="mr">Marathi</option>
+              <option value="mn">Mongolian</option>
+              <option value="ne">Nepali</option>
+              <option value="no">Norwegian</option>
+              <option value="fa">Persian</option>
+              <option value="pl">Polish</option>
+              <option value="pt">Portuguese</option>
+              <option value="pa">Punjabi</option>
+              <option value="ro">Romanian</option>
+              <option value="ru">Russian</option>
+              <option value="sr">Serbian</option>
+              <option value="st">Sesotho</option>
+              <option value="si">Sinhala</option>
+              <option value="sk">Slovak</option>
+              <option value="sl">Slovenian</option>
+              <option value="so">Somali</option>
+              <option value="es">Spanish</option>
+              <option value="sw">Swahili</option>
+              <option value="sv">Swedish</option>
+              <option value="ta">Tamil</option>
+              <option value="te">Telugu</option>
+              <option value="th">Thai</option>
+              <option value="tr">Turkish</option>
+              <option value="uk">Ukrainian</option>
+              <option value="ur">Urdu</option>
+              <option value="vi">Vietnamese</option>
+              <option value="cy">Welsh</option>
+              <option value="yi">Yiddish</option>
+              <option value="yo">Yoruba</option>
+              <option value="zu">Zulu</option>
+            </select>
+            <p class="note">Default source language is auto-detect. Default target language is English.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>Alternative Target Language</td>
+          <td>
+            <span>Alternative Target Language: </span>
+            <select data-pref="translator.alt">
+              <option value="af">Afrikaans</option>
+              <option value="sq">Albanian</option>
+              <option value="ar">Arabic</option>
+              <option value="hy">Armenian</option>
+              <option value="az">Azerbaijani</option>
+              <option value="eu">Basque</option>
+              <option value="be">Belarusian</option>
+              <option value="bn">Bengali</option>
+              <option value="bg">Bulgarian</option>
+              <option value="ca">Catalan</option>
+              <option value="ceb">Cebuano</option>
+              <option value="zh-CN">Ch (Simplified)</option>
+              <option value="zh-TW">Ch (Traditional)</option>
+              <option value="hr">Croatian</option>
+              <option value="cs">Czech</option>
+              <option value="da">Danish</option>
+              <option value="nl">Dutch</option>
+              <option value="en">English</option>
+              <option value="eo">Esperanto</option>
+              <option value="et">Estonian</option>
+              <option value="tl">Filipino</option>
+              <option value="fi">Finnish</option>
+              <option value="fr">French</option>
+              <option value="gl">Galician</option>
+              <option value="ka">Georgian</option>
+              <option value="de">German</option>
+              <option value="el">Greek</option>
+              <option value="gu">Gujarati</option>
+              <option value="ht">Haitian Creole</option>
+              <option value="ha">Hausa</option>
+              <option value="iw">Hebrew</option>
+              <option value="hi">Hindi</option>
+              <option value="hmn">Hmong</option>
+              <option value="hu">Hungarian</option>
+              <option value="is">Icelandic</option>
+              <option value="ig">Igbo</option>
+              <option value="id">Indonesian</option>
+              <option value="ga">Irish</option>
+              <option value="it">Italian</option>
+              <option value="ja">Japanese</option>
+              <option value="jw">Javanese</option>
+              <option value="kn">Kannada</option>
+              <option value="km">Khmer</option>
+              <option value="ko">Korean</option>
+              <option value="lo">Lao</option>
+              <option value="la">Latin</option>
+              <option value="lv">Latvian</option>
+              <option value="lt">Lithuanian</option>
+              <option value="mk">Macedonian</option>
+              <option value="ms">Malay</option>
+              <option value="mt">Maltese</option>
+              <option value="mi">Maori</option>
+              <option value="mr">Marathi</option>
+              <option value="mn">Mongolian</option>
+              <option value="ne">Nepali</option>
+              <option value="no">Norwegian</option>
+              <option value="fa">Persian</option>
+              <option value="pl">Polish</option>
+              <option value="pt">Portuguese</option>
+              <option value="pa">Punjabi</option>
+              <option value="ro">Romanian</option>
+              <option value="ru">Russian</option>
+              <option value="sr">Serbian</option>
+              <option value="st">Sesotho</option>
+              <option value="si">Sinhala</option>
+              <option value="sk">Slovak</option>
+              <option value="sl">Slovenian</option>
+              <option value="so">Somali</option>
+              <option value="es">Spanish</option>
+              <option value="sw">Swahili</option>
+              <option value="sv">Swedish</option>
+              <option value="ta">Tamil</option>
+              <option value="te">Telugu</option>
+              <option value="th">Thai</option>
+              <option value="tr">Turkish</option>
+              <option value="uk">Ukrainian</option>
+              <option value="ur">Urdu</option>
+              <option value="vi">Vietnamese</option>
+              <option value="cy">Welsh</option>
+              <option value="yi">Yiddish</option>
+              <option value="yo">Yoruba</option>
+              <option value="zu">Zulu</option>
+            </select>
+            <p class="note">Default alternative target language is English.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>Toolbar-popup size</td>
+          <td>
+            <label><span>Set translator's toolbar-popup height: </span><input data-pref="translator.height" type="number"></input><span> pixels.</span></label>
+            <p class="note">Enter the desired height for toolbar-popup. Default is 170 pixels, minimum is 100 and maximum height is 512 pixels.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Set translator's toolbar-popup width: </span><input data-pref="translator.width" type="number"></input><span> pixels.</span></label>
+            <p class="note">Enter the desired width for toolbar-popup. Default is 450 pixels, minimum is 300 and maximum height is 700 pixels.</p>
+            <p class="spacer"></p>
+            <!-- -->
+          </td>
+        </tr>
+        <tr>
+          <td>General Settings</td>
+          <td>
+            <label><span>Use cache for translations  </span><input data-pref="translator.useCache" type="checkbox"></input></label>
+            <p class="note">When cache is enabled, translations are instant for previously looked up words.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Minimum word length to activate bubble translation is </span><input data-pref="settings.minimumNumberOfCharacters" type="number"></input><span> character(s).</span></label>
+            <p class="note">Enter the minimum number of characters to activate translation. Default is 2 characters.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Add "Translate page in Google Translate" context-menu right-click item  </span><input data-pref="settings.contextMenu" type="checkbox"></input></label>
+            <p class="note">Uncheck this box to remove context-menu item from right-click menu.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Enable translation for "input" or "editable" areas  </span><input data-pref="settings.translateInputArea" type="checkbox"></input></label>
+            <p class="note">Uncheck this option if you do not want to see translations for input or editable areas.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Open a new tab when translating the entire page via right-click context-menu option </span><input data-pref="settings.translateInNewTab" type="checkbox"></input></label>
+            <p class="note">When translating the entire page via right-click context-menu option, open a new tab for translated page.</p>
+            <p class="note">Disable this option if you do not want to open a new tab (you will see the translation within the current page).</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Enter Bubble theme-color in rgb(R, G, B) format: </span><input data-pref="settings.bubbleRGB" type="text"></input><span></span></label>
+            <p class="note">Enter the desired color for translator bubble in RGB format. Default is rgb(222, 184, 135).</p>
+            <p class="note">To choose an RGB color you can use <a target="_blank" href="http://www.rapidtables.com/web/color/RGB_Color.htm#color%20picker">Color Picker</a> website. First, select a desired color and then enter the values of R, G and B in the above field.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Do NOT show translation bubble in: </span><input style="width: 70%; height: 30px;" data-pref="settings.exclude" type="text"></input><span></span></label>
+            <p class="note">Translation bubble is shown in all pages except the list above. Note: You need to disable and re-enable the addon for the changes to take effect (This Option is ONLY for Firefox).</p>
+            <p class="spacer"></p>
+          </td>
+        </tr>
+        <tr>
+          <td>Enable or Disable Translations</td>
+          <td>
+            <label><span>Show translation when text is selected by mouse while "Alt", "Insert" or "T" key is hold </span><input data-pref="settings.selection" type="checkbox"></input></label>
+            <p class="note">Translation bubble will be shown immediately after selection</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Show translation when text is selected by mouse double-clicking </span><input data-pref="settings.dbClick" type="checkbox"></input></label>
+            <p class="note">Translation bubble will be shown immediately after dbClick</p>
+            <p class="spacer"></p>
+            <!-- -->
+
+            <!-- not active for now
+            <label><span>Show translation when mouse is over a word (Beta) </span><input data-pref="settings.mouseOverTranslation" type="checkbox"></input></label>
+            <p class="note">Translation bubble will be shown immediately if you move the mouse over a word (mouse-over translation).</p>
+            <p class="note">Please note this option is still in Beta and may not work properly or may slowdown your browser.</p>
+            <p class="spacer"></p>
+            -->
+
+            <!-- -->
+            <p style="width: 100%; border-top: solid 1px #E5E5E5;" class="spacer"></p>
+            <label><span>Show a small bubble next to any selected text, clicking on the bubble will show the translation </span><input data-pref="settings.showIcon" type="checkbox"></input></label>
+            <p class="note">Translation bubble will be shown after clicking the small bubble</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>After selecting any text, show the small bubble after </span><input data-pref="settings.translateIconShow" type="number"></input> <span> second(s).</span></label>
+            <p class="note">Small bubble will be shown after above seconds. Default is 0 second.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>Hide the small bubble automatically after </span><input data-pref="settings.translateIconTime" type="number"></input> <span> second(s).</span></label>
+            <p class="note">Small bubble will be hidden after few seconds if you do not click on it. Default is 5 seconds.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>History Settings</td>
+          <td>
+            <label><span>Check the box if you want to save words and definitions to history </span><input data-pref="history.enable" type="checkbox"></input></label>
+            <p class="note">Translations are saved to history by default.</p>
+            <p class="note">Note: unchecking this box will clear the entire history and you cannot undo this action.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <label><span>The number of desired items you want to save to history </span><input data-pref="history.number" type="number" min="0" max="100"></input></label>
+            <p class="note">Minimum number is 0 and default is 20.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <span>Click the button to save Google™ Translator history to a (.CSV) file </span><button class="flat-button" id="saveAsHistory" title="Save Google™ Translator History">Save as .CSV</button>
+            <p class="note">Note: a CSV is a comma-separated values file stores tabular data in plain-text form. You can open it with Microsoft Excel, Open Office Calc or Google Docs.</p>
+            <p class="spacer"></p>
+            <!-- -->
+            <span>Click the button to clear Google™ Translator history </span><button class="flat-button" id="clearHistory" title="Clear Google™ Translator History">Clear History</button>
+            <p class="note">Note: This option only clears Google™ Translator local history not your Google Translate account history. Cleared history cannot be retrieved later.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>Google™ Translator History</td>
+          <td>
+            <table id="translator-history-list">
+              <tr style="font-weight: bold; color: white; background-color: #A4A5A6;">
+                <td rule='index'>#</td><td>WORD</td><td>DEFINITION</td><td>REMOVE</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <script src="chrome/chrome.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

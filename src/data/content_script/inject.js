@@ -1,60 +1,3 @@
-var background = {}, manifest = {};
-
-/**** wrapper (start) ****/
-if (typeof self !== 'undefined' && self.port) { /* Firefox */
-  background.send = function (id, data) {
-    self.port.emit(id, data);
-  }
-  background.receive = function (id, callback) {
-    self.port.on(id, callback);
-  }
-  manifest.url = "resource://jid1-dgnibwqga0sibw-at-jetpack/igtranslator/";
-}
-else if (typeof safari !== 'undefined') { /* Safari */
-  background.send = function (id, obj) {
-    safari.self.tab.dispatchMessage("message", {
-      id: id,
-      data: obj
-    });
-  }
-  background.receive = (function () {
-    var callbacks = {};
-    safari.self.addEventListener("message", function (e) {
-      if (callbacks[e.name]) {
-        callbacks[e.name](e.message);
-      }
-    }, false);
-
-    return function (id, callback) {
-      callbacks[id] = callback;
-    }
-  })();
-  manifest.url = safari.extension.baseURI;
-
-  document.addEventListener('contextmenu', function () {
-    var selectedText = window.getSelection().toString();
-    try {
-      safari.self.tab.setContextMenuEventUserInfo(event, {selectedText: selectedText});
-    } catch (e) {}
-  }, false);
-}
-else {  /* Chrome */
-  background.send = function (id, data) {
-    chrome.runtime.sendMessage({path: 'page-to-background', method: id, data: data});
-  }
-  background.receive = function (id, callback) {
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request.path == 'background-to-page') {
-        if (request.method == id) {
-          callback(request.data);
-        }
-      }
-    });
-  }
-  manifest.url = chrome.extension.getURL("./");
-}
-/**** wrapper (end) ****/
-
 function init() {
   /* Global Variables */
   var translateIconShow = 0;
@@ -68,7 +11,7 @@ function init() {
   var isMouseOverTranslation = false;
   var allowMouseOverTranslation = true;
   var bubbleRGB = "rgb(222, 184, 135)";
-  var bubble, header, content, footer, bookmarks, voice, home, settings;
+  var bubble, header, content, footer, bookmarks, voice, home, settings, faq;
 
   function html(tag, attrs, parent) {
     if (!attrs) attrs = {};
@@ -144,7 +87,7 @@ function init() {
     mainDIV.style.height = (80) + "px";
     mainDIV.style.display = 'block';
     header.style.width = (264) + "px";
-    header.parentNode.style.backgroundImage = "url(" + manifest.url + "data/content_script/loading.gif)";
+    header.parentNode.style.backgroundImage = "url(" + manifest.url + "data/icons/loading.gif)";
     content.style.display = "none";
     allowMouseOverTranslation = false;
     background.send("translation-request", requestBubbleTranslation.text);
@@ -189,20 +132,20 @@ function init() {
       }, iFrame.contentDocument.body);
       /* Header */
       header = html("pre", {dir: "auto"}, html("td", {
-        colspan: 4,
+        colspan: 5,
         "class": "igtranslator-header"
       }, html("tr", {}, bubble)));
       /* Content */
       content = html("tbody", {
         "class": "igtranslator-content"
-      }, html("table", {}, html("td", {colspan: 4}, html("tr", {}, bubble))));
+      }, html("table", {}, html("td", {colspan: 5}, html("tr", {}, bubble))));
       /* Footer */
       footer = html("tr", {
         "class": "igtranslator-footer",
       }, bubble);
       /* Bookmarks */
       bookmarks = html("td", {
-        style: "background-image: url(" + manifest.url + "data/content_script/bookmarks.png)",
+        style: "background-image: url(" + manifest.url + "data/icons/bookmarks.png)",
         title: "Save to Phrasebook"
       }, footer);
       bookmarks.addEventListener("click", function () {
@@ -218,11 +161,11 @@ function init() {
             answer: definition
           });
         }
-        bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-loading.gif)";
+        bookmarks.style.backgroundImage = "url(" + manifest.url + "data/icons/bookmarks-loading.gif)";
       }, false);
       /* Voice Icon */
       voice = html("td", {
-        style: "background-image: url(" + manifest.url + "data/content_script/voice.png)",
+        style: "background-image: url(" + manifest.url + "data/icons/voice.png)",
         title: "Listen"
       }, footer);
       voice.addEventListener("click", function () {
@@ -234,7 +177,7 @@ function init() {
       }, false);
       /* Home Icon */
       home = html("td", {
-        style: "background-image: url(" + manifest.url + "data/content_script/home.png)",
+        style: "background-image: url(" + manifest.url + "data/icons/home.png)",
         title: "Open Google Translate"
       }, footer);
       home.addEventListener("click", function (e) {
@@ -245,12 +188,22 @@ function init() {
       });
       /* Settings Icon */
       settings = html("td", {
-        style: "background-image: url(" + manifest.url + "data/content_script/settings.png)",
+        style: "background-image: url(" + manifest.url + "data/icons/settings.png)",
         title: "Open Settings"
       }, footer);
       settings.addEventListener("click", function () {
         background.send("open-page", {
          page: 'settings'
+       });
+      }, false);
+      /* FAQ Icon */
+      faq = html("td", {
+        style: "background-image: url(" + manifest.url + "data/icons/faq.png)",
+        title: "Open FAQ/Support Page"
+      }, footer);
+      faq.addEventListener("click", function () {
+        background.send("open-page", {
+         page: 'faq'
        });
       }, false);
     }
@@ -313,7 +266,7 @@ function init() {
   /* Translate Icon */
   var translateIcon = html("div", {
     "class": "igtranslator-activator-icon bounceIn",
-    style: "background-image: url(" + manifest.url + "data/content_script/home.png)",
+    style: "background-image: url(" + manifest.url + "data/icons/home.png)",
     title: "Click to Show Translation"
   }, document.body);
   translateIcon.addEventListener("click", requestBubbleTranslation, false);
@@ -346,21 +299,21 @@ function init() {
         header.textContent = "Cannot Access Google Translate!";
         header.style.width = "388px";
         header.style.textAlign = "center";
-        content.style.backgroundImage = "url(" + manifest.url + "data/content_script/error.png)";
-        voice.style.backgroundImage = "url(" + manifest.url + "data/content_script/novoice.png)";
+        content.style.backgroundImage = "url(" + manifest.url + "data/icons/error.png)";
+        voice.style.backgroundImage = "url(" + manifest.url + "data/icons/novoice.png)";
         voice.setAttribute("isVoice", "no");
       }
       else {
         content.style.backgroundImage = "none";
         if (data.phrasebook) {
-          bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-saved.png)";
+          bookmarks.style.backgroundImage = "url(" + manifest.url + "data/icons/bookmarks-saved.png)";
           bookmarks.setAttribute("status", "saved");
         }
         else {
-          bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks.png)";
+          bookmarks.style.backgroundImage = "url(" + manifest.url + "data/icons/bookmarks.png)";
           bookmarks.removeAttribute("status");
         }
-        voice.style.backgroundImage = "url(" + manifest.url + "data/content_script/" + (data.isVoice ? "" : "no") + "voice.png)";
+        voice.style.backgroundImage = "url(" + manifest.url + "data/icons/" + (data.isVoice ? "" : "no") + "voice.png)";
         voice.setAttribute("isVoice", data.isVoice);
 
         var synonyms = data.synonyms;
@@ -680,19 +633,19 @@ function init() {
   background.receive("saved-to-phrasebook", function () {
     bookmarks.setAttribute("title", "Saved");
     bookmarks.setAttribute("status", "saved");
-    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks-saved.png)";
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/icons/bookmarks-saved.png)";
   });
 
   background.receive("removed-from-phrasebook", function () {
     bookmarks.setAttribute("title", "Save to Phrasebook");
     bookmarks.removeAttribute("status");
-    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks.png)";
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/icons/bookmarks.png)";
   });
 
   background.receive("failed-phrasebook", function (status) {
     bookmarks.setAttribute("title", "Sign-in required");
     bookmarks.setAttribute("status", status);
-    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/content_script/bookmarks" + (status ? "-saved" : "") + ".png)";
+    bookmarks.style.backgroundImage = "url(" + manifest.url + "data/icons/bookmarks" + (status ? "-saved" : "") + ".png)";
   });
   /* removing EventListener */
   window.removeEventListener("DOMContentLoaded", init, false);

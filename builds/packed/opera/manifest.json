@@ -1,0 +1,41 @@
+{
+  "version": "0.4.3",
+  "manifest_version": 2,
+  "name": "Google™ Translator",
+  "short_name": "igtranslator",
+  "description": "Google™ Translator is a handy multi-language translator built on top of Google Translate.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "<all_urls>",
+    "contextMenus",
+    "notifications"
+  ],
+  "browser_action": {
+    "default_icon": "data/icon16.png",
+    "default_popup": "data/popup/popup.html",
+    "default_title": "Google™ Translator"
+  },
+  "background": {
+    "page": "lib/chrome/background.html"
+  },
+  "web_accessible_resources": ["data/*"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "css": ["data/content_script/inject.css"],
+    "js": [
+      "data/content_script/chrome/chrome.js",
+      "data/content_script/inject.js"
+    ],
+    "run_at": "document_start",
+    "all_frames": false
+  }],
+  "options_page": "data/options/options.html",
+  "icons": {
+    "16": "data/icon16.png",
+    "32": "data/icon32.png",
+    "48": "data/icon48.png",
+    "64": "data/icon64.png",
+    "128": "data/icon128.png"
+  }
+}

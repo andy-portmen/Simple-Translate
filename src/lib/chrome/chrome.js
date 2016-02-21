@@ -1,8 +1,8 @@
 var app = {
-  Promise: Promise,
-  
   timer: window,
   
+  Promise: Promise,
+
   load: (function () {
     var loadReason = '';
     chrome.runtime.onInstalled.addListener(function(details) {
@@ -24,7 +24,6 @@ var app = {
     var objs = {};
     chrome.storage.local.get(null, function (o) {
       objs = o;
-      /* store to local storage */
       document.getElementById("common").src = "../common.js";
     });
     return {

@@ -1,55 +1,3 @@
-var background = {};
-
-/**** wrapper (start) ****/
-if (typeof self !== 'undefined' && self.port) { /* Firefox */
-  background.send = function (id, data) {
-    self.port.emit(id, data);
-  }
-  background.receive = function (id, callback) {
-    self.port.on(id, callback);
-  }
-}
-else if (typeof safari !== 'undefined') { /* Safari */
-  background.send = function (id, obj) {
-    safari.self.tab.dispatchMessage("message", {
-      id: id,
-      data: obj
-    });
-  }
-  background.receive = (function () {
-    var callbacks = {};
-    safari.self.addEventListener("message", function (e) {
-      if (callbacks[e.name]) {
-        callbacks[e.name](e.message);
-      }
-    }, false);
-    return function (id, callback) {
-      callbacks[id] = callback;
-    }
-  })();
-  document.addEventListener('contextmenu', function () {
-    var selectedText = window.getSelection().toString();
-    try {
-      safari.self.tab.setContextMenuEventUserInfo(event, {selectedText: selectedText});
-    } catch (e) {}
-  }, false);
-}
-else {  /* Chrome */
-  background.send = function (id, data) {
-    chrome.runtime.sendMessage({path: 'options-to-background', method: id, data: data});
-  }
-  background.receive = function (id, callback) {
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request.path == 'background-to-options') {
-        if (request.method == id) {
-          callback(request.data);
-        }
-      }
-    });
-  }
-}
-/**** wrapper (end) ****/
-
 var connect = function (elem, pref) {
   var att = "value";
   if (elem) {
@@ -243,6 +191,8 @@ function init() {
     document.body.appendChild(link);
     link.click();
   }, false);
+  /*  */
   window.removeEventListener("load", init, false);
 };
+/*  */
 window.addEventListener("load", init, false);

@@ -85,6 +85,7 @@
   text-align: center;
   background-repeat: no-repeat;
   background-position: center center;
+  background-size: auto 11px !important;
 }
 .igtranslator-header td {
   border: 0;
